@@ -230,4 +230,6 @@ class(df$`w-kvp`)
 SwissVotes_Df1 <- df
 rm(df, df_raw)
 
-saveRDS(SwissVotes_Df1, file.path(input_path, "swissvotes_typed.rds"))
+saveRDS(SwissVotes_Df1, file.path(input_path, "swissvotes_prepared.rds"))
+
+write.csv(SwissVotes_Df1, file.path(input_path, "swissvotes_prepared.csv"), row.names = TRUE, na = "")
