@@ -4,13 +4,14 @@
 # Variable definitions: Swissvotes (2025) Codebuch, S. 3-21, 26-27, 34-38
 
 # 1. Data import -----------------------------------------------------
-## Loading necessary libraries ---------------------------------------
+# Loading necessary libraries ----------------------------------------
 
 install.packages("tidyverse")
 install.packages("lubridate")
-
+install.packages("dplyr")
 library(tidyverse)   # readr, dplyr, stringr, tibble
 library(lubridate)   # dmy()
+#library(dplyr)       # select(), filter(), mutate(), across()
 
 ## Project paths -----------------------------------------------------
 
@@ -224,7 +225,19 @@ print(sort(unique(df$`unter-quorum`)))
 
 class(df$`w-kvp`)
 
-# 4. Saving dataset for the pipeline ----------------------------------
+
+## Deleting reference columns ------------------------------------------
+
+SwissVotes_Df1_ref <- SwissVotes_Df1
+
+library(dplyr)
+# Removing columns: titel_kurz_e, kurzbetitel, gesch_nr, entwurf_nr_ref
+SwissVotes_Df1 <- SwissVotes_Df1 %>%
+  select(-c(titel_kurz_e, kurzbetitel, gesch_nr, entwurf_nr_ref))
+
+library(tidyverse)
+
+# 4. Saving dataset for the pipeline -----------------------------------
 
 SwissVotes_Df1 <- df
 rm(df, df_raw)
