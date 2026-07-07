@@ -1,19 +1,18 @@
-# ====================================================================
-# 01_load_swissvotes.R
+----------------- ### 01_load_swissvotes.R ### -----------------------
+
 # Loading the cleaned SwissVotes dataset with correct variable types
 # Variable definitions: Swissvotes (2025) Codebuch, S. 3-21, 26-27, 34-38
-# ====================================================================
 
-# Data import ----------------------------------------------------------
+# 1. Data import -----------------------------------------------------
+## Loading necessary libraries ---------------------------------------
 
-# Load necessary libraries
 install.packages("tidyverse")
 install.packages("lubridate")
 
 library(tidyverse)   # readr, dplyr, stringr, tibble
 library(lubridate)   # dmy()
 
-# Project paths -------------------------------------------------
+## Project paths -----------------------------------------------------
 
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
 input_path  <- file.path(base_path, "Input Data")
@@ -21,7 +20,7 @@ output_path <- file.path(base_path, "Output")
 
 SwissVotes_Df0 <- file.path(input_path, "Cleaned Dataset for R - 2.7.26.csv")
 
-# Importing as character ----------------------------------------
+## Data Import as characters ------------------------------------------
 
 # Reading every column as text first so nothing gets auto-coerced;
 # Only empty cells become NA, '.', '0' and '9999' as literal strings
@@ -36,7 +35,8 @@ df_raw <- read_csv(
 
 str(df_raw)
 
-# Dropping phantom rows and stray whitespace --------------------
+# 2. Data Cleaning ----------------------------------------------------
+## Dropping phantom rows and stray whitespace -------------------------
 
 df_raw <- df_raw %>%
   filter(!if_all(everything(), is.na)) %>% # removing fully empty rows
@@ -44,7 +44,7 @@ df_raw <- df_raw %>%
 
 str(df_raw)
 
-# Signature-date columns: Splitting codes from dates ------------
+## Signature-date columns: Splitting codes from dates -----------------
 
 # dat-start, dat-limit, dat-submit, dat-success mix real dates with
 # Codes that carry their own meaning (Codebuch S. 16-17):
@@ -66,7 +66,7 @@ df <- df_raw %>%
 
 str(df)
 
-# Plain date columns ----------------------------------------------------
+## Plain date columns --------------------------------------------------
 
 # datum, dat-message and dat-parl contain only dd/mm/yyyy dates,
 plain_date_cols <- c("datum", "dat-message", "dat-parl")
@@ -74,7 +74,7 @@ plain_date_cols <- c("datum", "dat-message", "dat-parl")
 df <- df %>%
   mutate(across(all_of(plain_date_cols), ~ dmy(na_if(.x, ".")))) # '.' as 'missing' marker 
 
-# Keeping gesch_nr as character ----------------------------------------
+## Keeping gesch_nr as character ---------------------------------------
 
 # gesch_nr mixes the modern 'YY.NNN' format (25.018) with plain pre-1970s business numbers (10091, 9309) 
 # Keep as character, so leading and trailing zeros survive
@@ -90,8 +90,7 @@ fix_gesch_nr <- function(x) {
 df <- df %>%
   mutate(across(gesch_nr, fix_gesch_nr))
 
-
-# Numeric columns carrying codes ---------------------------------------
+## Numeric columns carrying codes ---------------------------------------
 
 # sammelfrist: '.' missing | '9999' keine Begrenzung
 # sammeltempo: '.' missing | '0' keine Unterschriftensammlung 
@@ -114,7 +113,7 @@ for (col in names(coded_num_cols)) {
 
 str(df)
 
-# Turning '.' into NA where it is plain missing ------------------------
+## Turning '.' into NA where it is plain missing ------------------------
 
 # '.' is missing marker in ~45 further columns (dep, br-pos, nrja, srja, w-*..) 
 # turning it into NA there, so those columns convert to numeric instead of staying characters
@@ -130,7 +129,7 @@ df <- df %>%
   mutate(across(where(is.character) & !any_of(protected_cols),
                 ~ na_if(.x, ".")))
 
-# Categorical codes as factors -------------------------------------------
+## Categorical codes as factors -----------------------------------------
 
 # Levels follow the codebook descriptions, so factor
 # structure stays stable when new votes enter the dataset (Codebuch S. 4-14, 34-35, 38)
@@ -159,7 +158,7 @@ df <- df %>%
 is.ordered(df$init_formul)
 str(df)
 
-# Typing all remaining columns ---------------------------------------
+## Typing all remaining columns -----------------------------------------
 
 df <- suppressMessages(
   type_convert(
@@ -194,7 +193,7 @@ df <- df %>%
 str(df)
 str(df_raw)
 
-# Sanity checks ----------------------------------------------------
+# 3. Sanity checks -----------------------------------------------------
 
 # anr: character, plain and decimal ids intact
 df %>% count(anr_decimal = str_detect(anr, "\\."))
@@ -225,7 +224,7 @@ print(sort(unique(df$`unter-quorum`)))
 
 class(df$`w-kvp`)
 
-# Saving dataset for the pipeline ---------------------------------
+# 4. Saving dataset for the pipeline ----------------------------------
 
 SwissVotes_Df1 <- df
 rm(df, df_raw)
