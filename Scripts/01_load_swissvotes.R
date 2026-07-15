@@ -1,9 +1,9 @@
------------------ # 01_load_swissvotes.R -----------------------------
+###################### 01_load_swissvotes.R ###########################
 
 # Loading the cleaned SwissVotes dataset with correct variable types
 # Variable definitions: Swissvotes (2025) Codebuch, S. 3-21, 26-27, 34-38
 
-# 1. Data import -----------------------------------------------------
+# 1. Data import ------------------------------------------------------
 ## Loading necessary libraries ----------------------------------------
 
 install.packages("tidyverse")
@@ -74,6 +74,14 @@ plain_date_cols <- c("datum", "dat-message", "dat-parl")
 
 df <- df %>%
   mutate(across(all_of(plain_date_cols), ~ dmy(na_if(.x, ".")))) # '.' as 'missing' marker 
+
+## Excluding the pre-Frauenstimmrecht votes ----------------------------
+
+# anr 219-224 predate the 7.2.1971 introduction of women's suffrage;
+# berecht jumps from 1.65M to 3.57M at this point, a hard discontinuity, not a gradual drift; 
+# These votes were decided by the male only franchise it later abolished, 
+# so its yes-share is not comparable to any later row's target variable
+df <- df %>% filter(datum >= as.Date("1971-06-06"))
 
 ## Keeping gesch_nr as character ---------------------------------------
 
@@ -238,6 +246,9 @@ library(dplyr)
 # Removing columns: titel_kurz_e, kurzbetitel, gesch_nr, entwurf_nr_ref
 SwissVotes_Df1 <- SwissVotes_Df1 %>%
   select(-c(titel_kurz_e, kurzbetitel, gesch_nr, entwurf_nr_ref))
+
+SwissVotes_Df1 <- SwissVotes_Df1 %>% filter(datum >= as.Date("1971-06-06"))
+str(SwissVotes_Df1)
 
 library(tidyverse)
 

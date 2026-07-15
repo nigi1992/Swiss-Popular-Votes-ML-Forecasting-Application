@@ -1,10 +1,11 @@
------------------ # 02_features.R ------------------------------------
+########################## 02_features.R #############################
 
 # Building all campaign-start (T) features derivable from SwissVotes +
 # other open-source datasets: Tables 0, A, B, C, D of my predictor list; 
 # later sources (roll calls, coded urheber, text) get their own 02x scripts and join on anr
 
-## Data import --------------------------------------------------------
+## Data import -------------------------------------------------------
+
 library(tidyverse)
 library(lubridate)
 
@@ -14,7 +15,9 @@ input_path  <- file.path(base_path, "Input Data")
 df <- readRDS(file.path(input_path, "swissvotes_prepared.rds"))
 
 ## Small helpers -----------------------------------------------------
+
 # Turning NA in a factor into an explicit 'miss' level so lm keeps the row
+# Recoding missingness as own category treats "missing" as potentially informative rather than random.
 factor_with_miss <- function(x) {
   x_chr <- as.character(x)
   x_chr[is.na(x_chr)] <- "miss"
@@ -33,17 +36,23 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
 
 # 1. Calendar / Structural-break controls -----------------------------
 
+#df <- df %>% filter(datum >= as.Date("1971-06-06"))
+#str(df)
+
 # Era breaks as defined in my predictor list; season = quarter, 
 # because there are 4 possible official voting Sundays per year
+
 df <- df %>%
   mutate(
     year_num = year(datum),
     era = factor(case_when(
-      datum <  as.Date("1971-01-01") ~ "pre1971",
+      #datum <  as.Date("1971-01-01") ~ "pre1971",
       datum <  as.Date("1991-01-01") ~ "e1971_1990",
       datum <  as.Date("2008-01-01") ~ "e1991_2007",
       TRUE                           ~ "e2008plus"
-    ), levels = c("pre1971", "e1971_1990", "e1991_2007", "e2008plus")),
+    ), levels = c(
+                  #"pre1971", 
+                  "e1971_1990", "e1991_2007", "e2008plus")),
     season = factor(paste0("Q", quarter(datum)), levels = paste0("Q", 1:4))
   )
 
@@ -54,7 +63,7 @@ nr_election_dates <- sapply(seq(1971, 2031, by = 4), function(y) {
   d <- as.Date(sprintf("%d-10-31", y))
   d - as.integer(format(d, "%w"))   # stepping back to the last sunday
 })
-nr_election_dates <- as.Date(nr_election_dates, origin = "1970-01-01")
+nr_election_dates <- as.Date(nr_election_dates, origin = "1971-03-01") #"1970-01-01")
 
 df <- df %>%
   mutate(
@@ -63,14 +72,14 @@ df <- df %>%
     }, numeric(1))
   )
 
-## More Time Features? ------------------------------------------------
+df <- df %>%
+  mutate(
+    nr_last_election_months = vapply(datum, function(d) {
+      as.numeric(d - max(nr_election_dates[nr_election_dates <= d])) / 30.44
+    }, numeric(1))
+  )
 
-# datum
-# legislatur
-# legisjahr
-# nr-wahl
-
-## Notes for 2. ------------------------------------------------------
+## Notes for 2. -------------------------------------------------------
 
 # changes_constitution: rechtsform 1, 3, 4 target the constitution;
 # approximation, since a minority of obligatory referendums concern non-constitutional objects 
@@ -92,7 +101,7 @@ df <- df %>%
 # the full gov_recommend factor and the derived signed/alignment
 # variables stay computed for tree-based engines (tree_extras below)
 
-# 2. Institutional features ------------------------------------------
+# 2. Institutional features -------------------------------------------
 
 df <- df %>%
   mutate(
@@ -120,22 +129,39 @@ for (k in 1:12) {
   )
 }
 
-## More "dumb" institutional features --------------------------------
+## More "dumb" institutional features ---------------------------------
 
-# deliberation_duration:
-# dauer_bv + dauer_abst
-# i-dauer_tot
-# fr-dauer_tot
-# entwurf_nr (the higher the number the more complicated deliberation)
-# Proxies for contentious parliamentary process? -> lengthy deliberation does not bode well for proposal
+# anz - Proxy for Voter fatigue? 
 
-# Voter fatigue? 
-# anz
+# pa_iv = (0/1)	- Low cardinality binary, Parliamentary initiatives with better chances of passing?
 
-# parliamentary_initiatives	pa_iv = (0/1)	Parliamentary initiatives with better chances of passing?
-df <- df %>%
-  mutate(
-  )  
+# Are these variables proxies for a contentious parliamentary process? 
+# -> Idea that lengthy deliberation does not bode well for proposal
+
+# entwurf_nr - the higher the number, the more complicated the deliberation process?
+
+# deliberation_duration in parlamentary consultation process, if pa_iv = 1 -> NA
+# dauer_bv  - Proxy for elite conflict/complexity?
+
+
+## From Codebook, s.15-18:
+
+#dauer_abst - Anzahl Tage vom Parlamentsbeschluss bis zum Tag der Volksabstimmung 
+
+## The next 5 variables are only defined for one kind of rechtsform (2 or 3)
+## They would need a missingness indicator 
+
+#i-dauer_tot - Nur bei Volksinitiativen: Anzahl Tage ab der Einreichung bis zum Tag der Volksabstimmung
+#i-dauer_samm - Nur bei Volksinitiativen: Anzahl Tage ab Sammelbeginn bis zur Einreichung der Initiative
+#i-dauer_br - Nur bei Volksinitiativen: Anzahl Tage ab der Einreichung bis zur Verabschiedung der bundesrätlichen Botschaft zuhanden des Parlaments
+
+#fr-dauer_samm - Nur bei fakultativen Referenden: Anzahl Tage ab Beginn der Sammelfrist (Veröffentlichung des Parlamentsbeschlusses) bis zur Einreichung der Unterschriften
+#fr-dauer_tot - Nur bei fakultativen Referenden: Anzahl Tage von der bundesrätlichen Botschaft bis zum Tag der Volksabstimmung.
+
+## Note: i-dauer_samm + i-dauer_tot  =  Gesamtdauer Initiative  =  i-dauer_samm + i-dauer_br + dauer_bv + dauer_abst 
+
+
+#df <- df %>% mutate()  
 
 # 3. Elite cues / Coalition theory ----------------------------------
 
@@ -181,7 +207,7 @@ df <- df %>%
     parl_consensus = if_else(is.na(parl_consensus), 0.5, parl_consensus)
   )
 
-# 4. Historical base rates (strictly as-of cutoffs) -----------------------
+# 4. Historical base rates (strictly as-of cutoffs) -------------------
 
 # Strictly earlier dates only; same-day votes never see each other;
 # Outcomes of not-yet-voted proposals are NA and drop out automatically
@@ -291,6 +317,35 @@ feature_sets <- list(
   # lm sets: alias-free by construction on the 1970+ frame (see NOTE above)
   m1_1 = c("rechtsform", "parl_recommend", "gov_missing",
            "main_domain", "dep"),
+  
+  m1_1 = c(
+    "rechtsform", 
+    "parl_recommend", 
+    "gov_missing",
+    "main_domain", 
+    "dep"
+  ),  
+  
+  # Rerun m1_1 as:
+  m1_1a = c(
+    "rechtsform",
+    "nr_recommend",
+    "d1e1",		
+  ),
+  
+  m1_1b = c(
+    "roll_yes_rechtsform",
+    "nr_recommend",
+    "d1e1",
+  ),
+  
+  m1_1c = c(
+    "roll_yes_rechtsform",
+    "nr_recommend",
+    "roll_yes_domain",
+  ),
+  ## add primitive Ideology rating feature later ("left", "right", "center")
+  
   m1_2 = c(
     # table 0
     "rechtsform", "parl_recommend", "gov_missing", "main_domain", "dep",
@@ -306,6 +361,67 @@ feature_sets <- list(
     # table D
     "era", "season", "months_to_election"
   ),
+  
+  # Elite consensus features:
+  #1. nr_support > par_support_signed > parl_consensus
+  #2. interchamber_disagree
+  #3. gov_parl_align/brpos_signed
+  
+  
+  m1_2a = c(
+    # table 0
+    "rechtsform", "anz", "nr_recommend", "main_domain", 
+    # table A 
+    "nr_support", "nr_yes_share", "sr_yes_share", "interchamber_disagree",
+    # table C
+    "roll_yes_rechtsform", "roll_yes_domain",
+    "last_domain_outcome", "time_since_domain_vote",
+    # table D
+    "era", "season", "months_to_election"	
+  ),  
+    
+  m1_2b = c(
+      # table 0
+      "rechtsform", "anz", "main_domain", 
+      # table A 
+      "nr_yes_share", "sr_yes_share", "interchamber_disagree",
+      "parl_support_signed", "parl_participation", 
+      "gov_parl_align",
+      # table C
+      "roll_yes_rechtsform", "roll_yes_domain",
+      "last_domain_outcome", "time_since_domain_vote",
+      # table D
+      "era", "season", "months_to_election"
+  ),      
+      
+  m1_2c = c(
+        # table 0
+        "rechtsform", "anz", "main_domain", 
+        # table A 
+        "nr_yes_share", "sr_yes_share", "interchamber_disagree",
+        "nr_support", "parl_participation", 
+        "brpos_signed", 
+        # table C
+        "roll_yes_rechtsform", "roll_yes_domain",
+        "last_domain_outcome", "time_since_domain_vote",
+        # table D
+        "era", "season", "months_to_election"
+  ),        
+        
+m1_2d = c(
+          # table 0
+          "rechtsform", "anz", "nr_recommend", "main_domain", "dep",
+          # table A
+          "nr_yes_share", "sr_yes_share", "interchamber_disagree",
+          "nr_support", "parl_support_signed", "elite_consensus", "parl_participation",
+          "gov_parl_align",
+          # table C
+          "roll_yes_rechtsform", "roll_yes_domain", "roll_acc_rechtsform",
+          "last_domain_outcome", "time_since_domain_vote",
+          # table D
+          "era", "season", "months_to_election"
+  ),
+
   m1_3 = character(0),   # placeholder: m1_2 + external features, later
   # computed but reserved for tree-based engines: redundant or
   # rank-deficient under lm dummy coding, informative for splits
@@ -313,6 +429,8 @@ feature_sets <- list(
                   "gov_parl_recommend_n", "changes_constitution",
                   "double_majority_required", "has_signature_phase",
                   "parl_vote_missing", "parl_consensus",
+                  # deliberation process features
+                  "pa_iv", "entwurf_nr", "dauer_bv", "dauer_abst",
                   sprintf("policy_%02d", 1:12))
 )
 
