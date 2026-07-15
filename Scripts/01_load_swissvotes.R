@@ -228,6 +228,10 @@ class(df$`w-kvp`)
 
 ## Deleting reference columns ------------------------------------------
 
+SwissVotes_Df1 <- df
+str(SwissVotes_Df1)
+rm(df, df_raw)
+
 SwissVotes_Df1_ref <- SwissVotes_Df1
 
 library(dplyr)
@@ -238,10 +242,6 @@ SwissVotes_Df1 <- SwissVotes_Df1 %>%
 library(tidyverse)
 
 # 4. Saving dataset for the ML pipeline --------------------------------
-
-SwissVotes_Df1 <- df
-str(SwissVotes_Df1)
-rm(df, df_raw)
 
 saveRDS(SwissVotes_Df1, file.path(input_path, "swissvotes_prepared.rds"))
 
