@@ -1,10 +1,10 @@
------------------ ### 01_load_swissvotes.R ### -----------------------
+----------------- # 01_load_swissvotes.R -----------------------------
 
 # Loading the cleaned SwissVotes dataset with correct variable types
 # Variable definitions: Swissvotes (2025) Codebuch, S. 3-21, 26-27, 34-38
 
 # 1. Data import -----------------------------------------------------
-# Loading necessary libraries ----------------------------------------
+## Loading necessary libraries ----------------------------------------
 
 install.packages("tidyverse")
 install.packages("lubridate")
@@ -21,7 +21,7 @@ output_path <- file.path(base_path, "Output")
 
 SwissVotes_Df0 <- file.path(input_path, "Cleaned Dataset for R - 2.7.26.csv")
 
-## Data Import as characters ------------------------------------------
+## Data import as characters ------------------------------------------
 
 # Reading every column as text first so nothing gets auto-coerced;
 # Only empty cells become NA, '.', '0' and '9999' as literal strings
@@ -36,7 +36,7 @@ df_raw <- read_csv(
 
 str(df_raw)
 
-# 2. Data Cleaning ----------------------------------------------------
+# 2. Data cleaning ----------------------------------------------------
 ## Dropping phantom rows and stray whitespace -------------------------
 
 df_raw <- df_raw %>%
@@ -237,9 +237,10 @@ SwissVotes_Df1 <- SwissVotes_Df1 %>%
 
 library(tidyverse)
 
-# 4. Saving dataset for the pipeline -----------------------------------
+# 4. Saving dataset for the ML pipeline --------------------------------
 
 SwissVotes_Df1 <- df
+str(SwissVotes_Df1)
 rm(df, df_raw)
 
 saveRDS(SwissVotes_Df1, file.path(input_path, "swissvotes_prepared.rds"))
