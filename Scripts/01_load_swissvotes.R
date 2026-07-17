@@ -1,4 +1,4 @@
-###################### 01_load_swissvotes.R ###########################
+### 01_load_swissvotes.R ###
 
 # Loading the cleaned SwissVotes dataset with correct variable types
 # Variable definitions: Swissvotes (2025) Codebuch, S. 3-21, 26-27, 34-38
@@ -37,6 +37,32 @@ df_raw <- read_csv(
 str(df_raw)
 
 # 2. Data cleaning ----------------------------------------------------
+## Documented manual corrections of the source data -------------------
+# cell-level fact corrections only, never statistical fills; each entry
+# names its basis so the deviation from the swissvotes original stays
+# auditable; the raw csv remains untouched
+#manual_corrections <- tribble(
+#  ~anr,  ~variable, ~value, ~basis,
+#  "293", "dep",     "8",    paste("Federfuehrung analog anr 369 (identische Vorlage,",
+#                                  "d1e3 = 1.43, ebenfalls pa-iv, dep = 8/BK);",
+#                                  "einziger dep-NA-Fall im Frame, nicht strukturell",
+#                                  "(34 andere pa-iv-Vorlagen tragen ein dep);",
+#                                  "zu verifizieren via BR-Stellungnahme im Bundesblatt")
+#)
+
+#apply_corrections <- function(d, corr) {
+#  for (i in seq_len(nrow(corr))) {
+#    r <- corr[i, ]
+#    stopifnot(r$variable %in% names(d), any(d$anr == r$anr, na.rm = TRUE))
+#    old <- as.character(d[[r$variable]][d$anr == r$anr])
+#    d[[r$variable]][d$anr == r$anr] <- r$value
+#    message(sprintf("correction: anr %s, %s: %s -> %s", r$anr, r$variable,
+#                    ifelse(is.na(old), "NA", old), r$value))
+#  }
+#  d
+#}
+
+#df_raw <- apply_corrections(df_raw, manual_corrections)
 ## Dropping phantom rows and stray whitespace -------------------------
 
 df_raw <- df_raw %>%
@@ -238,19 +264,17 @@ class(df$`w-kvp`)
 
 SwissVotes_Df1 <- df
 str(SwissVotes_Df1)
-rm(df, df_raw)
-
-SwissVotes_Df1_ref <- SwissVotes_Df1
 
 library(dplyr)
 # Removing columns: titel_kurz_e, kurzbetitel, gesch_nr, entwurf_nr_ref
 SwissVotes_Df1 <- SwissVotes_Df1 %>%
   select(-c(titel_kurz_e, kurzbetitel, gesch_nr, entwurf_nr_ref))
-
-SwissVotes_Df1 <- SwissVotes_Df1 %>% filter(datum >= as.Date("1971-06-06"))
 str(SwissVotes_Df1)
-
 library(tidyverse)
+
+# Reference df with more info
+SwissVotes_Df1_ref <- df
+rm(df, df_raw)
 
 # 4. Saving dataset for the ML pipeline --------------------------------
 

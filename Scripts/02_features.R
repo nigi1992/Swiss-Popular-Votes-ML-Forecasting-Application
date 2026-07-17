@@ -1,10 +1,10 @@
-########################## 02_features.R #############################
+### 02_features.R ###
 
 # Building all campaign-start (T) features derivable from SwissVotes +
 # other open-source datasets: Tables 0, A, B, C, D of my predictor list; 
 # later sources (roll calls, coded urheber, text) get their own 02x scripts and join on anr
 
-## Data import -------------------------------------------------------
+# 1. Data import ------------------------------------------------------
 
 library(tidyverse)
 library(lubridate)
@@ -24,8 +24,9 @@ factor_with_miss <- function(x) {
   factor(x_chr)
 }
 
-# As-of aggregation: for every row, applying fun to y of all rows with a strictly earlier date 
-# (same-day votes excluded: their outcome is unknown at T), optionally within a group
+# Computing data leakage-free historical statistic for every row via as-of aggregation: 
+# Applying fun to y of all rows with a strictly earlier date, optionally within a group 
+# (Same-day votes are excluded: Their outcome is unknown at T)
 asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
   vapply(seq_along(dates), function(i) {
     sel <- dates < dates[i] & !is.na(y)
@@ -34,13 +35,13 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
   }, numeric(1))
 }
 
-# 1. Calendar / Structural-break controls -----------------------------
+# 2. Calendar / Structural-break controls -----------------------------
 
 #df <- df %>% filter(datum >= as.Date("1971-06-06"))
 #str(df)
 
-# Era breaks as defined in my predictor list; season = quarter, 
-# because there are 4 possible official voting Sundays per year
+# Era breaks as defined in my predictor list
+# season = quarter, because there are 4 possible official voting Sundays per year
 
 df <- df %>%
   mutate(
@@ -56,14 +57,14 @@ df <- df %>%
     season = factor(paste0("Q", quarter(datum)), levels = paste0("Q", 1:4))
   )
 
-# Months until the next Nationalrat election: elections take place on
-# the last sunday of october every four years (1971 + 4k); 
-# computing the date arithmetic instead of relying on nr-wahl (year-only)
-nr_election_dates <- sapply(seq(1971, 2031, by = 4), function(y) {
+# Months until the next and since last Nationalrat election: 
+# Elections take place on the last sunday of october every four years (1971 + 4k)
+# Computing the date arithmetic instead of relying on nr-wahl (year-only)
+nr_election_dates <- sapply(seq(1963, 2031, by = 4), function(y) {
   d <- as.Date(sprintf("%d-10-31", y))
   d - as.integer(format(d, "%w"))   # stepping back to the last sunday
 })
-nr_election_dates <- as.Date(nr_election_dates, origin = "1971-03-01") #"1970-01-01")
+nr_election_dates <- as.Date(nr_election_dates, origin = "1970-01-01")
 
 df <- df %>%
   mutate(
@@ -74,51 +75,103 @@ df <- df %>%
 
 df <- df %>%
   mutate(
-    nr_last_election_months = vapply(datum, function(d) {
+    months_since_election = vapply(datum, function(d) {
       as.numeric(d - max(nr_election_dates[nr_election_dates <= d])) / 30.44
     }, numeric(1))
   )
 
 ## Notes for 2. -------------------------------------------------------
 
-# changes_constitution: rechtsform 1, 3, 4 target the constitution;
+# 'changes_constitution': 'rechtsform' 1, 3, 4 target the constitution (5 redundant)
 # approximation, since a minority of obligatory referendums concern non-constitutional objects 
-# (art. 140 BV: dringliche Bundesgesetze, bestimmte Staatsvertraege); 
+# (art. 140 BV: dringliche Bundesgesetze, bestimmte Staatsverträge) 
 # -> acceptable proxy, flagged here
 
-# NOTE on exact collinearity in the rechtsform 1-4 modeling frame (all verified empirically on this dataset):
-# - changes_constitution     = 1 - 1[rechtsform == 2]   -> redundant given rechtsform
-# - double_majority_required = changes_constitution     -> identical once rechtsform 5 is out
-# - gov_parl_recommend_n     = 1[gov==1] + 1[parl==1]   -> linear combination of the dummies
+## Notes on exact collinearity in the rechtsform 1-4 modeling frame (all verified empirically on this dataset):
+# 'changes_constitution'     = 1 - 1[rechtsform == 2]   -> redundant given rechtsform
+# 'double_majority_required' = changes_constitution     -> identical once rechtsform 5 is out
+# 'gov_parl_recommend_n'     = 1[gov==1] + 1[parl==1]   -> linear combination of the dummies
 
-# Government direction duplicates parliament direction from 1970-2026
-# - br-pos and bv-pos NEVER diverge in direction 
-#   (gov=1 => parl=1; parl in {2,3} => gov=2, checked over all 481 frame rows), 
-#   so the only estimable government information is gov_missing (n=33) and 'keine Empfehlung' (n=2); 
-# - brpos_signed and gov_parl_align are exact/near linear combinations of the parliament dummies
+## Government direction duplicates parliament direction from 1971-2026
 
-# Therefore, the lm feature sets carry parl_recommend + gov_missing;
-# the full gov_recommend factor and the derived signed/alignment
-# variables stay computed for tree-based engines (tree_extras below)
+# 'br-pos' and 'bv-pos' NEVER diverge in direction (gov=1 => parl=1; parl in {2,3} => gov=2, checked over all 475 frame rows), 
+# So the only estimable government information is gov_missing (n=30) and 'keine Empfehlung' (n=2)
+# (n=8), is not of concern, because 'rechtsform' = 5 will later be dropped
 
-# 2. Institutional features -------------------------------------------
+# 'brpos_signed' and 'gov_parl_align' are exact/near linear combinations of the parliament dummies
+
+# Therefore, the lm feature sets carry 'parl_recommend' + 'gov_missing'
+# The full gov_recommend factor and the derived signed/alignment variables stay computed for tree-based engines (tree_extras below)
+
+## Notes on 'br-pos' = 3 code for 'anr' 293 + 433: BV voted in favor of prop. despite the reservations of BR.
+# BR therefore decided to not make a rec., due to being in favor of prop in general, but not after certain changes were made by parliament
+# (Linder et al. (2010): Handbuch der eidgenössischen Volksabstimmungen 1848–2007. Bern: Haupt, 388f., 551f.)
+
+## Dealing with NAs in institutional factor variables ------------------
+
+# dep
+sum(is.na(df$dep)) # 1 NA, manually imputing, based on historical comparisons?
+which(is.na(df$dep)) # Finding row via row identifier (anr)
+df |> filter(is.na(dep)) %>% select(anr, datum, titel_kurz_d, dep) 
+
+# Creating separate df, where d1e2 = 1.4, select columns 'anr', 'titel_off_d', 'd1e2', 'dep'
+df_dep <- df %>%
+  filter(d1e2 == 1.4) %>%
+  select(anr, titel_off_d, d1e2, dep)
+
+# Because the other proposal, that concerns itself with voting rights for 18 year olds, 
+# was also lead by the "Schweizerische Bundeskanzlei (BK)", Value n=8 is picked for NA value.
+df <- df %>%
+  mutate(dep = if_else(anr == 293, "8", dep))
+
+
+# br-pos
+sum(is.na(df$`br-pos`)) # 30 NAs, no imputation or deletion, setting them as a separate category
+
+
+# d1e1, bv-pos, nr-pos, sr-pos have no NAs
+sum(is.na(c(df$d1e1, df$`bv-pos`, df$`nr-pos`, df$`sr-pos`)))
+
+# Showing all columns with NAs for past votes only
+colnames(df[df$vote_done == "voted", ])[colSums(is.na(df[df$vote_done == "voted", ])) > 0]
+
+# nrja, nrnein, srja, srnein missing values where bv-pos = 3
+which(is.na(df$nrja)) # Finding row via row identifier (anr)
+df |> filter(is.na(nrja)) %>% select(anr, datum, titel_kurz_d, `bv-pos`, `nr-pos`, nrja, nrnein, `sr-pos`, srja, srnein)
+
+## Directionless Codebook values for gov-pos variables ------------------------------
+
+# see p. 12-14 for reference
+
+# Creating separate df, where d1e2 = 1.4, select columns 'anr', 'titel_off_d', 'd1e2', 'dep'
+df_gov_pos <- df %>%
+  filter(`bv-pos` == 3) %>%
+  select(anr, datum, titel_kurz_d, rechtsform, init_formul, `br-pos`, `bv-pos`, `nr-pos`, `sr-pos`)
+
+## 3 instances in which all three chambers have code = 3 
+# -> For lm.predict(), recode as "miss", because 3 is too few to estimate a reliable standalone coefficient
+# -> For tree-based engines (Random Forest or XGBoost), keep as 3, because they can split on it and learn from it.
+
+## 2 instances in which bv-pos = 3, but nr and sr have differing recommendations -> leave them be.
+
+# 3. Institutional features -------------------------------------------
 
 df <- df %>%
   mutate(
     changes_constitution     = as.integer(rechtsform %in% c("1", "3", "4")), # redundant
     double_majority_required = as.integer(rechtsform %in% c("1", "3", "4", "5")), # identical
     
-    gov_recommend            = factor_with_miss(`br-pos`), # not interesting
-    gov_missing              = as.integer(is.na(`br-pos`)), # includes 33 NAs
+    gov_recommend            = factor_with_miss(`br-pos`), # includes 30 NAs as 'miss', and n=3 and n=8 as their own categories
+    gov_missing              = as.integer(is.na(`br-pos`)), # binary (0/1) Indicator: was there a rec. or not?
     parl_recommend           = factor_with_miss(`bv-pos`), # nr + sr recommendation
     gov_parl_recommend_n     = as.integer(gov_recommend == "1") +
-      as.integer(parl_recommend == "1"), # useless since gov is not allowed to diverge from parl in direction
+      as.integer(parl_recommend == "1"), # useless, since gov is not allowed to diverge from parl, they have same direction
     # (Art. 10a, Abs. 4 BPR)
     nr_recommend             = factor_with_miss(`nr-pos`), # better approximation for elite support
     # than nr + sr, according to Trechsel/Sciarini 1998, 108
     
     main_domain              = factor(d1e1, levels = 1:12),
-    dep                      = factor_with_miss(dep)
+    #dep                      = factor_with_miss(dep)
   )
 
 # policy areas as multi-hot indicators over the three slots
@@ -129,7 +182,7 @@ for (k in 1:12) {
   )
 }
 
-## More "dumb" institutional features ---------------------------------
+## Notes for more "dumb" institutional features ---------------------
 
 # anz - Proxy for Voter fatigue? 
 
@@ -163,55 +216,11 @@ for (k in 1:12) {
 
 #df <- df %>% mutate()  
 
-# 3. Elite cues / Coalition theory ----------------------------------
-
-# Parliament seat total for participation: SR had 44 seats before the
-# canton of Jura entered in 1979, 46 after; NR 200 throughout
-df <- df %>%
-  mutate(
-    nr_yes_share  = nrja / (nrja + nrnein), # Elite-cue proxy
-    sr_yes_share  = srja / (srja + srnein), # state support
-    
-    nr_support = (nrja - nrnein) / (nrja + nrnein), # NR support
-    
-    parl_support_signed = (nrja + srja - nrnein - srnein) /
-      (nrja + srja + nrnein + srnein), # Pooled signed support (NR-weighted by size)
-    parl_consensus  = (nr_yes_share + sr_yes_share) / 2, # Overall elite consensus 
-    
-    interchamber_disagree = abs(nr_yes_share - sr_yes_share), # Bicameral conflict signal
-    elite_consensus = abs(parl_support_signed), # How united is parliament? (not proposal specific)
-    
-    brpos_signed = case_when( # for gov-parl alignment
-      `br-pos` == "1" ~  1,
-      `br-pos` == "2" ~ -1,
-      TRUE            ~  0    # keine Empfehlung, Stichfrage codes, missing
-    ),
-    gov_parl_align = as.integer( # Government-parliament alignment
-      (`br-pos` == "1" & parl_support_signed > 0) |
-        (`br-pos` == "2" & parl_support_signed < 0)
-    ),
-    gov_parl_align = if_else(is.na(gov_parl_align), 0L, gov_parl_align),
-    
-    parl_seats    = if_else(datum < as.Date("1979-01-01"), 244, 246),
-    parl_participation = (nrja + nrnein + srja + srnein) / parl_seats, # MP turnout
-    # catches elite discomfort (no distinction between abstentions and absentees)
-  ) 
-
-# Three votes lack a final-vote count (no Schlussabstimmung) 
-df <- df %>%
-  mutate( # imputing neutrality and letting the indicator carry the information
-    parl_vote_missing = as.integer(is.na(nr_yes_share) | is.na(sr_yes_share)),
-    across(c(nr_yes_share, sr_yes_share),        ~ if_else(is.na(.x), 0.5, .x)),
-    across(c(interchamber_disagree, parl_support_signed,
-             elite_consensus, parl_participation), ~ if_else(is.na(.x), 0, .x)),
-    parl_consensus = if_else(is.na(parl_consensus), 0.5, parl_consensus)
-  )
-
-# 4. Historical base rates (strictly as-of cutoffs) -------------------
+# 4. Historical base rates (strict as-of cutoffs) --------------------
 
 # Strictly earlier dates only; same-day votes never see each other;
 # Outcomes of not-yet-voted proposals are NA and drop out automatically
-# Cold start: the extract begins 1970, so the earliest rows fall back
+# Cold start: the extract begins 1971, so the earliest rows fall back
 # to the expanding grand mean, and the very first voting day to 50% as mean %
 
 df <- df %>% arrange(datum)
@@ -255,7 +264,7 @@ df <- df %>%
                                   3650, na.rm = FALSE), # capped at 10 years
     time_since_domain_vote = if_else(is.na(time_since_domain_vote),
                                      3650, time_since_domain_vote)#,
-    
+    # together with anz a voter fatigue proxy?
     # author_prior_failures =, Sponsor track record; count of failed initiatives by same urheber bloc before date
     # party_weighted_support =,	Σ (w-party × historical party tendency in domain, past data only)	Expected support from party-strength × past positions (not proposal specific – domain average)
   )
@@ -263,10 +272,85 @@ df <- df %>%
 # Dropping the raw policy slot columns after multi-hot encoding
 # d1e1 lives on as main_domain; the level-2/3 slots hold hierarchical codes,
 # like 10.31 that would enter numeric selections as fake magnitudes
-df <- df %>%
-  select(-matches("^d[123]e[123]$"))
+#df <- df %>% select(-matches("^d[123]e[123]$"))
 
-# 5. Signature / Mobilization signals ----------------------------------
+# 5. Elite cues / Coalition theory ----------------------------------
+
+# Parliament seat total for participation: SR had 44 seats before the
+# canton of Jura entered in 1979, 46 after; NR 200 throughout
+df <- df %>%
+  mutate(
+    nr_yes_share  = nrja / (nrja + nrnein), # Elite-cue proxy
+    sr_yes_share  = srja / (srja + srnein), # state support
+    
+    nr_support = (nrja - nrnein) / (nrja + nrnein), # NR support
+    
+    parl_support_signed = (nrja + srja - nrnein - srnein) /
+      (nrja + srja + nrnein + srnein), # Pooled signed support (NR-weighted by size)
+    parl_consensus  = (nr_yes_share + sr_yes_share) / 2, # Overall elite consensus 
+    
+    interchamber_disagree = abs(nr_yes_share - sr_yes_share), # Bicameral conflict signal
+    elite_consensus = abs(parl_support_signed), # How united is parliament? (not proposal specific)
+    
+    brpos_signed = case_when( # for gov-parl alignment
+      `br-pos` == "1" ~  1,
+      `br-pos` == "2" ~ -1,
+      TRUE            ~  0    # keine Empfehlung, Stichfrage codes, missing
+    ),
+    gov_parl_align = as.integer( # Government-parliament alignment
+      (`br-pos` == "1" & parl_support_signed > 0) |
+        (`br-pos` == "2" & parl_support_signed < 0)
+    ),
+    gov_parl_align = if_else(is.na(gov_parl_align), 0L, gov_parl_align),
+    
+    parl_seats    = if_else(datum < as.Date("1979-01-01"), 244, 246),
+    parl_participation = (nrja + nrnein + srja + srnein) / parl_seats, # MP turnout
+    # catches elite discomfort (no distinction between abstentions and absentees)
+  ) 
+
+# Three votes lack a final-vote count (no Schlussabstimmung) 
+df <- df %>%
+  mutate( # imputing neutrality and letting the indicator carry the information
+    parl_vote_missing = as.integer(is.na(nr_yes_share) | is.na(sr_yes_share)),
+    across(c(nr_yes_share, sr_yes_share),        ~ if_else(is.na(.x), 0.5, .x)),
+    across(c(interchamber_disagree, parl_support_signed, nr_support,
+             elite_consensus, parl_participation), ~ if_else(is.na(.x), 0, .x)),
+    parl_consensus = if_else(is.na(parl_consensus), 0.5, parl_consensus)
+  )
+
+## Some Data Discovery ------------------------------------------------
+
+sum(df$`nr-pos` == "1" & df$volk == "1", na.rm = TRUE) + sum(df$`nr-pos` == "2" & df$volk == "0", na.rm = TRUE)
+sum(df$`nr-pos` == "2" & df$volk == "1", na.rm = TRUE) + sum(df$`nr-pos` == "1" & df$volk == "0", na.rm = TRUE)
+380+92
+380/472*100
+
+sum(df$`sr-pos` == "1" & df$volk == "1", na.rm = TRUE) + sum(df$`sr-pos` == "2" & df$volk == "0", na.rm = TRUE)
+sum(df$`sr-pos` == "2" & df$volk == "1", na.rm = TRUE) + sum(df$`sr-pos` == "1" & df$volk == "0", na.rm = TRUE)
+380+92
+380/472*100
+
+sum(df$`br-pos` == "1" & df$volk == "1", na.rm = TRUE) + sum(df$`br-pos` == "2" & df$volk == "0", na.rm = TRUE)
+sum(df$`br-pos` == "1" & df$volk == "0", na.rm = TRUE) + sum(df$`br-pos` == "2" & df$volk == "1", na.rm = TRUE)
+358+85
+358/443*100
+
+sum(df$`bv-pos` == "1" & df$volk == "1", na.rm = TRUE) + sum(df$`bv-pos` == "2" & df$volk == "0", na.rm = TRUE)
+sum(df$`bv-pos` == "1" & df$volk == "0", na.rm = TRUE) + sum(df$`bv-pos` == "2" & df$volk == "1", na.rm = TRUE)
+379+91
+379/470*100
+
+sum(df$brpos_signed == "1" & df$volk == "1", na.rm = TRUE) + sum(df$brpos_signed == "-1" & df$volk == "0", na.rm = TRUE)
+sum(df$brpos_signed == "1" & df$volk == "0", na.rm = TRUE) + sum(df$brpos_signed == "-1" & df$volk == "1", na.rm = TRUE)
+
+sum(df$gov_parl_align == "1" & df$volk == "1", na.rm = TRUE) #+ 
+sum(df$gov_parl_align == "0" & df$volk == "0", na.rm = TRUE)
+sum(df$gov_parl_align == "1" & df$volk == "0", na.rm = TRUE) #+ 
+sum(df$gov_parl_align == "0" & df$volk == "1", na.rm = TRUE)
+
+# Gov-parl alignment is a miserable predictor of outcome, nr-pos is a way better predictor
+
+# 6. Signature / Mobilization signals ----------------------------------
 
 # Has_signature_phase strictly from rechtsform: 
 # Only initiatives (3) and optional referendums (2) collect signatures for the proposal
@@ -307,14 +391,17 @@ df <- df %>%
   )
 
 
-# 6. Feature-set registry ---------------------------------------------
+# 7. Feature-set registry ---------------------------------------------
 
 # Model iterations differ by column selection, not by pipeline; 
 # m1_3 extends m1_2 once the external features (roll-call factions, coded urheber) are joined in
 
 feature_sets <- list(
   m0   = c("roll_yes_rechtsform"),
-  # lm sets: alias-free by construction on the 1970+ frame (see NOTE above)
+  
+  # lm sets: alias-free by construction on the 1971+ frame (see NOTE above)
+  m1_0 = c("rechtsform"),
+  
   m1_1 = c("rechtsform", "parl_recommend", "gov_missing",
            "main_domain", "dep"),
   
@@ -434,7 +521,8 @@ m1_2d = c(
                   sprintf("policy_%02d", 1:12))
 )
 
-# 7. Saving dataset for the ML pipeline -------------------------------
+# 8. Saving dataset for the ML pipeline -------------------------------
 
-saveRDS(df,           file.path(input_path, "swissvotes_features.rds"))
+saveRDS(df, file.path(input_path, "swissvotes_features.rds"))
+
 saveRDS(feature_sets, file.path(input_path, "feature_sets.rds"))

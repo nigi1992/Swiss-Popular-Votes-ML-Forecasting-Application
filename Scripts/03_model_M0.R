@@ -1,10 +1,10 @@
-########################### 03_model_M0.R #############################
+### 03_model_M0.R ###
 
 # Naive benchmark: expanding as-of mean yes-share by rechtsform
 # No fitting required, the prediction column comes ready-made from 02_features
 # evaluated on the same temporal folds as every later model
 
-## Data import -------------------------------------------------------
+# 1. Data import -----------------------------------------------------
 
 library(tidyverse)
 
@@ -16,7 +16,7 @@ source(file.path(base_path, "Scripts", "00_helpers.R"))
 
 df <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 
-## Modeling frame ----------------------------------------------------
+# 2. Modeling frame --------------------------------------------------
 
 # Already voted on proposals only, excluding the 4 Stichfragen (rechtsform 5)
 # Their volkja-proz measures initiative-vs-counterproposal preference, 
@@ -30,7 +30,7 @@ frame <- df %>%
 
 folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6)
 
-## Evaluation --------------------------------------------------------
+# 3. Evaluation ------------------------------------------------------
 
 m0_fold <- map_dfr(seq_along(folds), function(b) {
   te <- frame[folds[[b]]$test, ]
@@ -55,7 +55,7 @@ print(test_all %>%
                   mae = mae(yes_share, roll_yes_rechtsform),
                   volksmehr_acc = volksmehr_acc(yes_share, roll_yes_rechtsform)))
 
-## Saving dataset for the ML pipeline --------------------------------
+# 4. Saving dataset for the ML pipeline ------------------------------
 
 write_csv(bind_rows(m0_fold, m0_pooled, mgrand_pooled),
           file.path(output_path, "metrics_M0.csv"))
