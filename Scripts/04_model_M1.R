@@ -47,7 +47,7 @@ run_lm_set <- function(set_name, feats) {
 }
 
 run_these <- c(
-              "m1_0", "m1_1", "m1_1a", "m1_1b", "m1_1c", 
+              "m1_0", "m1_1", "m1_1a", "m1_1b", "m1_1c", "m1_1d", "m1_1e",
               "m1_2", "m1_2a", "m1_2b", "m1_2c", "m1_2d",
               if (length(feature_sets$m1_3) > 0) "m1_3"
               )

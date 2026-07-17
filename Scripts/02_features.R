@@ -390,7 +390,6 @@ df <- df %>%
     across(all_of(sig_features), ~ if_else(is.na(.x), 0, .x))
   )
 
-
 # 7. Feature-set registry ---------------------------------------------
 
 # Model iterations differ by column selection, not by pipeline; 
@@ -417,19 +416,31 @@ feature_sets <- list(
   m1_1a = c(
     "rechtsform",
     "nr_recommend",
-    "d1e1",		
+    "d1e1"		
   ),
   
   m1_1b = c(
     "roll_yes_rechtsform",
     "nr_recommend",
-    "d1e1",
+    "d1e1"
   ),
   
   m1_1c = c(
     "roll_yes_rechtsform",
     "nr_recommend",
-    "roll_yes_domain",
+    "roll_yes_domain"
+  ),
+  
+  m1_1d = c(
+    "roll_yes_rechtsform",
+    "nr_support",
+    "d1e1"
+  ),
+  
+  m1_1e = c(
+    "roll_yes_rechtsform",
+    "nr_support",
+    "roll_yes_domain"
   ),
   ## add primitive Ideology rating feature later ("left", "right", "center")
   
@@ -518,6 +529,8 @@ m1_2d = c(
                   "parl_vote_missing", "parl_consensus",
                   # deliberation process features
                   "pa_iv", "entwurf_nr", "dauer_bv", "dauer_abst",
+                  "sparedays", 
+                  "legislature", "nr_wahl", "months_since_election",
                   sprintf("policy_%02d", 1:12))
 )
 
