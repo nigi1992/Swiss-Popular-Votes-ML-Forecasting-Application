@@ -401,7 +401,7 @@ feature_sets <- list(
   # lm sets: alias-free by construction on the 1971+ frame (see NOTE above)
   m1_0 = c("rechtsform"),
   
-  m1_1 = c("rechtsform", "parl_recommend", "gov_missing",
+  m1_1_0 = c("rechtsform", "parl_recommend", "gov_missing",
            "main_domain", "dep"),
   
   m1_1 = c(
@@ -506,7 +506,7 @@ feature_sets <- list(
         "era", "season", "months_to_election"
   ),        
         
-m1_2d = c(
+  m1_2d = c(
           # table 0
           "rechtsform", "anz", "nr_recommend", "main_domain", "dep",
           # table A
