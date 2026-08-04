@@ -538,14 +538,13 @@ df <- df %>%
 
 # 8. Coalition Config from 'support_coalition' -------------------------------
 
-# coalition-configuration features from support_coalition
-# operationalizing Kriesi (2005), Linder/Mueller (2021) and Wagschal
-# (2023) through the faction roll-call proxy; bloc membership is parsed
-# from the string so every present and future pattern is covered
+# Coalition-configuration features from support_coalition variable according to Kriesi (2005), Linder/Mueller (2021) and Wagschal (2023) 
+
+# Bloc membership is parsed from the string so every present and future pattern is covered
 gov_blocs <- c("S", "ME", "RL", "V")
 all_blocs <- c("S", "G", "GL", "ME", "RL", "V")
 
-# exact token parse; str_detect is unusable here (G matches inside GL)
+# Exact token parse; str_detect is unusable here (G matches inside GL)
 coal_str  <- as.character(df$support_coalition)
 coal_toks <- strsplit(coal_str, "\\+")
 for (b in all_blocs) {
