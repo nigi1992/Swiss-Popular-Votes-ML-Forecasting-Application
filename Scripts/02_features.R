@@ -276,6 +276,19 @@ df <- df %>%
 # like 10.31 that would enter numeric selections as fake magnitudes
 #df <- df %>% select(-matches("^d[123]e[123]$"))
 
+## Imputation of faulty nrja, nrnein count values -----------------------
+
+# Manual corrections: one row per anr, anr must be character to match df
+nr_fixes <- tibble::tribble(
+  ~anr,        ~nrja, ~nrnein,
+  "543",      126,   58,
+  #"YYYY",      000L,   000L
+)
+
+# Applying the overrides in place, keyed on anr.
+df <- df %>%
+  rows_update(nr_fixes, by = "anr")
+
 # 5. Elite cues / Coalition theory ----------------------------------
 
 # Parliament seat total for participation: SR had 44 seats before the
@@ -371,56 +384,99 @@ bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v2.
                show_col_types = FALSE)
 str(bw)
 
+
+## Orientation and Validation -------------------------------------------
+
 # Validating every roll call against the official final-vote totals before anything gets joined
-# The *_support columns are proposal-oriented (SwissVotes also counts nrja/nrnein proposal-oriented)
+# The *_support/*_oppose columns are proposal-oriented (SwissVotes also counts nrja/nrnein proposal-oriented)
+# via roll_call_inverted (verified: inverted rows have support = nein)
 
 # Factions according to "Parlamentswörterbuch - Faktenblatt Fraktionen", p.5:
 # S: Sozialdemokratische Fraktion; G: Grüne Fraktion; GL: Grünliberale Fraktion; 
 # ME: Mitte-Fraktion (CVP-EVP-BDP) RL: FDP-Liberale Fraktion; V: Fraktion der Schweizerischen Volkspartei. 
 
-blocs <- c("S", "G", "GL", "ME", "RL", "V")   # left -> right (excl. other)
+blocs <- c("S", "G", "GL", "ME", "RL", "V")   # left -> right (excluding 'other')
 
 # Indicative left-right placements on a -10 to +10 scale, according to Hug and Schulz 2007 and NZZ Parlamentarier Rating 2025
 # LR anchors for bloc weighting: S = -6.5, G = -8.0, GL = -1.5, ME = 1.5, RL = 5.5, V = 8.5
-
-
+rm(frak) # clearing any previous version of frak to avoid confusion)
 frak <- bw %>%
   mutate(
-    anr = as.character(anr),          # key typing: master anr is character
+    anr = as.character(anr),  # key typing: master anr is character
+    # 'other' group has no *_support/*_oppose column in df, only raw other_ja/other_nein 
+    # Orienting it here so both parts of the total share one orientation, then validating against the official final-vote counts
     other_sup = if_else(roll_call_inverted == 1, other_nein, other_ja),
     other_opp = if_else(roll_call_inverted == 1, other_ja, other_nein),
     tot_sup = rowSums(across(all_of(paste0(blocs, "_support"))), na.rm = TRUE) + other_sup,
     tot_opp = rowSums(across(all_of(paste0(blocs, "_oppose"))),  na.rm = TRUE) + other_opp
   ) %>%
   left_join(df %>% select(anr, nrja, nrnein), by = "anr") %>%
+  # Rows where the inversion flag contradicts the totals fail and are quarantined together with the genuine mismatches
   mutate(frak_pass = tot_sup == nrja & tot_opp == nrnein) %>%
+  # Quarantining failed validations and deduplicating multi-roll-call anr: keeping only validated rows, one per proposal
   filter(frak_pass) %>%
+  filter(cue_valid == 1) %>%
   distinct(anr, .keep_all = TRUE)
 
+## Bloc features --------------------------------------------------------
+
+# 4 period-stable blocs: 
+# left = S (Social Democrats) + G (Grüne), center = Mitte (CVP + BDP + EVP) + GLP (GLP folded in because its Fraktion only exists from 2007), 
+# fdp = RL, svp = V. Shares over cast direction votes only, abstentions excluded
 share <- function(sup, opp) if_else((sup + opp) > 0, sup / (sup + opp), NA_real_)
 
 # table support_coaltion
 table(bw$support_coalition)
 
+# Summing bloc columns with na.rm 
+# Reflects only the blocs that actually existed at the time, the GL Fraction did not exist before 2012
+bloc_sum <- function(...) rowSums(cbind(...), na.rm = TRUE)
+
 frak_feats <- frak %>%
   transmute(
     anr,
-    frak_left_sup   = share(S_support + G_support,   S_oppose + G_oppose),
-    frak_center_sup = share(ME_support + GL_support, ME_oppose + GL_oppose),
+    #frak_left_sup   = share(S_support + G_support,   S_oppose + G_oppose),
+    #frak_center_sup = share(ME_support + GL_support, ME_oppose + GL_oppose),
+    frak_left_sup   = share(bloc_sum(S_support, G_support), bloc_sum(S_oppose,  G_oppose)),
+    frak_center_sup = share(bloc_sum(ME_support, GL_support), bloc_sum(ME_oppose,  GL_oppose)),
     frak_fdp_sup    = share(RL_support, RL_oppose),
     frak_svp_sup    = share(V_support,  V_oppose),
-    frak_breadth    = (frak_left_sup > 0.5) + (frak_center_sup > 0.5) +
-      (frak_fdp_sup  > 0.5) + (frak_svp_sup    > 0.5),
-    frak_lr_signed  = frak_left_sup - frak_svp_sup,   # LC of two shares: tree engines only
-    # the weighted left-right cue score; neutral-filling its handful of
-    # gaps at the scale midpoint 0, below any estimability threshold
+    
+    # Breadth: how many of the four blocs carry a supporting majority
+    #frak_breadth    = (frak_left_sup > 0.5) + (frak_center_sup > 0.5) + (frak_fdp_sup > 0.5) + (frak_svp_sup > 0.5),
+    # rowSums with na.rm so one undefined share cannot void the count
+    frak_breadth    = rowSums(cbind(frak_left_sup   > 0.5, frak_center_sup > 0.5, frak_fdp_sup    > 0.5,
+                                    frak_svp_sup    > 0.5), na.rm = TRUE),
+    
+    frak_lr_signed  = frak_left_sup - frak_svp_sup,   # Linear Combination of two shares: tree engines only
+    
+    # The weighted left-right cue score, neutral-filling its handful of gaps at the scale midpoint 0, below any estimate threshold
     elite_cue_lr    = if_else(is.na(elite_cue_lr), 0, elite_cue_lr),
-    # coalition composition string, 29 distinct values: factor for tree
-    # engines only, far too many thin levels for lm at this n
+    
+    # Coalition composition string, 29 distinct values: Factor for tree engines only, far too many thin levels for lm at this n
     support_coalition = factor(support_coalition)
   )
-
 # Source for coaltion theory: Kriesi 2005, p.83, Jaquet, Sciarini & Gava 2022, Wagschal 2023
+
+
+## Alternative Bloc Resolution ---------------------------------------------
+
+# Keeping G separate from S, this preserves the S/G divergence that the four-bloc version collapses
+frak_feats5 <- frak %>%
+  transmute(
+    anr,
+    frak_sp_sup     = share(S_support,  S_oppose),
+    frak_gruene_sup = share(G_support,  G_oppose),
+    frak_center_sup = share(bloc_sum(ME_support, GL_support), bloc_sum(ME_oppose,  GL_oppose)),
+    #frak_center_sup = share(ME_support + GL_support, ME_oppose + GL_oppose),
+    frak_fdp_sup    = share(RL_support, RL_oppose),
+    frak_svp_sup    = share(V_support,  V_oppose),
+    frak_breadth5   = rowSums(cbind(frak_sp_sup > 0.5, frak_gruene_sup > 0.5, frak_center_sup > 0.5, 
+                                    frak_fdp_sup > 0.5, frak_svp_sup > 0.5), na.rm = TRUE),
+    frak_lr_signed  = frak_sp_sup + frak_gruene_sup - frak_svp_sup, 
+    elite_cue_lr    = if_else(is.na(elite_cue_lr), 0, elite_cue_lr),
+    support_coalition = factor(support_coalition)
+  )
 
 ## Join audit, both directions -------------------------------------------
 
@@ -428,6 +484,8 @@ message("frak orphans (validated roll calls without master row): ",
         nrow(anti_join(frak_feats, df, by = "anr")))
 message("master rows without faction data (expected: pre-1994 + quarantined): ",
         nrow(anti_join(df, frak_feats, by = "anr")))
+
+#anti_join(frak_feats, df, by = "anr")
 
 df <- df %>%
   left_join(frak_feats, by = "anr", relationship = "one-to-one")
@@ -441,13 +499,10 @@ stopifnot(nrow(df) == n_master)
 urh <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles_refined_r4.csv"),
                 show_col_types = FALSE) %>%
   mutate(anr = as.character(anr)) %>%   # file reads anr as numeric
-  select(anr, pole_refined_r4, urheber_is_coalition = is_coalition)
+  select(anr, pole_refined_r4, urheber_is_coalition = is_coalition, n_sponsors, established_actor, actor_label_r4, actor_code_r4)
 
 ## Join audit, both directions -------------------------------------------
 
-# orphans = the six pre-Frauenstimmrecht rows still in the coding file;
-# gaps = the six not-yet-voted 2026 proposals, which are the inference
-# set and MUST be coded before any prediction run
 message("urheber orphans (coded but not in master): ",
         paste(anti_join(urh, df, by = "anr")$anr, collapse = " "))
 message("master rows without urheber coding: ",
@@ -457,34 +512,31 @@ df <- df %>%
   left_join(urh, by = "anr", relationship = "one-to-one")
 stopifnot(nrow(df) == n_master)
 
-# pole as factor with fixed levels (tree engines and inspection)
+# Pole as factor with fixed levels (for tree engines and inspection)
 pole_levels <- c("none", "left", "right", "center", "mixed",
                  "environmental", "nonpartisan")
 df <- df %>%
   mutate(pole_refined_r4 = factor(pole_refined_r4, levels = pole_levels))
 
-# pole as indicator block for lm: 'none' is the all-zero baseline;
-# NOTE the structural identity in the rechtsform 1-4 frame:
-#   pole == 'none'  <=>  rechtsform == 1   (verified: 110 = all rf-1 rows)
-# so the six indicators sum to 1 - 1[rechtsform == 1], an exact linear
-# combination with the rechtsform dummies; encoding as separate columns
-# lets the per-fold alias guard drop exactly one indicator instead of
+# Political pole as indicator block for lm: 'none' is the all-zero baseline
+# NOTE: pole == 'none'  <=>  rechtsform == 1 -> Exact linear combination with the rechtsform dummies
+# Encoding as separate columns lets the per-fold alias guard drop exactly one indicator instead of
 # discarding the whole variable
 for (p in setdiff(pole_levels, "none")) {
   df[[paste0("pole_", p)]] <- as.integer(df$pole_refined_r4 == p)
 }
 
-# building regression-safe urheber features with explicit structural-missingness handling
+# Building regression-safe urheber features with explicit structural-missingness handling
 df <- df %>%
   mutate(
-    has_urheber   = as.integer(actor_label != "none"),
+    has_urheber   = as.integer(actor_label_r4 != "none"),
     # filling structurally-undefined rows with 0; the indicator absorbs the level shift
     n_sponsors_f  = if_else(has_urheber == 1, n_sponsors, 0L),
-    is_coalition_f = if_else(has_urheber == 1, is_coalition, 0L),
+    is_coalition_f = if_else(has_urheber == 1, urheber_is_coalition, 0L),
     established_f = if_else(has_urheber == 1, coalesce(established_actor, 0L), 0L)
   )
 
-# XX. Coalition Config from 'support_coalition' -------------------------------
+# 8. Coalition Config from 'support_coalition' -------------------------------
 
 # coalition-configuration features from support_coalition
 # operationalizing Kriesi (2005), Linder/Mueller (2021) and Wagschal
@@ -548,7 +600,7 @@ df <- df %>%
                                   as.integer(support_coalition %in% c("G", "GL", "G+GL")))
   )
 
-# XX. Signature / Mobilization signals ----------------------------------
+# 9. Signature / Mobilization signals ----------------------------------
 
 # Has_signature_phase strictly from rechtsform: 
 # Only initiatives (3) and optional referendums (2) collect signatures for the proposal
@@ -588,7 +640,7 @@ df <- df %>%
     across(all_of(sig_features), ~ if_else(is.na(.x), 0, .x))
   )
 
-# XX. Feature-set registry ---------------------------------------------
+# 10. Feature-set registry ---------------------------------------------
 
 # Model iterations differ by column selection, not by pipeline; 
 # m1_3 extends m1_2 once the external features (roll-call factions, coded urheber) are joined in
@@ -722,6 +774,8 @@ feature_sets <- list(
   # stay one-liners and each source can be switched in or out cleanly
   ext_frak_lm    = c("frak_left_sup", "frak_center_sup", "frak_fdp_sup",
                      "frak_svp_sup", "frak_breadth", "elite_cue_lr"),
+  ext_frak5_lm    = c("frak_sp_sup", "frak_gruene_sup", "frak_center_sup", "frak_fdp_sup",
+                     "frak_svp_sup", "frak_breadth", "elite_cue_lr"),
   ext_coal_lm    = c("coalition_kriesi", "n_gov_defectors",
                      "svp_defects", "sp_defects",
                      "bourgeois_pro", "bourgeois_contra",
@@ -800,7 +854,7 @@ cat("validated faction rows joined:", sum(!is.na(df$frak_left_sup)), "\n")
 cat("urheber-coded rows joined:    ", sum(!is.na(df$pole_refined_r4)), "\n")
 
 
-# XX. Saving dataset for the ML pipeline -------------------------------
+# 11. Saving dataset for the ML pipeline -------------------------------
 
 saveRDS(df, file.path(input_path, "swissvotes_features.rds"))
 
