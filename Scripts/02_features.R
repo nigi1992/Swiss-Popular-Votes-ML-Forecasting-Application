@@ -14,6 +14,8 @@ input_path  <- file.path(base_path, "Input Data")
 
 df <- readRDS(file.path(input_path, "swissvotes_prepared.rds"))
 
+n_master <- nrow(df) # for later joins by key (anr) to check for row loss from other df's
+
 ## Small helpers -----------------------------------------------------
 
 # Turning NA in a factor into an explicit 'miss' level so lm keeps the row
@@ -350,7 +352,203 @@ sum(df$gov_parl_align == "0" & df$volk == "1", na.rm = TRUE)
 
 # Gov-parl alignment is a miserable predictor of outcome, nr-pos is a way better predictor
 
-# 6. Signature / Mobilization signals ----------------------------------
+
+# 6. Faction blocs --------------------------------------------------------
+
+# Faction roll-call voting blocs from about 1994 to present (Nationalrat Schlussabstimmung)
+# Voting blocs in upper chamber as a proxy for party paroles (as these are not available at campaign start)
+# Joining the external feature datasets onto the master feature table by Proposal ID (anr) as key 
+# Data originates from parlament.ch, for more details on how faction blocs were derived from roll call data,
+# see other GitHub Repository with the accompanying Python scripts and documentation:
+# ... 
+
+# Every join is audited in both directions and type-checked
+
+n_master <- nrow(df)
+
+library(tidyverse)
+bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v2.csv"),
+               show_col_types = FALSE)
+str(bw)
+
+# Validating every roll call against the official final-vote totals before anything gets joined
+# The *_support columns are proposal-oriented (SwissVotes also counts nrja/nrnein proposal-oriented)
+
+# Factions according to "Parlamentswörterbuch - Faktenblatt Fraktionen", p.5:
+# S: Sozialdemokratische Fraktion; G: Grüne Fraktion; GL: Grünliberale Fraktion; 
+# ME: Mitte-Fraktion (CVP-EVP-BDP) RL: FDP-Liberale Fraktion; V: Fraktion der Schweizerischen Volkspartei. 
+
+blocs <- c("S", "G", "GL", "ME", "RL", "V")   # left -> right (excl. other)
+
+# Indicative left-right placements on a -10 to +10 scale, according to Hug and Schulz 2007 and NZZ Parlamentarier Rating 2025
+# LR anchors for bloc weighting: S = -6.5, G = -8.0, GL = -1.5, ME = 1.5, RL = 5.5, V = 8.5
+
+
+frak <- bw %>%
+  mutate(
+    anr = as.character(anr),          # key typing: master anr is character
+    other_sup = if_else(roll_call_inverted == 1, other_nein, other_ja),
+    other_opp = if_else(roll_call_inverted == 1, other_ja, other_nein),
+    tot_sup = rowSums(across(all_of(paste0(blocs, "_support"))), na.rm = TRUE) + other_sup,
+    tot_opp = rowSums(across(all_of(paste0(blocs, "_oppose"))),  na.rm = TRUE) + other_opp
+  ) %>%
+  left_join(df %>% select(anr, nrja, nrnein), by = "anr") %>%
+  mutate(frak_pass = tot_sup == nrja & tot_opp == nrnein) %>%
+  filter(frak_pass) %>%
+  distinct(anr, .keep_all = TRUE)
+
+share <- function(sup, opp) if_else((sup + opp) > 0, sup / (sup + opp), NA_real_)
+
+# table support_coaltion
+table(bw$support_coalition)
+
+frak_feats <- frak %>%
+  transmute(
+    anr,
+    frak_left_sup   = share(S_support + G_support,   S_oppose + G_oppose),
+    frak_center_sup = share(ME_support + GL_support, ME_oppose + GL_oppose),
+    frak_fdp_sup    = share(RL_support, RL_oppose),
+    frak_svp_sup    = share(V_support,  V_oppose),
+    frak_breadth    = (frak_left_sup > 0.5) + (frak_center_sup > 0.5) +
+      (frak_fdp_sup  > 0.5) + (frak_svp_sup    > 0.5),
+    frak_lr_signed  = frak_left_sup - frak_svp_sup,   # LC of two shares: tree engines only
+    # the weighted left-right cue score; neutral-filling its handful of
+    # gaps at the scale midpoint 0, below any estimability threshold
+    elite_cue_lr    = if_else(is.na(elite_cue_lr), 0, elite_cue_lr),
+    # coalition composition string, 29 distinct values: factor for tree
+    # engines only, far too many thin levels for lm at this n
+    support_coalition = factor(support_coalition)
+  )
+
+# Source for coaltion theory: Kriesi 2005, p.83, Jaquet, Sciarini & Gava 2022, Wagschal 2023
+
+## Join audit, both directions -------------------------------------------
+
+message("frak orphans (validated roll calls without master row): ",
+        nrow(anti_join(frak_feats, df, by = "anr")))
+message("master rows without faction data (expected: pre-1994 + quarantined): ",
+        nrow(anti_join(df, frak_feats, by = "anr")))
+
+df <- df %>%
+  left_join(frak_feats, by = "anr", relationship = "one-to-one")
+stopifnot(nrow(df) == n_master)
+
+# 7. Sponsors / Urheber --------------------------------------------------
+
+# See Scripts in Urheber_Poles/ for the coding and review process
+
+# coded urheber poles
+urh <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles_refined_r4.csv"),
+                show_col_types = FALSE) %>%
+  mutate(anr = as.character(anr)) %>%   # file reads anr as numeric
+  select(anr, pole_refined_r4, urheber_is_coalition = is_coalition)
+
+## Join audit, both directions -------------------------------------------
+
+# orphans = the six pre-Frauenstimmrecht rows still in the coding file;
+# gaps = the six not-yet-voted 2026 proposals, which are the inference
+# set and MUST be coded before any prediction run
+message("urheber orphans (coded but not in master): ",
+        paste(anti_join(urh, df, by = "anr")$anr, collapse = " "))
+message("master rows without urheber coding: ",
+        paste(anti_join(df, urh, by = "anr")$anr, collapse = " "))
+
+df <- df %>%
+  left_join(urh, by = "anr", relationship = "one-to-one")
+stopifnot(nrow(df) == n_master)
+
+# pole as factor with fixed levels (tree engines and inspection)
+pole_levels <- c("none", "left", "right", "center", "mixed",
+                 "environmental", "nonpartisan")
+df <- df %>%
+  mutate(pole_refined_r4 = factor(pole_refined_r4, levels = pole_levels))
+
+# pole as indicator block for lm: 'none' is the all-zero baseline;
+# NOTE the structural identity in the rechtsform 1-4 frame:
+#   pole == 'none'  <=>  rechtsform == 1   (verified: 110 = all rf-1 rows)
+# so the six indicators sum to 1 - 1[rechtsform == 1], an exact linear
+# combination with the rechtsform dummies; encoding as separate columns
+# lets the per-fold alias guard drop exactly one indicator instead of
+# discarding the whole variable
+for (p in setdiff(pole_levels, "none")) {
+  df[[paste0("pole_", p)]] <- as.integer(df$pole_refined_r4 == p)
+}
+
+# building regression-safe urheber features with explicit structural-missingness handling
+df <- df %>%
+  mutate(
+    has_urheber   = as.integer(actor_label != "none"),
+    # filling structurally-undefined rows with 0; the indicator absorbs the level shift
+    n_sponsors_f  = if_else(has_urheber == 1, n_sponsors, 0L),
+    is_coalition_f = if_else(has_urheber == 1, is_coalition, 0L),
+    established_f = if_else(has_urheber == 1, coalesce(established_actor, 0L), 0L)
+  )
+
+# XX. Coalition Config from 'support_coalition' -------------------------------
+
+# coalition-configuration features from support_coalition
+# operationalizing Kriesi (2005), Linder/Mueller (2021) and Wagschal
+# (2023) through the faction roll-call proxy; bloc membership is parsed
+# from the string so every present and future pattern is covered
+gov_blocs <- c("S", "ME", "RL", "V")
+all_blocs <- c("S", "G", "GL", "ME", "RL", "V")
+
+# exact token parse; str_detect is unusable here (G matches inside GL)
+coal_str  <- as.character(df$support_coalition)
+coal_toks <- strsplit(coal_str, "\\+")
+for (b in all_blocs) {
+  df[[paste0("coal_has_", b)]] <- ifelse(is.na(coal_str), NA_integer_,
+                                         map_int(coal_toks, ~ as.integer(b %in% .x)))
+}
+
+df <- df %>%
+  mutate(
+    # Kriesi-style typology from my enumeration, plus explicit residual;
+    # 40 of the 56 residual rows are SVP-defection coalitions
+    # (S+G+ME+RL etc.), the Linder/Mueller modern-era pattern
+    coalition_kriesi = factor(case_when(
+      is.na(support_coalition) ~ NA_character_,
+      support_coalition %in% c("S+G", "S+G+GL")                  ~ "left_wing",
+      support_coalition %in% c("V", "RL+V", "ME+V")              ~ "right_wing",
+      support_coalition %in% c("S+G+ME", "S+G+GL+ME")            ~ "center_left",
+      support_coalition %in% c("ME+RL+V", "GL+ME+RL+V")          ~ "center_right",
+      support_coalition %in% c("S+ME+RL+V", "S+G+ME+RL+V",
+                               "S+GL+ME+RL+V", "S+G+GL+ME+RL+V") ~ "grand",
+      support_coalition == "none"                                ~ "none",
+      TRUE                                                       ~ "other"
+    ), levels = c("grand", "center_right", "center_left", "left_wing",
+                  "right_wing", "none", "other")),
+    
+    # Linder/Mueller as a derived count instead of string lists: how many
+    # of the four government parties are NOT in the support coalition;
+    # monotone in the data (win rates .91 / .70 / .45 / .09 / .06)
+    n_gov_defectors = 4L - (coal_has_S + coal_has_ME + coal_has_RL + coal_has_V),
+    
+    # who defects (Linder et al. 2008: the defector's identity matters)
+    svp_defects = as.integer(coal_has_V == 0 &
+                               (coal_has_S + coal_has_ME + coal_has_RL) >= 2),
+    sp_defects  = as.integer(coal_has_S == 0 &
+                               (coal_has_ME + coal_has_RL + coal_has_V) >= 2),
+    
+    # Wagschal camp cohesion, direction-aware: the symmetric version
+    # conflates united support with united opposition and flips the
+    # sign; split by side it replicates his finding in this frame
+    bourgeois_pro    = as.integer(coal_has_ME == 1 & coal_has_RL == 1 & coal_has_V == 1),
+    bourgeois_contra = as.integer(coal_has_ME == 0 & coal_has_RL == 0 & coal_has_V == 0),
+    left_pro         = as.integer(coal_has_S == 1 & coal_has_G == 1),
+    left_contra      = as.integer(coal_has_S == 0 & coal_has_G == 0),
+    
+    # my thematic buckets: 3-4 rows each, below any estimability
+    # threshold; carried for tree engines and documentation only
+    coal_social_conserv = if_else(is.na(coal_str), NA_integer_,
+                                  as.integer(support_coalition == "ME+V")),
+    coal_social_lib     = if_else(is.na(coal_str), NA_integer_,
+                                  as.integer(support_coalition %in% c("S+G+GL+RL", "S+G+RL"))),
+    coal_environ        = if_else(is.na(coal_str), NA_integer_,
+                                  as.integer(support_coalition %in% c("G", "GL", "G+GL")))
+  )
+
+# XX. Signature / Mobilization signals ----------------------------------
 
 # Has_signature_phase strictly from rechtsform: 
 # Only initiatives (3) and optional referendums (2) collect signatures for the proposal
@@ -390,7 +588,7 @@ df <- df %>%
     across(all_of(sig_features), ~ if_else(is.na(.x), 0, .x))
   )
 
-# 7. Feature-set registry ---------------------------------------------
+# XX. Feature-set registry ---------------------------------------------
 
 # Model iterations differ by column selection, not by pipeline; 
 # m1_3 extends m1_2 once the external features (roll-call factions, coded urheber) are joined in
@@ -520,6 +718,17 @@ feature_sets <- list(
           "era", "season", "months_to_election"
   ),
 
+  # external blocks, joined above; kept as named blocks so model sets
+  # stay one-liners and each source can be switched in or out cleanly
+  ext_frak_lm    = c("frak_left_sup", "frak_center_sup", "frak_fdp_sup",
+                     "frak_svp_sup", "frak_breadth", "elite_cue_lr"),
+  ext_coal_lm    = c("coalition_kriesi", "n_gov_defectors",
+                     "svp_defects", "sp_defects",
+                     "bourgeois_pro", "bourgeois_contra",
+                     "left_pro", "left_contra"),
+  ext_urheber_lm = c(paste0("pole_", setdiff(pole_levels, "none")),
+                     "urheber_is_coalition"),
+  
   m1_3 = character(0),   # placeholder: m1_2 + external features, later
   # computed but reserved for tree-based engines: redundant or
   # rank-deficient under lm dummy coding, informative for splits
@@ -531,10 +740,67 @@ feature_sets <- list(
                   "pa_iv", "entwurf_nr", "dauer_bv", "dauer_abst",
                   "sparedays", 
                   "legislature", "nr_wahl", "months_since_election",
+                  # coalition theory + sponsor theory features
+                  "frak_lr_signed", "support_coalition", "pole_refined_r4",
+                  paste0("coal_has_", all_blocs),
+                  "coal_social_conserv", "coal_social_lib", "coal_environ",
                   sprintf("policy_%02d", 1:12))
 )
 
-# 8. Saving dataset for the ML pipeline -------------------------------
+
+# composing the model iterations from the blocks above; the frak/coal
+# sets only exist on the post-1994 frame and are evaluated there
+feature_sets$m1_3    <- c(feature_sets$m1_2, feature_sets$ext_urheber_lm)
+feature_sets$m2_frak <- c(feature_sets$m1_2, feature_sets$ext_frak_lm)
+feature_sets$m2_coal <- c(feature_sets$m2_frak, feature_sets$ext_coal_lm)
+
+# guarding the registry instead of repairing it silently: with a single
+# literal a duplicate name is a typo, and every referenced column must
+# exist in the feature table or a later model script fails mid-fold
+stopifnot(!any(duplicated(names(feature_sets))))
+stopifnot(all(unlist(feature_sets) %in% names(df)))
+
+## Registry Update (delete) ---------------------------------------------
+
+# deduplicating registry names (m1_1 exists twice; `$` reaches only the
+# first, the second is shadowed and diverges silently once edited)
+if (any(duplicated(names(feature_sets)))) {
+  message("deduplicating registry names: ",
+          paste(names(feature_sets)[duplicated(names(feature_sets))], collapse = ", "))
+  feature_sets <- feature_sets[!duplicated(names(feature_sets))]
+}
+
+feature_sets$ext_frak_lm <- c("frak_left_sup", "frak_center_sup",
+                              "frak_fdp_sup", "frak_svp_sup",
+                              "frak_breadth", "elite_cue_lr")
+feature_sets$ext_urheber_lm <- c(paste0("pole_", setdiff(pole_levels, "none")),
+                                 "urheber_is_coalition")
+feature_sets$tree_extras <- union(feature_sets$tree_extras,
+                                  c("frak_lr_signed", "support_coalition",
+                                    "pole_refined_r4"))
+
+## ---- registry additions ----------------------------------------------
+feature_sets$ext_coal_lm <- c("coalition_kriesi", "n_gov_defectors",
+                              "svp_defects", "sp_defects",
+                              "bourgeois_pro", "bourgeois_contra",
+                              "left_pro", "left_contra")
+feature_sets$tree_extras <- union(feature_sets$tree_extras,
+                                  c(paste0("coal_has_", all_blocs),
+                                    "coal_social_conserv", "coal_social_lib",
+                                    "coal_environ"))
+
+# composing model sets stays a one-liner, e.g.:
+# feature_sets$m1_3 <- c(feature_sets$m1_2, feature_sets$ext_urheber_lm)
+# feature_sets$m2_frak <- c(feature_sets$m1_2, feature_sets$ext_frak_lm)
+
+saveRDS(df,           file.path(input_path, "swissvotes_features_ext.rds"))
+saveRDS(feature_sets, file.path(input_path, "feature_sets.rds"))
+
+cat("validated faction rows joined:", sum(!is.na(df$frak_left_sup)), "\n")
+cat("urheber-coded rows joined:    ", sum(!is.na(df$pole_refined_r4)), "\n")
+
+
+# XX. Saving dataset for the ML pipeline -------------------------------
 
 saveRDS(df, file.path(input_path, "swissvotes_features.rds"))
 

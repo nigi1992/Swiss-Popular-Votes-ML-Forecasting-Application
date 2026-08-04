@@ -1,0 +1,486 @@
+﻿anr,datum,titel_kurz_d,rechtsform,urheber,n_sponsors,is_coalition,actor_code,actor_label,established_actor,pole,pole_conf,confidence,needs_review
+219.0,01/02/1970,Bundesbeschluss über die inländische Zuckerwirtschaft,2,Landesring der Unabhängigen,1,0,1,party,1,center,0.85,0.85,0
+220.0,07/06/1970,Initiative «Gegen die Überfremdung»,3,Nationale Aktion,1,0,1,party,1,right,0.85,0.55,1
+221.0,27/09/1970,Verfassungsartikel zur Förderung von Turnen und Sport,1,.,0,0,0,none,,none,1.0,1.0,0
+222.0,27/09/1970,Initiative «Recht auf Wohnung und Ausbau des Familienschutzes»,3,"Aktionskomitee Lausanne, mouvement populaire des familles",2,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+223.0,15/11/1970,Änderung der Finanzordnung,1,.,0,0,0,none,,none,1.0,1.0,0
+224.0,07/02/1971,Einführung des Frauenstimmrechts,1,.,0,0,0,none,,none,1.0,1.0,0
+225.0,06/06/1971,Umweltschutzartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+226.0,06/06/1971,Weiterführung der Finanzordnung,1,.,0,0,0,none,,none,1.0,1.0,0
+227.1,05/03/1972,Initiative «zur Förderung des Wohnungsbaues»,3,Denner AG,1,0,5,firm_individual,0,nonpartisan,0.5,0.85,1
+227.2,05/03/1972,Gegenentwurf zur Wohnungsbau-Initiative,4,Denner AG,1,0,5,firm_individual,0,nonpartisan,0.5,0.85,1
+228.0,05/03/1972,Verfassungsartikel über den Mieterschutz und die Allgemeinverbindlicherklärung von Mietverträgen,1,.,0,0,0,none,,none,1.0,1.0,0
+229.0,04/06/1972,Massnahmen zur Stabilisierung des Baumarktes,1,.,0,0,0,none,,none,1.0,1.0,0
+230.0,04/06/1972,Bundesbeschluss über den Schutz der Währung,1,.,0,0,0,none,,none,1.0,1.0,0
+231.0,24/09/1972,Initiative für ein Waffenausfuhrverbot,3,"Initiativkomitee für vermehrte Rüstungskontrolle und ein Waffenausfuhrverbot (SP- und kirchennahe Persönlichkeiten, Pazifisten) ",4,1,3,adhoc_committee,0,left,0.85,0.85,0
+232.1,03/12/1972,Initiative zur Einführung einer Volkspension,3,Partei der Arbeit,1,0,1,party,1,left,0.85,0.85,0
+232.2,03/12/1972,Gegenentwurf zur Initiative zur Einführung einer Volkspension,4,Partei der Arbeit,1,0,1,party,1,left,0.85,0.85,0
+233.0,03/12/1972,Abkommen mit der EWG,1,.,0,0,0,none,,none,1.0,1.0,0
+234.0,04/03/1973,Bildungsartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+235.0,04/03/1973,Verfassungsartikel zur wissenschaftlichen Forschung,1,.,0,0,0,none,,none,1.0,1.0,0
+236.0,20/05/1973,Aufhebung des Jesuiten- und des Klosterartikels,1,.,0,0,0,none,,none,1.0,1.0,0
+237.0,02/12/1973,Massnahmen zur Preisüberwachung,1,.,0,0,0,none,,none,1.0,1.0,0
+238.0,02/12/1973,Massnahmen auf dem Gebiet des Kreditwesens,1,.,0,0,0,none,,none,1.0,1.0,0
+239.0,02/12/1973,Massnahmen zur Stabilisierung des Baumarktes,1,.,0,0,0,none,,none,1.0,1.0,0
+240.0,02/12/1973,Einschränkung der steuerwirksamen Abschreibungen,1,.,0,0,0,none,,none,1.0,1.0,0
+241.0,02/12/1973,Tierschutzartikel ,1,.,0,0,0,none,,none,1.0,1.0,0
+242.0,20/10/1974,Initiative «Gegen die Überfremdung»,3,Nationale Aktion,1,0,1,party,1,right,0.85,0.55,1
+243.0,08/12/1974,Verbesserung des Bundeshaushalts,1,.,0,0,0,none,,none,1.0,1.0,0
+244.0,08/12/1974,Erschwerung von Ausgabenbeschlüssen,1,.,0,0,0,none,,none,1.0,1.0,0
+245.1,08/12/1974,Initiative «für eine soziale Krankenversicherung»,3,Sozialdemokratische Partei,1,0,1,party,1,left,0.85,0.85,0
+245.2,08/12/1974,Bundesbeschluss über die soziale Krankenversicherung (Gegenentwurf),4,Sozialdemokratische Partei,1,0,1,party,1,left,0.85,0.85,0
+246.0,02/03/1975,Konjunkturartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+247.0,08/06/1975,Bundesbeschluss über den Schutz der Währung,1,.,0,0,0,none,,none,1.0,1.0,0
+248.0,08/06/1975,Bundesbeschluss über die Finanzierung der Nationalstrassen,2,"Landesring der Unabhängigen, Automobilisten um den Herausgeber der Zeitschrift ""Motor-Report"", R. Böhi",3,1,6,coalition_mixed,1,center,0.85,0.6,0
+249.0,08/06/1975,Änderung des Generalzolltarifs,2,"Landesring der Unabhängigen, Mouvement Populaire des Familles, Mietervereine",3,1,1,party,1,center,0.85,0.85,0
+250.0,08/06/1975,Bundesbeschluss zur Erhöhung der Steuereinnahmen,1,.,0,0,0,none,,none,1.0,1.0,0
+251.0,08/06/1975,Erschwerung von Ausgabenbeschlüssen,1,.,0,0,0,none,,none,1.0,1.0,0
+252.0,07/12/1975,Reform der Niederlassungsfreiheit und Unterstützungsregelung,1,.,0,0,0,none,,none,1.0,1.0,0
+253.0,07/12/1975,Verfassungsbestimmungen zur Wasserwirtschaft,1,.,0,0,0,none,,none,1.0,1.0,0
+254.0,07/12/1975,Gesetz über die Ein- und Ausfuhr von Landwirtschaftserzeugnissen,2,"Denner AG, unterstützt von Konsumentenorganisationen",2,1,6,coalition_mixed,1,nonpartisan,0.5,0.6,1
+255.1,21/03/1976,Initiative «für die Mitbestimmung der Arbeitnehmer»,3,Schweizerischer Gewerkschaftsbund,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+255.2,21/03/1976,Gegenentwurf zur Mitbestimmungsinitiative,4,Schweizerischer Gewerkschaftsbund,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+256.0,21/03/1976,Initiative «für eine Reform des Steuerwesens»,3,Landesring der Unabhängigen,1,0,1,party,1,center,0.85,0.85,0
+257.0,13/06/1976,Raumplanungsgesetz,2,Ligue vaudoise,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+258.0,13/06/1976,Darlehen an die Internationale Entwicklungsorganisation,2,.,0,0,0,none,,none,1.0,1.0,0
+259.0,13/06/1976,Neukonzeption der Arbeitslosenversicherung,1,.,0,0,0,none,,none,1.0,1.0,0
+260.0,26/09/1976,Radio- und Fernsehartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+261.0,26/09/1976,Initiative für eine Haftpflichtversicherung für Motorfahrzeuge und Fahrräder,3,Schweizerischer Verband des Personals öffentlicher Dienste,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+262.0,05/12/1976,Bundesbeschluss über die Geld- und Kreditpolitik,1,.,0,0,0,none,,none,1.0,1.0,0
+263.0,05/12/1976,Bundesbeschluss über die Preisüberwachung,1,.,0,0,0,none,,none,1.0,1.0,0
+264.0,05/12/1976,Initiative «für die Einführung der 40-Stunden-Woche»,3,"Partito socialista autonomo, Revolutionäre marxistische Liga, Progressive Organisationen Schweiz (POCH)",3,1,1,party,1,left,0.85,0.85,0
+265.0,13/03/1977,Vierte «Überfremdungsinitiative»,3,Schweizerische Republikanische Bewegung,1,0,4,movement,0,right,0.85,0.85,0
+266.0,13/03/1977,Initiative «für eine Beschränkung der Einbürgerungen»,3,Nationale Aktion,1,0,1,party,1,right,0.85,0.55,1
+267.1,13/03/1977,Initiative zur Neuordnung des Staatsvertragsreferendums,3,Nationale Aktion,1,0,1,party,1,right,0.85,0.55,1
+267.2,13/03/1977,Neuordnung des Staatsvertragsreferendums (Gegenentwurf),4,Nationale Aktion gegen die Überfremdung,1,0,1,party,1,right,0.85,0.55,1
+268.0,12/06/1977,Neuordnung der Umsatzsteuer und der direkten Bundessteuer,1,.,0,0,0,none,,none,1.0,1.0,0
+269.0,12/06/1977,Bundesbeschluss über die Steuerharmonisierung,1,.,0,0,0,none,,none,1.0,1.0,0
+270.1,25/09/1977,Mieterschutzinitiative,3,"Aktionskomitee für einen wirksamen Mieterschutz (mouvement populaire des familles, Schweizerischer Mieterverband und Fédération locataire romande)",3,1,6,coalition_mixed,1,nonpartisan,0.5,0.6,1
+270.2,25/09/1977,Gegenentwurf zur Mieterschutzinitiative,4,Aktionskomitee für einen wirksamen Mieterschutz,1,0,4,movement,0,nonpartisan,0.5,0.55,1
+271.0,25/09/1977,Initiative «gegen die Luftverschmutzung durch Motorfahrzeuge»,3,Arbeitsgruppe saubere Schweiz (Ad-hoc-Komitee aus St. Gallen),1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+272.0,25/09/1977,Erhöhung der Unterschriftenzahl für das Referendum,1,.,0,0,0,none,,none,1.0,1.0,0
+273.0,25/09/1977,Erhöhung der Unterschriftenzahl für die Verfassungsinitiative,1,.,0,0,0,none,,none,1.0,1.0,0
+274.0,25/09/1977,Initiative «für die Fristenlösung»,3,Schweizerische Vereinigung für straflosen Schwangerschaftsabbruch,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+275.0,04/12/1977,«Reichtumssteuer-Initiative»,3,Sozialdemokratische Partei,1,0,1,party,1,left,0.85,0.85,0
+276.0,04/12/1977,Bundesgesetz über die politischen Rechte,2,Verschiedene linke Gruppierungen,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+277.0,04/12/1977,Einführung eines zivilen Ersatzdienstes,1,.,0,0,0,none,,none,1.0,1.0,0
+278.0,04/12/1977,Massnahmen zum Ausgleich des Bundeshaushaltes,2,"Progressive Organisationen Schweiz (POCH), Partito socialista autonomo, Partei der Arbeit",3,1,1,party,1,left,0.85,0.85,0
+279.0,26/02/1978,Initiative für mehr Mitbestimmung im Nationalstrassenbau,3,"Komitee ""Demokratie im Nationalstrassenbau"" (Franz Weber)",1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+280.0,26/02/1978,9. AHV-Revision,2,"Gewerbliche, konservative Kreise",2,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+281.0,26/02/1978,Initiative zur Herabsetzung des AHV-Alters,3,"Progressive Organisationen der Schweiz (POCH), Partito socialista autonomo",2,1,1,party,1,left,0.85,0.85,0
+282.0,26/02/1978,Konjunkturartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+283.0,28/05/1978,Zeitgesetz (Sommerzeit),2,"Junge Zürcher Bauern, unterstützt vom Schweizerischen Bauernverband",2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+284.0,28/05/1978,Zolltarifgesetz (Brotpreis),2,Sozialdemokratische Partei,1,0,1,party,1,left,0.85,0.85,0
+285.0,28/05/1978,Gesetz über den Schwangerschaftsabbruch,2,"Dissidente der Organisation ""Ja zum Leben"" sowie Teile der Schweizerischen Vereinigung für straflosen Schwangerschaftsabbruch",2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+286.0,28/05/1978,Gesetz über die Hochschulförderung,2,"Konservative Kreise, gewerbliche Kreise",2,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+287.0,28/05/1978,Initiative für 12 autofreie Sonntage pro Jahr,3,Gruppe von Burgdorfer Technikumstudenten,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+288.0,24/09/1978,Bundesbeschluss über die Gründung des Kantons Jura,1,.,0,0,0,none,,none,1.0,1.0,0
+289.0,03/12/1978,Milchwirtschaftsbeschluss,2,Union des Producteurs Suisses und weitere dissidente Bauernorganisationen,2,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+290.0,03/12/1978,Tierschutzgesetz ,2,Genfer Liga zur Bekämpfung der Vivisektion,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+291.0,03/12/1978,Sicherheitspolizeigesetz,2,"Linke Gruppierungen, Sozialdemokratische Partei, überparteiliches westschweizerisches Komitee",3,1,6,coalition_mixed,1,left,0.85,0.6,0
+292.0,03/12/1978,Berufsbildungsgesetz,2,Schweizerischer Gewerkschaftsbund,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+293.0,18/02/1979,Stimm- und Wahlrecht für 18-Jährige,1,.,0,0,0,none,,none,1.0,1.0,0
+294.0,18/02/1979,Bundesbeschluss über die Fuss- und Wanderwege,4,Volksinitiative: Arbeitsgruppe zur Förderung der Schweizerischen Fuss- und Wanderwege,2,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+295.0,18/02/1979,Initiative «gegen Suchtmittelreklame»,3,Schweizer Guttempler-Jugend,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+296.0,18/02/1979,Atominitiative,3,"Initiativkomitee zur Wahrung der Volksrechte und der Sicherheit beim Bau und Betrieb von Atomanlagen (Nordwestschweizer Aktions-Komtee gegen Atomkraftwerke, Gewaltfreie Aktion Kaiseraugst)",4,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+297.0,20/05/1979,Neuordnung der Umsatzsteuer und der direkten Bundessteuer,1,.,0,0,0,none,,none,1.0,1.0,0
+298.0,20/05/1979,Atomgesetz,2,Radikalerer Flügel der Atomenergieopponenten,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+299.0,02/03/1980,Initiative zur «vollständigen Trennung von Kirche und Staat»,3,Schweizerisches Aktionskomitee für die Trennung von Staat und Kirche,2,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+300.0,02/03/1980,Neuordnung der Landesversorgung,1,.,0,0,0,none,,none,1.0,1.0,0
+301.0,30/11/1980,Gurten- und Schutzhelmobligatorium,2,"Komitee ""Vereinigung gegen technische Missbräuche"" (Westschweizer Automobilisten)",1,0,2,interest_group,1,nonpartisan,0.5,0.55,1
+302.0,30/11/1980,Aufhebung des Kantonsanteils an den Stempelabgaben,1,.,0,0,0,none,,none,1.0,1.0,0
+303.0,30/11/1980,Abbau des Kantonsanteils an den Alkoholeinnahmen ,1,.,0,0,0,none,,none,1.0,1.0,0
+304.0,30/11/1980,Revision der Brotgetreideordnung,1,.,0,0,0,none,,none,1.0,1.0,0
+305.0,05/04/1981,Initiative «für eine neue Ausländerpolitik»,3,"Arbeitsgemeinschaft für eine neue Ausländerpolitik (33 Organisationen, Initiative ausgearbeitet von der Katholischen Arbeitnehmerbewegung)",2,1,4,movement,0,nonpartisan,0.5,0.85,1
+306.0,14/06/1981,Artikel zur Gleichstellung von Mann und Frau,4,Schweizerischer Kongress für die Interessen der Frau,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+307.0,14/06/1981,Konsumentenschutz-Artikel,4,"Volksinitiative: ""Die Tat"" (sozialliberale Tageszeitung)",1,0,5,firm_individual,0,nonpartisan,0.5,0.85,1
+308.0,29/11/1981,Weiterführung der Finanzordnung,1,.,0,0,0,none,,none,1.0,1.0,0
+309.0,06/06/1982,Revision des Strafgesetzes (Gewaltverbrechen),2,"Linkskomitee, SP-und gewerkschaftsnahes Komitee, bürgerliches Komitee (Junge SVP und Jungliberale)",4,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+310.0,06/06/1982,Ausländergesetz,2,Nationale Aktion,1,0,1,party,1,right,0.85,0.55,1
+311.1,28/11/1982,Preisüberwachungs-Initiative,3,Konsumentinnenforum der deutschen Schweiz und des Kantons Tessin,2,1,4,movement,0,nonpartisan,0.5,0.85,1
+311.2,28/11/1982,Gegenentwurf zur Preisüberwachungs-Initiative,4,Konsumentinnenforum der deutschen Schweiz und des Kantons Tessin,2,1,4,movement,0,nonpartisan,0.5,0.85,1
+312.0,27/02/1983,Neuregelung der Treibstoffzölle,1,.,0,0,0,none,,none,1.0,1.0,0
+313.0,27/02/1983,Energieartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+314.0,04/12/1983,Reform der Bürgerrechtsregelung in der Bundesverfassung,1,.,0,0,0,none,,none,1.0,1.0,0
+315.0,04/12/1983,Bundesbeschluss über die Erleichterung gewisser Einbürgerungen,1,.,0,0,0,none,,none,1.0,1.0,0
+316.0,26/02/1984,Einführung einer Schwerverkehrsabgabe,1,.,0,0,0,none,,none,1.0,1.0,0
+317.0,26/02/1984,Einführung der Autobahnvignette,1,.,0,0,0,none,,none,1.0,1.0,0
+318.0,26/02/1984,Zivildienst-Initiative,3,Ad-hoc-Komitee für einen echten Zivildienst,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+319.0,20/05/1984,Initiative «gegen den Missbrauch des Bankgeheimnisses und der Bankenmacht»,3,Sozialdemokratische Partei,1,0,1,party,1,left,0.85,0.85,0
+320.0,20/05/1984,Initiative «Gegen den Ausverkauf der Heimat»,3,Nationale Aktion,1,0,1,party,1,right,0.85,0.55,1
+321.0,23/09/1984,Initiative «für eine Zukunft ohne weitere Atomkraftwerke»,3,Schweizerische Energie-Stiftung und weitere Umweltorganisationen,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+322.0,23/09/1984,Initiative «für eine umweltgerechte Energieversorgung»,3,Schweizerische Energie-Stiftung und weitere Umweltorganisationen,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+323.0,02/12/1984,Initiative «für einen wirksamen Schutz der Mutterschaft»,3,"Initiativkomitee für einen wirksamen Schutz der Mutterschaft (10 Organisationen: Frauenorganisationen, Gewerkschaften, linke Parteien)",3,1,6,coalition_mixed,1,nonpartisan,0.5,0.6,1
+324.0,02/12/1984,Radio- und Fernsehartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+325.0,02/12/1984,Bundesbeschluss über die Entschädigung der Opfer von Gewaltverbrechen,4,"Volksinitiative: Journalisten der Zeitschrift ""Beobachter""",1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+326.0,10/03/1985,Aufhebung der Bundesbeiträge für den Primarschulunterricht,1,.,0,0,0,none,,none,1.0,1.0,0
+327.0,10/03/1985,Aufhebung der Beitragspflicht des Bundes im Gesundheitswesen,1,.,0,0,0,none,,none,1.0,1.0,0
+328.0,10/03/1985,Bundesbeschluss über die Ausbildungsbeiträge,1,.,0,0,0,none,,none,1.0,1.0,0
+329.0,10/03/1985,Ferien-Initiative,3,"Schweizerischer Gewerkschaftsbund, Sozialdemokratische Partei",2,1,6,coalition_mixed,1,left,0.85,0.6,0
+330.0,09/06/1985,Initiative «Recht auf Leben»,3,Initiativkomitee Recht auf Leben,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+331.0,09/06/1985,Aufhebung des Kantonsanteils an den Stempelabgaben,1,.,0,0,0,none,,none,1.0,1.0,0
+332.0,09/06/1985,Neuverteilung der Erträge aus der Alkoholabgabe,1,.,0,0,0,none,,none,1.0,1.0,0
+333.0,09/06/1985,Aufhebung der Unterstützung für die Selbstversorgung mit Brotgetreide,1,.,0,0,0,none,,none,1.0,1.0,0
+334.0,22/09/1985,Bundesbeschluss zur Koordination des Schuljahresbeginns,4,Volksinitiative: 11 Deutschschweizer FDP-Kantonalparteien,1,0,1,party,1,center,0.85,0.85,0
+335.0,22/09/1985,Bundesbeschluss über die Innovationsrisikogarantie,2,"Schweizerischer Gewerbeverband, unterstützt vom Schweizerischen Handels- und Industrieverein",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+336.0,22/09/1985,Neues Ehe- und Erbrecht,2,"Komitee unter Führung von Christoph Blocher,  unterstützt von Schweizerischem Gewerbeverband und der Eidgenössisch-demokratischen Union",3,1,6,coalition_mixed,1,nonpartisan,0.5,0.6,1
+337.0,01/12/1985,Initiative «für die Abschaffung der Vivisektion»,3,Helvetia Nostra (Franz Weber),1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+338.0,16/03/1986,UNO-Beitritt,1,.,0,0,0,none,,none,1.0,1.0,0
+339.1,28/09/1986,Kulturinitiative,3,Komitee von 14 kulturellen Organisationen,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+339.2,28/09/1986,Gegenentwurf zur Kulturinitiative,4,.,0,0,0,none,,none,1.0,1.0,0
+340.0,28/09/1986,Initiative zur Berufsbildung und Umschulung,3,Aktionskomitee für eine gesicherte Berufsbildung und Umschulung (Sozialistische Arbeiterpartei),2,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+341.0,28/09/1986,Bundesbeschluss über die Zuckerwirtschaft,2,Migros-Genossenschafts-Bund,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+342.0,07/12/1986,Bundesbeschluss zum Mieterschutz,4,Schweizerische Mietervereinigung,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+343.0,07/12/1986,Initiative für eine Schwerverkehrsabgabe,3,Verkehrs-Club der Schweiz,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+344.0,05/04/1987,Asylgesetz,2,"Linke Partien, gewerkschaftliche und religiöse Organisationen sowie Drittweltorganisationen",4,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+345.0,05/04/1987,Ausländergesetz,2,"Linke Partien, gewerkschaftliche und religiöse Organisationen sowie Drittweltorganisationen",4,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+346.0,05/04/1987,Initiative für die Einführung eines Rüstungsreferendums,3,Sozialdemokratische Partei,1,0,1,party,1,left,0.85,0.85,0
+347.0,05/04/1987,Abstimmungsverfahren bei Volksinitiativen mit Gegenentwurf,1,.,0,0,0,none,,none,1.0,1.0,0
+348.0,06/12/1987,Bahn 2000,2,.,0,0,0,none,,none,1.0,1.0,0
+349.0,06/12/1987,Krankenversicherungsgesetz,2,"Westschweizer Ärzte, gewerbliche Kreise ",2,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+350.0,06/12/1987,Initiative «zum Schutz der Moore - Rothenthurm-Initiative»,3,World Wildlife Fund Schweiz und Rothenthurmer Bauern,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+351.0,12/06/1988,Verfassungsgrundlagen für eine koordinierte Verkehrspolitik,1,.,0,0,0,none,,none,1.0,1.0,0
+352.0,12/06/1988,Initiative zur Herabsetzung des AHV-Rentenalters,3,Progressive Organisationen der Schweiz (POCH),1,0,1,party,1,left,0.85,0.85,0
+353.0,04/12/1988,«Stadt-Land-Initiative gegen die Bodenspekulation»,3,"Fédération Suisse des locataires, Union des Producteurs Suisses, Umweltorganisationen und Linksparteien",4,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+354.0,04/12/1988,Initiative «zur Herabsetzung der Arbeitszeit»,3,Schweizerischer Gewerkschaftsbund,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+355.0,04/12/1988,Initiative «für die Begrenzung der Einwanderung»,3,Nationale Aktion,1,0,1,party,1,right,0.85,0.55,1
+356.0,04/06/1989,Kleinbauern-Initiative,3,Schweizerische Vereinigung zum Schutz der kleinen und mittleren Bauern,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+357.0,26/11/1989,Initiative für eine Schweiz ohne Armee,3,Gruppe für eine Schweiz ohne Armee,1,0,4,movement,0,nonpartisan,0.5,0.85,1
+358.0,26/11/1989,Initiative «pro Tempo 130/100»,3,Ad-hoc-Komitee 'pro Tempo 130/100'  (Automobiljournalist Bernhard Böhi),1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+359.0,01/04/1990,Initiative «für eine Begrenzung des Strassenbaus»,3,"Ad-hoc-Komitee (Progressive Organisationen Schweiz POCH, Umweltorganisationen)",2,1,6,coalition_mixed,1,left,0.85,0.6,0
+360.0,01/04/1990,Initiative «für eine autobahnfreie Landschaft zwischen Murten und Yverdon»,3,Verkehrs-Club der Schweiz,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+361.0,01/04/1990,Initiative «für ein autobahnfreies Knonauer Amt»,3,Verkehrs-Club der Schweiz,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+362.0,01/04/1990,Initiative für eine freie Aarelandschaft zwischen Biel und Solothurn,3,Verkehrs-Club der Schweiz,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+363.0,01/04/1990,Rebbaubeschluss,2,"5 Parlamentarier, unterstützt von Denner AG, COOP, Konsumentenschutzorganisationen und Hoteliers",5,1,6,coalition_mixed,1,nonpartisan,0.5,0.6,1
+364.0,01/04/1990,Gesetz über die Organisation der Bundesrechtspflege,2,Demokratische Juristinnen und Juristen der Schweiz,2,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+365.0,23/09/1990,Initiative für einen Ausstieg aus der Atomenergie,3,"Sozialdemokratische Partei, unterstützt von 36 Organisationen",2,1,1,party,1,left,0.85,0.85,0
+366.0,23/09/1990,Initiative «Stopp dem Atomkraftwerkbau (Moratorium)»,3,"Nordwestschweizer Aktionskomitee gegen Atomkraftwerke (NWA), unterstützt von 200 Organisationen",2,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+367.0,23/09/1990,Energieartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+368.0,23/09/1990,Strassenverkehrsgesetz,2,"Verkehrsclub der Schweiz, Umweltorganisationen und Teile der Grünen, IG Velo ",4,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+369.0,03/03/1991,Herabsetzung des Stimmrechtsalters auf 18 Jahre,1,.,0,0,0,none,,none,1.0,1.0,0
+370.0,03/03/1991,Initiative «zur Förderung des öffentlichen Verkehrs»,3,Landesring der Unabhängigen,1,0,1,party,1,center,0.85,0.85,0
+371.0,02/06/1991,Neuordnung der Bundesfinanzen (Einführung Mehrwertsteuer),1,.,0,0,0,none,,none,1.0,1.0,0
+372.0,02/06/1991,Militärstrafgesetz,2,"Gruppe für eine Schweiz ohne Armee, z.T. Sozialdemokratische Partei und Grünes Bündnis, Ligue vaudoise",4,1,6,coalition_mixed,1,left,0.85,0.6,0
+373.0,16/02/1992,«Krankenkassen-Initiative»,3,Konkordat der Schweizerischen Krankenkassen,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+374.0,16/02/1992,Initiative «Weg vom Tierversuch!»,3,Schweizer Tierschutz,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+375.0,17/05/1992,Beitritt zu den Institutionen von Bretton Woods,2,"Rechts-isolationistisches Komitee, Links-Komitee (Drittweltbewegung)",2,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+376.0,17/05/1992,Gesetz über die Mitwirkung an den Institutionen von Bretton Woods,2,"Rechts-isolationistisches Komitee, Links-Komitee (Drittweltbewegung)",2,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+377.0,17/05/1992,Gewässerschutzgesetz,2,Kleinkraftwerksbesitzer,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+378.0,17/05/1992,Gewässerschutz-Initiative,3,"Zeitschrift ""Der Schweizerische Beobachter""",1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+379.0,17/05/1992,Regelung der Fortpflanzungs- und Gentechnologie,4,"Zeitschrift ""Der Schweizerische Beobachter""",1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+380.0,17/05/1992,Einführung eines Zivildiensts,1,.,0,0,0,none,,none,1.0,1.0,0
+381.0,17/05/1992,Reform des Sexualstrafrechts,2,"Eidgenössich-demokratische Union und Schweizer Demokraten, Auto-Partei",3,1,1,party,1,right,0.85,0.85,0
+382.0,27/09/1992,Alpentransit-Beschluss (NEAT),2,"Urnerisches Komitee, Umweltorganisationen, Automobilisten ",3,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+383.0,27/09/1992,Geschäftsverkehrsgesetz,2,"St. Galler Studenten, unterstützt vom Schweizerischen Gewerbeverband und bürgerlichen Parlamentariern",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+384.0,27/09/1992,Entschädigungsgesetz,2,"St. Galler Studenten, unterstützt vom Schweizerischen Gewerbeverband und bürgerlichen Parlamentariern",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+385.0,27/09/1992,Infrastrukturgesetz,2,"St. Galler Studenten, unterstützt vom Schweizerischen Gewerbeverband und bürgerlichen Parlamentariern",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+386.0,27/09/1992,Gesetz über die Stempelabgaben,2,Sozialdemokratische Partei und Gewerkschaften,2,1,6,coalition_mixed,1,left,0.85,0.6,0
+387.0,27/09/1992,Gesetz über das bäuerliche Bodenrecht,2,"Bürgerliche Parlamentarier aus der Romandie, Arbeitgeberseite, Liberale Partei der Schweiz",3,1,6,coalition_mixed,1,center,0.85,0.6,0
+388.0,06/12/1992,EWR-Beitritt,1,.,0,0,0,none,,none,1.0,1.0,0
+389.0,07/03/1993,Erhöhung des Treibstoffzolls,2,"Autopartei, Transportgewerbe-Vertreter, Centre Patronal",3,1,9,UNRESOLVED,0,right,0.85,0.0,1
+390.0,07/03/1993,Aufhebung des Spielbankenverbots,1,.,0,0,0,none,,none,1.0,1.0,0
+391.0,07/03/1993,Initiative «zur Abschaffung der Tierversuche»,3,"Internationale Liga ""Ärzte für die Abschaffung der Tierversuche""",1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+392.0,06/06/1993,Initiative «40 Waffenplätze sind genug»,3,Aktionsgruppe zur Rettung von Neuchlen-Anschwilen,1,0,4,movement,0,nonpartisan,0.5,0.85,1
+393.0,06/06/1993,Initiative «für eine Schweiz ohne neue Kampfflugzeuge»,3,Gruppe für eine Schweiz ohne Armee,1,0,4,movement,0,nonpartisan,0.5,0.85,1
+394.0,26/09/1993,Bundesbeschluss gegen den Waffenmissbrauch,1,.,0,0,0,none,,none,1.0,1.0,0
+395.0,26/09/1993,Kantonswechsel des Laufentals zu Basel-Landschaft,1,.,0,0,0,none,,none,1.0,1.0,0
+396.0,26/09/1993,1.-August-Initiative,3,Schweizer Demokraten,1,0,1,party,1,right,0.85,0.85,0
+397.0,26/09/1993,Befristete Massnahmen in der Krankenversicherung,2,Partei der Arbeit,1,0,1,party,1,left,0.85,0.85,0
+398.0,26/09/1993,Massnahmen in der Arbeitslosenversicherung,2,"Partei der Arbeit, Sozialdemokratische Partei, Schweizerischer Gewerkschaftsbund",3,1,6,coalition_mixed,1,left,0.85,0.6,0
+399.0,28/11/1993,Einführung der Mehrwertsteuer,1,.,0,0,0,none,,none,1.0,1.0,0
+400.0,28/11/1993,"Mehrwertsteuer-Satz 6,5%",1,.,0,0,0,none,,none,1.0,1.0,0
+401.0,28/11/1993,Mehrwertsteuerprozent für die AHV,1,.,0,0,0,none,,none,1.0,1.0,0
+402.0,28/11/1993,Bundesbeschluss über besondere Verbrauchssteuern,1,.,0,0,0,none,,none,1.0,1.0,0
+403.0,28/11/1993,Initiative «zur Verminderung der Alkoholprobleme»,3,Schweizerischer Verein zur Verminderung der Tabak- und Alkoholprobleme,2,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+404.0,28/11/1993,Initiative «zur Verminderung der Tabakprobleme»,3,Schweizerischer Verein zur Verminderung der Tabak- und Alkoholprobleme,2,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+405.0,20/02/1994,Weiterführung Autobahnvignette,1,.,0,0,0,none,,none,1.0,1.0,0
+406.0,20/02/1994,Weiterführung der Schwerverkehrsabgabe,1,.,0,0,0,none,,none,1.0,1.0,0
+407.0,20/02/1994,Einführung einer leistungsabhängigen Schwerverkehrsabgabe,1,.,0,0,0,none,,none,1.0,1.0,0
+408.0,20/02/1994,Alpen-Initiative,3,Verein Alpeninitiative,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+409.0,20/02/1994,Luftfahrtgesetz,2,"Verkehrsclub der Schweiz, unterstützt von der Sozialdemokratischen Partei",2,1,9,UNRESOLVED,0,left,0.85,0.0,1
+410.0,12/06/1994,Kulturförderungsartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+411.0,12/06/1994,Erleichterte Einbürgerung für junge Ausländer,1,.,0,0,0,none,,none,1.0,1.0,0
+412.0,12/06/1994,UNO-Blauhelme,2,"Lega dei Ticinesi, unterstützt von den Schweizer Demokraten, der Autopartei, der Ligue Vaudoise sowie Exponenten der Schweizerischen Volkspartei und der Freisinnig-Demokratischen Partei",6,1,1,party,1,mixed,0.8,0.85,0
+413.0,25/09/1994,Aufhebung der Brotgetreideverbilligung,1,.,0,0,0,none,,none,1.0,1.0,0
+414.0,25/09/1994,Verbot der Rassendiskriminierung,2,"Drei Komitees aus dem Rechten Lager, u.a. mit Ligue Vaudoise",2,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+415.0,04/12/1994,Krankenversicherungsgesetz,2,"Mehrere Komitees: drei Krankenkassen (Artisana, Swica, Winterthur), vier Ärzetvereinigungen (Komplementärmedizin)",4,1,6,coalition_mixed,1,nonpartisan,0.5,0.6,1
+416.0,04/12/1994,Initiative «für eine gesunde Krankenversicherung»,3,"Sozialdemokratische Partei der Schweiz, Schweizerischer Gewerkschaftsbund",2,1,6,coalition_mixed,1,left,0.85,0.6,0
+417.0,04/12/1994,Zwangsmassnahmen im Ausländerrecht,2,"Asylpolitische Organisationen, unterstützt von der Partei der Arbeit und der Sozialdemokratischen Partei",3,1,1,party,1,left,0.85,0.85,0
+418.0,12/03/1995,Landwirtschaftsartikel,4,Schweizerischer Bauernverband,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+419.0,12/03/1995,Milchwirtschaftsbeschluss,2,Vereinigung kleiner und mittlerer Bauern,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+420.0,12/03/1995,Landwirtschaftsgesetz,2,"Vereinigung kleiner und mittlerer Bauern, Konsumentenorganisationen",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+421.0,12/03/1995,Ausgabenbremse,1,.,0,0,0,none,,none,1.0,1.0,0
+422.0,25/06/1995,10. AHV-Revision,2,"Schweizerischer Gewerkschaftsbund, Christlichnationaler Gewerkschaftsbund, Frauen- und Rentnerorganisation",4,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+423.0,25/06/1995,Initiative «zum Ausbau von AHV und IV»,3,"Sozialdemokratische Partei, Schweizerischer Gewerkschaftsbund",2,1,6,coalition_mixed,1,left,0.85,0.6,0
+424.0,25/06/1995,Gesetz über den Erwerb von Grundstücken durch Personen im Ausland,2,Schweizer Demokraten,1,0,1,party,1,right,0.85,0.85,0
+425.0,10/03/1996,Sprachenartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+426.0,10/03/1996,Übertritt Vellerat zum Kanton Jura,1,.,0,0,0,none,,none,1.0,1.0,0
+427.0,10/03/1996,Zuständigkeit im Bereich der persönlichen militärischen Ausrüstung,1,.,0,0,0,none,,none,1.0,1.0,0
+428.0,10/03/1996,Aufhebung der Pflicht zur Übernahme von Brennapparaten und Branntwein,1,.,0,0,0,none,,none,1.0,1.0,0
+429.0,10/03/1996,Aufhebung der Beiträge an Bahnhofparkplätze,1,.,0,0,0,none,,none,1.0,1.0,0
+430.0,09/06/1996,Verfassungsartikel zur Landwirtschaft,4,"Volksinitiative: Organisationen aus Umwelt- und Tierschutz, Westschweizer Kreise des Landesrings der Unabhängigen (LdU/AdI), Konsumenten- und Kleinbauernorganisationen",5,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+431.0,09/06/1996,Regierungs- und Verwaltungsorganisationsgesetz,2,Rechtsbürgerliche Kreise,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+432.0,01/12/1996,Initiative «gegen die illegale Einwanderung»,3,Schweizerische Volkspartei ,1,0,1,party,1,right,0.85,0.85,0
+433.0,01/12/1996,Arbeitsgesetz,2,"Schweizerischer Gewerkschaftsbund, Christlichnationaler Gewerkschaftsbund, Eidgenössisch-Demokratische Union",3,1,6,coalition_mixed,1,right,0.85,0.6,0
+434.0,08/06/1997,Initiative «EU-Beitrittsverhandlungen vors Volk!»,3,Schweizer Demokraten und Lega dei Ticinesi,2,1,1,party,1,right,0.85,0.85,0
+435.0,08/06/1997,Initiative «für ein Verbot der Kriegsmaterialausfuhr»,3,Sozialdemokratische Partei,1,0,1,party,1,left,0.85,0.85,0
+436.0,08/06/1997,Aufhebung des Pulverregals,1,.,0,0,0,none,,none,1.0,1.0,0
+437.0,28/09/1997,Finanzierung der Arbeitslosenversicherung,2,"Arbeitslosenkomitee aus La Chaux-de-Fonds, unterstützt von kantonalen Gewerkschaften aus der Romandie",2,1,6,coalition_mixed,1,nonpartisan,0.5,0.6,1
+438.0,28/09/1997,Initiative «Jugend ohne Drogen»,3,"Ad-hoc-Komitee (Politiker bürgerlicher und rechter Parteien, Prominente aus Sport und Unterhaltung, unterstützt vom Verein zur Förderung der psychologischen Menschenkenntnis )",5,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+439.0,07/06/1998,Haushaltsziel 2001,1,.,0,0,0,none,,none,1.0,1.0,0
+440.0,07/06/1998,«Gen-Schutz-Initiative»,3,Schweizerische Arbeitsgruppe Gentechnologie,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+441.0,07/06/1998,Initiative «S.o.S. - Schweiz ohne Schnüffelpolizei»,3,"S. o. S. - Schweiz ohne Schnüffelpolizei (Linke und Grüne Parteien inkl. Landesring der Unabhängigen, Gewerkschaften, weitere Organisationen",4,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+442.0,27/09/1998,Leistungsabhängige Schwerverkehrsabgabe (LSVA),2,Schweizerischer Nutzfahrzeugverband (ASTAG),1,0,2,interest_group,1,nonpartisan,0.5,0.55,1
+443.0,27/09/1998,Kleinbauern-Initiative,3,Vereinigung kleiner und mittlerer Bauern,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+444.0,27/09/1998,Initiative «für die 10. AHV-Revision ohne Erhöhung des Rentenalters»,3,"Sozialdemokratische Partei, Schweizerischer Gewerkschaftsbund",2,1,6,coalition_mixed,1,left,0.85,0.6,0
+445.0,29/11/1998,Finanzierung des öffentlichen Verkehrs (FinöV),1,.,0,0,0,none,,none,1.0,1.0,0
+446.0,29/11/1998,Getreideartikel,1,.,0,0,0,none,,none,1.0,1.0,0
+447.0,29/11/1998,Initiative «für eine vernünftige Drogenpolitik»,3,"Arbeitsgemeinschaft für Drogenlegalisierung (Droleg), unterstützt von der Grünen Partei der Schweiz und der Sozialdemokratischen Partei",3,1,9,UNRESOLVED,0,left,0.85,0.0,1
+448.0,29/11/1998,Arbeitsgesetz,2,"Gewerkschafter aus der Romandie, Gewerkschaft Druck und Papier",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+449.0,07/02/1999,Bundesbeschluss über die Wählbarkeit in den Bundesrat,1,.,0,0,0,none,,none,1.0,1.0,0
+450.0,07/02/1999,Verfassungsbestimmung über die Transplantationsmedizin,1,.,0,0,0,none,,none,1.0,1.0,0
+451.0,07/02/1999,Wohneigentums-Initiative,3,Schweizerischer Hauseigentümer-Verband,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+452.0,07/02/1999,Raumplanungsgesetz,2,"Vereinigung kleiner und mittlerer Bauern, Grüne Partei Schweiz, Umweltorganisationen",4,1,6,coalition_mixed,1,left,0.85,0.6,0
+453.0,18/04/1999,Neue Bundesverfassung,1,.,0,0,0,none,,none,1.0,1.0,0
+454.0,13/06/1999,Asylgesetz,2,"Flüchtlingshilfswerke, unterstützt von der Sozialdemokratischen Partei und dem Schweizerischen Gewerkschaftsbund",3,1,2,interest_group,1,left,0.85,0.85,0
+455.0,13/06/1999,Massnahmen im Asyl- und Ausländerbereich,2,"Flüchtlingshilfswerke, unterstützt von der Sozialdemokratischen Partei und dem Schweizerischen Gewerkschaftsbund",3,1,2,interest_group,1,left,0.85,0.85,0
+456.0,13/06/1999,Bundesbeschluss über die ärztliche Verschreibung von Heroin,2,Eidgenössisch-Demokratische Union,1,0,1,party,1,right,0.85,0.85,0
+457.0,13/06/1999,Gesetz über die Invalidenversicherung,2,"Schweizer Paraplegikervereinigung, Schweizerischer Invalidenverband, unterstützt von der Dachorganisation der Behindertenhilfe Askio",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+458.0,13/06/1999,Gesetz über die Mutterschaftsversicherung,2,"Junge SVP, unterstützt von den Präsidenten des Arbeitgeberverbands und des Schweizerischen Gewerbeverbands",3,1,6,coalition_mixed,1,right,0.85,0.6,0
+459.0,12/03/2000,Justizreform,1,.,0,0,0,none,,none,1.0,1.0,0
+460.0,12/03/2000,Initiative «für die Beschleunigung der direkten Demokratie»,3,Denner AG,1,0,5,firm_individual,0,nonpartisan,0.5,0.85,1
+461.0,12/03/2000,Initiative «für eine gerechte Vertretung der Frauen in den Bundesbehörden»,3,Komitee Frauen in den Bundesrat (lanciert v.a. von grünen Parlamentarierinnen),1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+462.0,12/03/2000,Initiative «für menschenwürdige Fortpflanzung»,3,"Ad-hoc-Komitee (Persönlichkeiten verschiedener Parteien, Organisationen ""Helfen statt töten"", ""Rede mitenand"", ""Ja zum Leben"")",4,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+463.0,12/03/2000,«Verkehrshalbierungs-Initiative»,3,"umverkehR, Initiativkomitee zur Halbierung des motorisierten Strassenverkehrs",2,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+464.0,21/05/2000,Bilaterale Abkommen mit der EU,2,"Schweizer Demokraten, Lega dei Ticinesi, weitere rechte, sowie auch linksextreme und ökologisch orientierte Gruppen (insgesamt 11 Komitees). ",5,1,6,coalition_mixed,1,right,0.85,0.6,0
+465.1,24/09/2000,Solarinitiative,3,Förderverein Energie-Umwelt- und Solar-Initiativen FEUSOL,2,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+465.2,24/09/2000,Förderabgabe für erneuerbare Energien,4,Förderverein Energie-Umwelt- und Solar-Initiativen FEUSOL,2,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+465.3,24/09/2000,Stichfrage zu Solarinitiative und Gegenentwurf,5,Förderverein Energie-Umwelt- und Solar-Initiativen FEUSOL,2,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+466.0,24/09/2000,Energielenkungsabgabe für die Umwelt,4,Förderverein Energie-Umwelt- und Solar-Initiativen FEUSOL,2,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+467.0,24/09/2000,Initiative «für eine Regelung der Zuwanderung»,3,Komitee für eine begrenzte Zuwanderung (rechtsbürgerliche Politiker),1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+468.0,24/09/2000,Initiative für ein konstruktives Referendum,3,Sozialdemokratische Partei,1,0,1,party,1,left,0.85,0.85,0
+469.0,26/11/2000,Initiative «für eine Flexibilisierung der AHV - gegen die Erhöhung des Rentenalters für Frauen»,3,"Schweizerischer Kaufmännischer Verband, unterstützt von der Vereinigung schweizerischer Angestelltenverbände und dem Schweizerischen Gewerkschaftsbund",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+470.0,26/11/2000,Initiative «für ein flexibles Rentenalter ab 62 für Frau und Mann»,3,Grüne Partei der Schweiz,1,0,1,party,1,left,0.85,0.85,0
+471.0,26/11/2000,«Umverteilungsinitiative»,3,Sozialdemokratische Partei,1,0,1,party,1,left,0.85,0.85,0
+472.0,26/11/2000,Initiative «für tiefere Spitalkosten»,3,Denner AG,1,0,5,firm_individual,0,nonpartisan,0.5,0.85,1
+473.0,26/11/2000,Bundespersonalgesetz,2,"Verband des Personals öffentlicher Dienste, Föderativverband des Personals öffentlicher Verwaltungen und Betriebe, unterstützt vom Schweizerischen Gewerkschaftsbund und der Sozialdemokratischen Partei",5,1,2,interest_group,1,left,0.85,0.85,0
+474.0,04/03/2001,Initiative «Ja zu Europa!»,3,Neue Europäische Bewegung,1,0,4,movement,0,nonpartisan,0.5,0.85,1
+475.0,04/03/2001,Initiative «für tiefere Arzneimittelpreise»,3,Denner AG,1,0,5,firm_individual,0,nonpartisan,0.5,0.85,1
+476.0,04/03/2001,Initiative «Strassen für alle» (Tempo 30),3,Verkehrs-Club der Schweiz,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+477.0,10/06/2001,Militärgesetz: Bewaffnung,2,"Gruppe für eine Schweiz ohne Armee, Aktion für eine Unabhängige und Neutrale Schweiz",3,1,4,movement,0,nonpartisan,0.5,0.85,1
+478.0,10/06/2001,Militärgesetz: Ausbildungszusammenarbeit,2,Aktion für eine Unabhängige und Neutrale Schweiz,2,1,4,movement,0,nonpartisan,0.5,0.85,1
+479.0,10/06/2001,Aufhebung des Bistumsartikels,1,.,0,0,0,none,,none,1.0,1.0,0
+480.0,02/12/2001,Schuldenbremse,1,.,0,0,0,none,,none,1.0,1.0,0
+481.0,02/12/2001,Initiative «Energie statt Arbeit besteuern»,3,Grüne Partei der Schweiz,1,0,1,party,1,left,0.85,0.85,0
+482.0,02/12/2001,Initiative für eine Schweiz ohne Armee,3,Gruppe für eine Schweiz ohne Armee,1,0,4,movement,0,nonpartisan,0.5,0.85,1
+483.0,02/12/2001,Initiative «Für einen freiwilligen zivilen Friedensdienst»,3,Gruppe für eine Schweiz ohne Armee,1,0,4,movement,0,nonpartisan,0.5,0.85,1
+484.0,02/12/2001,Initiative «für eine Kapitalgewinnsteuer»,3,Schweizerischer Gewerkschaftsbund,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+485.0,03/03/2002,Initiative für den UNO-Beitritt,3,Vereinigung Volksinitiative Beitritt der Schweiz zur UNO,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+486.0,03/03/2002,Initiative «für eine kürzere Arbeitszeit»,3,Schweizerischer Gewerkschaftsbund,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+487.0,02/06/2002,Fristenregelung (Schwangerschaftsabbruch),2,"Christlich-demokratische Volkspartei, Gesellschaft für den Schutz des ungeborenen Lebens (getragen von Politikern der SVP, der EVP und der EDU)",4,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+488.0,02/06/2002,Initiative «Für Mutter und Kind»,3,Schweizerische Hilfe für Mutter und Kind,2,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+489.1,22/09/2002,«Goldinitiative»,3,Schweizerische Volkspartei SVP,1,0,1,party,1,right,0.85,0.85,0
+489.2,22/09/2002,"Gegenentwurf «Gold für AHV, Kantone und Stiftung»",4,Schweizerische Volkspartei SVP,1,0,1,party,1,right,0.85,0.85,0
+489.3,22/09/2002,Stichfrage zu Goldinitiative und Gegenentwurf,5,Schweizerische Volkspartei SVP,1,0,1,party,1,right,0.85,0.85,0
+490.0,22/09/2002,Elektrizitätsmarktgesetz,2,"Verband des Personals öffentlicher Dienste, Jungsozialisten, Linke der Westschweiz",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+491.0,24/11/2002,Initiative «gegen Asylrechtsmissbrauch»,3,Schweizerische Volkspartei,1,0,1,party,1,right,0.85,0.85,0
+492.0,24/11/2002,Arbeitslosenversicherungsgesetz,2,"Sozialdemokratische Partei, Grüne Partei der Schweiz, Schweizerischer Gewerschaftsbund, Christlichnationaler Gewerkschaftsbund, Vereinigng zum Schutz der Arbeitslosen",5,1,6,coalition_mixed,1,left,0.85,0.6,0
+493.0,09/02/2003,Bundesbeschluss über die Änderung der Volksrechte,1,.,0,0,0,none,,none,1.0,1.0,0
+494.0,09/02/2003,Gesetz über die kantonalen Beiträge an Spitalbehandlungen,2,Krankenversicherung Assura,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+495.0,18/05/2003,Armee XXI,2,"Mehrere Organisationen, darunter Action service actif (Aktivdienstler), Schweizer Demokraten, Interessengemeinschaft Miliz, young4fun",5,1,1,party,1,right,0.85,0.85,0
+496.0,18/05/2003,Gesetz über den Zivilschutz,2,"Mehrere Organisationen, darunter Action service actif (Aktivdienstler), Schweizer Demokraten, Interessengemeinschaft Miliz, young4fun",5,1,1,party,1,right,0.85,0.85,0
+497.0,18/05/2003,Initiative «Ja zu fairen Mieten»,3,Schweizerischer Mieterinnen- und Mieterverband,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+498.0,18/05/2003,Initiative «Für einen autofreien Sonntag pro Jahreszeit»,3,Initiativkomitee Sonntags-Initiative,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.55,1
+499.0,18/05/2003,«Gesundheitsinitiative»,3,Sozialdemokratische Partei der Schweiz,1,0,1,party,1,left,0.85,0.85,0
+500.0,18/05/2003,Initiative «Gleiche Rechte für Behinderte»,3,Behindertenorganisationen,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+501.0,18/05/2003,Initiative «Strom ohne Atom»,3,"Verein 'Strom ohne Atom' (rund 30 Umweltorganisationen, Sozialdemokratische Partei, Grüne Partei der Schweiz)",3,1,6,coalition_mixed,1,left,0.85,0.6,0
+502.0,18/05/2003,Initiative «MoratoriumPlus»,3,"Verein 'Strom ohne Atom' (rund 30 Umweltorganisationen, Sozialdemokratische Partei, Grüne Partei der Schweiz)",3,1,6,coalition_mixed,1,left,0.85,0.6,0
+503.0,18/05/2003,«Lehrstellen-Initiative»,3,"Verein Lehrstellen-Initiative (Schweizerische Arbeitsgemeinschaft Jugendverbände, Jugendorganisationen von Gewerkschaften, Jungsozialisten, Jugendorganisation Landesring der Unabhängigen), unterstützt von der Sozialdemokratischen Partei, der Grünen Partei der Schweiz und dem Landesring der Unabhängigen ",7,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+504.0,08/02/2004,Gegenentwurf zur Avanti-Initiative,4,Volksinitiative: Touring Club der Schweiz,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+505.0,08/02/2004,Änderung des Mietrechts,2,Schweizerischer Mieterinnen- und Mieterverband,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+506.0,08/02/2004,Initiative für eine lebenslange Verwahrung für gefährliche Straftäter,3,Selbsthilfegruppe Licht der Hoffnung,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+507.0,16/05/2004,11. AHV-Revision,2,"Schweizerischer Gewerkschaftsbund, unterstützt von der Sozialdemokratischen Partei, der Grünen Partei und Travail.Suisse",4,1,2,interest_group,1,left,0.85,0.85,0
+508.0,16/05/2004,Anhebung der Mehrwertsteuer zu Gunsten von AHV und IV,1,.,0,0,0,none,,none,1.0,1.0,0
+509.0,16/05/2004,Steuerpaket,2,"Kantonsreferendum (elf Kantone), links-grünes Referendumskomitee",2,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+510.0,26/09/2004,Erleichterte Einbürgerung von Jugendlichen der zweiten Generation,1,.,0,0,0,none,,none,1.0,1.0,0
+511.0,26/09/2004,Bürgerrechtserwerb für die dritte Generation,1,.,0,0,0,none,,none,1.0,1.0,0
+512.0,26/09/2004,Initiative «Postdienst für alle»,3,Gewerkschaft Kommunikation,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+513.0,26/09/2004,Erwerbsersatz für Dienstleistende und bei Mutterschaft,2,Schweizerische Volkspartei,1,0,1,party,1,right,0.85,0.85,0
+514.0,28/11/2004,Neugestaltung Finanzausgleich,1,.,0,0,0,none,,none,1.0,1.0,0
+515.0,28/11/2004,Neue Finanzordnung,1,.,0,0,0,none,,none,1.0,1.0,0
+516.0,28/11/2004,Stammzellenforschungsgesetz,2,"Schweizerische Hilfe für Mutter und Kind, Human Life International Schweiz, Schweizerische Gesellschaft für Bioethik, Vereinigung katholischer Ärzte der Schweiz, Arbeitsgemeinschaft evangelischer Ärzt",6,1,2,interest_group,1,center,0.85,0.85,0
+517.0,05/06/2005,Abkommen zu Schengen und Dublin,2,"Aktion für eine unabhängige und neutrale Schweiz, Schweizerische Volkspartei",3,1,6,coalition_mixed,1,right,0.85,0.6,0
+518.0,05/06/2005,Gesetz über die eingetragene Partnerschaft gleichgeschlechtlicher Paare,2,"Evangelische Volkspartei, Eidgenössisch-Demokratische Union",2,1,1,party,1,mixed,0.8,0.85,0
+519.0,25/09/2005,Ausdehnung der Personenfreizügigkeit auf die neuen EU-Staaten,2,Denner AG,1,0,5,firm_individual,0,nonpartisan,0.5,0.85,1
+520.0,27/11/2005,Initiative «für Lebensmittel aus gentechnikfreier Landwirtschaft»,3,"Bauern, Umweltschützer, Konsumentenschützer, unterstützt vom Schweizerischen Bauernverband",4,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+521.0,27/11/2005,Arbeitsgesetz (Sonntagsarbeit),2,"Schweizerischer Gewerkschaftsbund, Travail.Suisse",2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+522.0,21/05/2006,Neuordnung der Verfassungsbestimmungen zur Bildung,1,.,0,0,0,none,,none,1.0,1.0,0
+523.0,24/09/2006,Initiative «Nationalbankgewinne für die AHV»,3,Komitee sichere AHV (der Sozialdemokratischen Partei nahestehende Personen),1,0,3,adhoc_committee,0,left,0.85,0.85,0
+524.0,24/09/2006,Ausländergesetz,2,"Grüne Partei der Schweiz, Solidarité sans frontières, Forum für die Integration der Migrantinnen und Migranten, unterstützt von der Sozialdemokratischen Partei und Gewerkschaften",6,1,6,coalition_mixed,1,left,0.85,0.6,0
+525.0,24/09/2006,Asylgesetz,2,"Grüne Partei der Schweiz, Solidarité sans frontières, Forum für die Integration der Migrantinnen und Migranten, unterstützt von der Sozialdemokratischen Partei und Gewerkschaften",6,1,6,coalition_mixed,1,left,0.85,0.6,0
+526.0,26/11/2006,Gesetz über die Zusammenarbeit mit den Staaten Osteuropas,2,"Schweizerische Volkspartei, Schweizer Demokraten und Lega dei ticinesi",3,1,1,party,1,right,0.85,0.85,0
+527.0,26/11/2006,Gesetz über die Familienzulagen,2,Schweizerischer Gewerbeverband,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+528.0,11/03/2007,Initiative für eine Einheitskrankenkasse,3,Mouvement populaire des familles,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+529.0,17/06/2007,5. IV-Revision,2,"Kleinere Behindertenorganisationen (u.a.: Zentrum für selbstbestimmtes Leben, Dachverband der Behinderten-selbsthilfe Agile), unterstützt von der Grünen Partei Schweiz und der Sozialdemokratischen Partei  ",4,1,6,coalition_mixed,1,left,0.85,0.6,0
+530.0,24/02/2008,Initiative «Gegen Kampfjetlärm in Tourismusgebieten»,3,Helvetia Nostra,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+531.0,24/02/2008,Unternehmenssteuerreform II,2,"SP, GPS, SGB",2,1,9,UNRESOLVED,0,left,0.85,0.0,1
+532.0,01/06/2008,Initiative «Für demokratische Einbürgerungen»,3,Schweizerische Volkspartei SVP,1,0,1,party,1,right,0.85,0.85,0
+533.0,01/06/2008,Initiative «gegen Behördenprogaganda»,3,Verein 'Bürger für Bürger',1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+534.0,01/06/2008,Verfassungsartikel zur Krankenversicherung,4,.,0,0,0,none,,none,1.0,1.0,0
+535.0,30/11/2008,Initiative für die Unverjährbarkeit pornografischer Straftaten an Kindern,3,Marche Blanche,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+536.0,30/11/2008,Initiative «für ein flexibles AHV-Alter»,3,SGB,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+537.0,30/11/2008,Verbandsbeschwerderechts-Initiative,3,FDP,1,0,1,party,1,center,0.85,0.85,0
+538.0,30/11/2008,Initiative «für eine vernünftige Hanf-Politik»,3,Pro Jugendschutz,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+539.0,30/11/2008,Betäubungsmittelgesetz,2,drogstop,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+540.0,08/02/2009,Weiterführung der Personenfreizügigkeit Schweiz–EU und Ausdehnung auf Bulgarien und Rumänien,2,SVP,1,0,1,party,1,right,0.85,0.85,0
+541.0,17/05/2009,Verfassungsartikel zur Komplementärmedizin,4,.,0,0,0,none,,none,1.0,1.0,0
+542.0,17/05/2009,Einführung des biometrischen Passes,2,Überparteiliches Komitee,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+543.0,27/09/2009,Zusatzfinanzierung der Invalidenversicherung,1,.,0,0,0,none,,none,1.0,1.0,0
+544.0,27/09/2009,Verzicht auf die Einführung der allgemeinen Volksinitiative,1,.,0,0,0,none,,none,1.0,1.0,0
+545.0,29/11/2009,Spezialfinanzierung für Aufgaben im Luftverkehr,1,.,0,0,0,none,,none,1.0,1.0,0
+546.0,29/11/2009,Initiative «Für ein Verbot von Kriegsmaterial-Exporten»,3,GSoA,1,0,4,movement,0,nonpartisan,0.5,0.85,1
+547.0,29/11/2009,Initiative «Gegen den Bau von Minaretten»,3,«Egerkinger Komitee» aus SVP- und EDU-Exponent:innen,2,1,6,coalition_mixed,1,right,0.85,0.6,0
+548.0,07/03/2010,Verfassungsartikel über die Forschung am Menschen,1,.,0,0,0,none,,none,1.0,1.0,0
+549.0,07/03/2010,Tierschutzanwalt-Initiative,3,Schweizerischer Tierschutz STS,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+550.0,07/03/2010,Berufliche Vorsorge: Anpassung des Mindestumwandlungssatzes,2,"SGB, SPS, GPS, SD",3,1,1,party,1,left,0.85,0.85,0
+551.0,26/09/2010,Revision des Arbeitslosenversicherungsgesetzes,2,"SPS, GPS, SGB",3,1,1,party,1,left,0.85,0.85,0
+552.1,28/11/2010,Ausschaffungsinitiative,3,SVP,1,0,1,party,1,right,0.85,0.85,0
+552.2,28/11/2010,Gegenentwurf zur Ausschaffungsinitiative,4,SVP,1,0,1,party,1,right,0.85,0.85,0
+552.3,28/11/2010,Stichfrage zu Ausschaffungsinitiative und Gegenentwurf,5,SVP,1,0,1,party,1,right,0.85,0.85,0
+553.0,28/11/2010,«Steuergerechtigkeits-Initiative»,3,SPS,1,0,1,party,1,left,0.85,0.85,0
+554.0,13/02/2011,Initiative «Für den Schutz vor Waffengewalt»,3,Verschiedene Organisationen,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+555.0,11/03/2012,Zweitwohnungsinitiative,3,Franz Weber Stiftung,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+556.0,11/03/2012,Initiative «Für ein steuerlich begünstigtes Bausparen»,3,SGFB (Schweizerische Gesellschaft zur Förderung des Bausparens),1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+557.0,11/03/2012,Initiative «6 Wochen Ferien für alle»,3,Travail Suisse,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+558.0,11/03/2012,Regelung der Geldspiele zugunsten gemeinnütziger Zwecke,4,.,0,0,0,none,,none,1.0,1.0,0
+559.0,11/03/2012,Gesetz über die Buchpreisbindung,2,"JFDP, JSVP, JGLP",3,1,1,party,1,mixed,0.8,0.85,0
+560.0,17/06/2012,Initiative «Eigene vier Wände dank Bausparen»,3,HEV,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+561.0,17/06/2012,Initiative «Staatsverträge vors Volk!»,3,AUNS,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+562.0,17/06/2012,Gesetz über die Krankenversicherung (Managed Care),2,.,0,0,0,none,,none,1.0,1.0,0
+563.0,23/09/2012,Bundesbeschluss über die Jugendmusikförderung,4,IG jugend und musik,2,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+564.0,23/09/2012,Initiative «Sicheres Wohnen im Alter»,3,HEV,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+565.0,23/09/2012,Initiative «Schutz vor Passivrauchen»,3,"Lungenliga, Schweizerische Herzstiftung, Krebsliga Schweiz, FMH",4,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+566.0,25/11/2012,Tierseuchengesetz,2,"Verein Bauernverstand, Blaudistel, Netzwerk Impfentscheid",3,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+567.0,03/03/2013,Bundesbeschluss über die Familienpolitik,1,.,0,0,0,none,,none,1.0,1.0,0
+568.0,03/03/2013,Initiative «gegen die Abzockerei»,3,Komitee um den Unternehmer Thomas Minder,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.55,1
+569.0,03/03/2013,Raumplanungsgesetz,2,SGV,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+570.0,09/06/2013,Initiative «Volkswahl des Bundesrates»,3,SVP,1,0,1,party,1,right,0.85,0.85,0
+571.0,09/06/2013,Asylgesetz,2,"Junge Grüne, verschiedene Organisationen",2,1,1,party,1,left,0.85,0.85,0
+572.0,22/09/2013,Initiative zur Aufhebung der Wehrpflicht,3,GSoA,1,0,4,movement,0,nonpartisan,0.5,0.85,1
+573.0,22/09/2013,Epidemiengesetz,2,"Netzwerk Impfentscheid, Bürger für Bürger, EDU, Human Life International, Jugend & Familie, JSVP, Wahre Demokratie",7,1,1,party,1,right,0.85,0.85,0
+574.0,22/09/2013,Arbeitsgesetz (Öffnungszeiten von Tankstellenshops),2,"Sonntagsallianz (kirchliche Organisationen, linke und christliche politische Parteien, Gewerkschaften, Frauenverbände, Suchthilfestellen und Arbeitsmediziner)",7,1,6,coalition_mixed,1,nonpartisan,0.5,0.6,1
+575.0,24/11/2013,Initiative «1:12 – Für gerechte Löhne»,3,Juso,1,0,1,party,1,left,0.85,0.85,0
+576.0,24/11/2013,«Familieninitiative»,3,SVP,1,0,1,party,1,right,0.85,0.85,0
+577.0,24/11/2013,Änderung des Nationalstrassenabgabegesetzes (Autobahnvignette),2,überparteiliches Komitee,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+578.0,09/02/2014,Finanzierung und Ausbau der Eisenbahninfrastruktur (FABI),4,VCS,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+579.0,09/02/2014,Initiative «Abtreibungsfinanzierung ist Privatsache»,3,überparteiliches Komitee,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+580.0,09/02/2014,Initiative «Gegen Masseneinwanderung»,3,SVP,1,0,1,party,1,right,0.85,0.85,0
+581.0,18/05/2014,Bundesbeschluss über die medizinische Grundversorgung,4,Hausärzte Schweiz,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+582.0,18/05/2014,Initiative «Pädophile sollen nicht mehr mit Kindern arbeiten dürfen»,3,Marche Blanche,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+583.0,18/05/2014,«Mindestlohn-Initiative»,3,Linke Parteien und Gewerkschaften,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+584.0,18/05/2014,Fonds zur Beschaffung des Kampfflugzeugs Gripen,2,"GSoA, linke Parteien und Organisationen",3,1,4,movement,0,nonpartisan,0.5,0.85,1
+585.0,28/09/2014,Initiative «Schluss mit der MwSt-Diskriminierung des Gastgewerbes!»,3,Gastrosuisse,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+586.0,28/09/2014,Initiative «Für eine öffentliche Krankenkasse»,3,"SP, GPS, Patienten- und Konsumentenorganisationen",3,1,2,interest_group,1,left,0.85,0.85,0
+587.0,30/11/2014,Initiative zur Abschaffung der Pauschalbesteuerung,3,"Alternative Linke, SP, Schweizerischer Gewerkschaftsbund und Unia",3,1,2,interest_group,1,left,0.85,0.85,0
+588.0,30/11/2014,Initiative «Stopp der Überbevölkerung – zur Sicherung der natürlichen Lebensgrundlagen»,3,Ecopop,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+589.0,30/11/2014,Gold-Initiative,3,SVP-Politiker,1,0,1,party,1,right,0.85,0.85,0
+590.0,08/03/2015,Initiative für steuerfreie Kinderzulagen,3,CVP,1,0,1,party,1,center,0.85,0.85,0
+591.0,08/03/2015,Initiative «Energie- statt Mehrwertsteuer»,3,GLP,1,0,1,party,1,center,0.85,0.85,0
+592.0,14/06/2015,Verfassungsbestimmung zur Fortpflanzungsmedizin und Gentechnologie im Humanbereich,1,.,0,0,0,none,,none,1.0,1.0,0
+593.0,14/06/2015,Stipendieninitiative,3,Verband der Schweizer Studierendenschaften (VSS),1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+594.0,14/06/2015,Initiative «Millionen-Erbschaften besteuern für unsere AHV»,3,"EVP, SP und GPS",2,1,1,party,1,mixed,0.8,0.85,0
+595.0,14/06/2015,Radio- und Fernsehgesetz (Radio- und Fernsehabgabe),2,"SGV, Aktion stopBillag.ch",2,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+596.0,28/02/2016,Initiative «gegen die Heiratsstrafe»,3,CVP,1,0,1,party,1,center,0.85,0.85,0
+597.0,28/02/2016,«Durchsetzungsinitiative»,3,SVP,1,0,1,party,1,right,0.85,0.85,0
+598.0,28/02/2016,Initiative «Keine Spekulation mit Nahrungsmitteln!»,3,Juso,1,0,1,party,1,left,0.85,0.85,0
+599.0,28/02/2016,Sanierung Gotthard-Strassentunnel,2,"Linke Parteien und Umweltschutzorganisationen (darunter Alpen-Initiative, VCS, SP, Grüne und GLP)",5,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+600.0,05/06/2016,Initiative «Pro Service public»,3,"Konsumentenzeitschriften K-Tipp, Saldo, Bon à Savoir und Spendere Meglio",4,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+601.0,05/06/2016,Initiative «Für ein bedingungsloses Grundeinkommen»,3,parteipolitisch unabhängiges Komitee,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+602.0,05/06/2016,Initiative «Für eine faire Verkehrsfinanzierung»,3,"Vereinigung der Automobil-Importeure, Strassenverkehrsverbände",2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+603.0,05/06/2016,Fortpflanzungsmedizingesetz,2,überparteiliche Komitees,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+604.0,05/06/2016,Asylgesetz,2,SVP,1,0,1,party,1,right,0.85,0.85,0
+605.0,25/09/2016,Initiative «Grüne Wirtschaft»,3,GPS,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+606.0,25/09/2016,Initiative «AHVplus: für eine starke AHV»,3,Gewerkschaften,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+607.0,25/09/2016,Nachrichtendienstgesetz,2,Linke Parteien und Organisationen,2,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+608.0,27/11/2016,Atomausstiegsinitiative,3,GPS,1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+609.0,12/02/2017,Erleichterte Einbürgerung der dritten Ausländergeneration,1,.,0,0,0,none,,none,1.0,1.0,0
+610.0,12/02/2017,Fonds für die Nationalstrassen und den Agglomerationsverkehr (NAF),1,.,0,0,0,none,,none,1.0,1.0,0
+611.0,12/02/2017,Unternehmenssteuerreform III,2,Linke Parteien und Gewerkschaften,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+612.0,21/05/2017,Energiegesetz,2,SVP,1,0,1,party,1,right,0.85,0.85,0
+613.0,24/09/2017,Bundesbeschluss über die Ernährungssicherheit,4,.,0,0,0,none,,none,1.0,1.0,0
+614.0,24/09/2017,Zusatzfinanzierung der AHV durch eine Erhöhung der Mehrwertsteuer,1,.,0,0,0,none,,none,1.0,1.0,0
+615.0,24/09/2017,Reform der Altersvorsorge 2020,2,"Westschweizer Gewerkschaften, Konsumentenzeitschriften (K-Tipp, Saldo)",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+616.0,04/03/2018,Neue Finanzordnung 2021,1,.,0,0,0,none,,none,1.0,1.0,0
+617.0,04/03/2018,Initiative «Abschaffung der Billag-Gebühren»,3,Komitee u.a. mit Vertreter:innen der Jungfreisinnigen und der JSVP,2,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+618.0,10/06/2018,Vollgeld-Initiative,3,"Komitee u.a. aus Ökonom:innen, Journalist:innen, Lehrpersonen und Kulturschaffenden",4,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+619.0,10/06/2018,Geldspielgesetz,2,"Komitee unter Führung von Jungparteien (Jungfreisinnige, Junge SVP, Junge Grünliberale, Junge Grüne)",4,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+620.0,23/09/2018,Bundesbeschluss über die Velowege sowie die Fuss- und Wanderwege,4,.,0,0,0,none,,none,1.0,1.0,0
+621.0,23/09/2018,Fair-Food-Initiative,3,Grüne Partei,1,0,1,party,1,left,0.85,0.85,0
+622.0,23/09/2018,Initiative «Für Ernährungssouveränität»,3,Uniterre (Bauerngewerkschaft),1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+623.0,25/11/2018,Hornkuh-Initiative,3,"Komitee um den Bergbauern Armin Capaul und weitere Landwirte, unterstützt von Tierschutzorganisationen",3,1,6,coalition_mixed,0,nonpartisan,0.5,0.6,1
+624.0,25/11/2018,Selbstbestimmungsinitiative,3,SVP,1,0,1,party,1,right,0.85,0.85,0
+625.0,25/11/2018,Gesetzliche Grundlage für die Überwachung von Versicherten,2,Parteiunabhängiges Komitee u.a. mit Kunstschaffenden und einzelnen Exponenten linksgrüner Parteien,2,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+626.0,10/02/2019,Zersiedelungsinitiative,3,Junge Grüne,1,0,1,party,1,left,0.85,0.85,0
+627.0,19/05/2019,Steuerreform und AHV-Finanzierung (STAF),2,"Drei Komitees: Linksgrünes Komitee u.a. mit den Grünen, den Jungen Grünen, den Juso, kleineren Linksparteien und Gewerkschaften; bürgerliches Komitee aus Kreisen der SVP, der Jungen SVP und der Jungfreisinnigen; ""Generationenkomitee"" der Jungen Grünliberalen.",7,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+628.0,19/05/2019,Umsetzung der EU-Waffenrichtlinie,2,"""Interessengemeinschaft Schiessen Schweiz"" (geprägt von Schützenverbänden und SVP-Politikern)",2,1,1,party,1,right,0.85,0.85,0
+629.0,09/02/2020,Initiative «Mehr bezahlbare Wohnungen»,3,"Mieterinnen- und Mieterverband Schweiz, SGB, SPS, GPS, Verband der Wohnbaugenossenschaften",6,1,6,coalition_mixed,1,left,0.85,0.6,0
+630.0,09/02/2020,Verbot der Diskriminierung aufgrund der sexuellen Orientierung,2,Christlich-konservative Kreise (u.a. EDU),1,0,1,party,1,right,0.85,0.85,0
+631.0,27/09/2020,Begrenzungsinitiative,3,"SVP, AUNS",2,1,1,party,1,right,0.85,0.85,0
+632.0,27/09/2020,Jagdgesetz,2,"Umwelt- und Tierschutzorganisationen (Pro Natura, WWF, BirdLife, Gruppe Wolf, Zoo Schweiz)",6,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+633.0,27/09/2020,Erhöhung der steuerlichen Kinderabzüge,2,SP,1,0,9,UNRESOLVED,0,left,0.85,0.0,1
+634.0,27/09/2020,Vaterschaftsurlaub,2,Komitee um Vertreterinnen und Vertreter der SVP und der Jungfreisinnigen,3,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+635.0,27/09/2020,Beschaffung neuer Kampfflugzeuge,2,"GSoA, Grüne, SP",2,1,4,movement,0,left,0.85,0.85,0
+636.0,29/11/2020,Konzernverantwortungsinitiative,3,Menschenrechts- und Umweltorganisationen sowie Hilfswerke,3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+637.0,29/11/2020,«Kriegsgeschäfte-Initiative»,3,GSoA und Junge Grüne,2,1,6,coalition_mixed,1,left,0.85,0.6,0
+638.0,07/03/2021,Initiative für ein Verhüllungsverbot,3,"""Egerkinger Komitee"" mit Mitgliedern der SVP, der EDU und der FDP",3,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+639.0,07/03/2021,Gesetz über elektronische Identifizierungsdienste,2,"Digitale Gesellschaft, unterstützt u.a. durch die SP und die Grünen",3,1,1,party,1,left,0.85,0.85,0
+640.0,07/03/2021,Freihandelsabkommen mit Indonesien,2,"Bauerngewerkschaft Uniterre, unterstützt u.a. durch die Grünen",2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+641.0,13/06/2021,Trinkwasserinitiative,3,"Verein «Sauberes Trinkwasser für alle», unterstützt von Umwelt- und Tierschutzorganisationen",3,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+642.0,13/06/2021,Pestizidinitiative,3,"Stiftung ""Future3""",1,0,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+643.0,13/06/2021,Covid-19-Gesetz,2,"Verein ""Freunde der Verfassung""",1,0,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+644.0,13/06/2021,CO2-Gesetz,2,Zwei Referendumskomitees: eines aus Wirtschafts- sowie SVP-Kreisen und eines der Westschweizer Sektionen der Klimastreikbewegung,3,1,6,coalition_mixed,1,right,0.85,0.6,0
+645.0,13/06/2021,Gesetz über polizeiliche Massnahmen gegen Terrorismus,2,"Jungparteien (JGLP, JUSO, Junge Grüne), Piratenpartei, Chaos Computer Club, unterstützt von SP und Grünen",7,1,1,party,1,mixed,0.8,0.85,0
+646.0,26/09/2021,«99%-Initiative»,3,JUSO,1,0,1,party,1,left,0.85,0.85,0
+647.0,26/09/2021,Ehe für alle,2,"Drei Komitees mit Politiker:innen der SVP, EDU, Mitte und EVP",4,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+648.0,28/11/2021,Pflegeinitiative,3,Berufsverband der Pflegefachfrauen und Pflegefachmänner SBK,2,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+649.0,28/11/2021,Justizinitiative,3,Bürger:innenkomitee um den Unternehmer Adrian Gasser,1,0,3,adhoc_committee,0,nonpartisan,0.5,0.55,1
+650.0,28/11/2021,Änderung des Covid-19-Gesetzes (2. Revision),2,"Drei Komitees des Vereins ""Freunde der Verfassung"", des ""Netzwerks Impfentscheid"" und des ""Aktionsbündnisses Urkantone"", unterstützt u.a. durch die Junge SVP",4,1,6,coalition_mixed,1,right,0.85,0.6,0
+651.0,13/02/2022,Initiative für ein Verbot von Tier- und Menschenversuchen,3,Bürger:innen-Komitee mit Mitgliedern von Tierschutzorganisationen und einzelnen Exponent:innen von SP und Grünen,3,1,6,coalition_mixed,1,left,0.85,0.6,0
+652.0,13/02/2022,Initiative «Kinder und Jugendliche ohne Tabakwerbung»,3,"Organisationen der Ärzt:innenschaft, Apotheker:innen, Schweizerische Gesundheitsligen-Konferenz (u.a. Krebs- und Lungenliga) sowie Schweizerische Arbeitsgemeinschaft der Jugendverbände",5,1,9,UNRESOLVED,0,nonpartisan,0.5,0.0,1
+653.0,13/02/2022,Gesetz über die Stempelabgaben,2,"SP, Grüne und Gewerkschaften",2,1,2,interest_group,1,left,0.85,0.85,0
+654.0,13/02/2022,Medienpaket,2,"Komitee aus Verlegern und Exponent:innen von SVP, FDP und Mitte",4,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+655.0,15/05/2022,Änderung des Filmgesetzes,2,"Jungfreisinnige, Junge SVP und Junge GLP",3,1,1,party,1,mixed,0.8,0.85,0
+656.0,15/05/2022,Widerspruchsregelung bei der Organspende,2,"Komitee u.a. mit Mediziner:innen, Ethiker:innen, Theolog:innen und Angehörigen verschiedener bürgerlicher Parteien",4,1,3,adhoc_committee,0,nonpartisan,0.5,0.85,1
+657.0,15/05/2022,Beteiligung an der europäischen Grenz- und Küstenwache Frontex,2,"Migrant Solidarity Network und weitere Flüchtlingsorganisationen, unterstützt von SP und Grünen",4,1,1,party,1,left,0.85,0.85,0
+658.0,25/09/2022,Massentierhaltungsinitiative,3,"Tierschutzorganisation Sentience Politics, unterstützt von den Tier- und Umweltschutzorganisationen Fondation Franz Weber, Greenpeace und Vier Pfoten",5,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+659.0,25/09/2022,Erhöhung der Mehrwertsteuer zugunsten der AHV,1,.,0,0,0,none,,none,1.0,1.0,0
+660.0,25/09/2022,AHV-Gesetz (AHV 21),2,"Linke Parteien, Frauenverbände und Gewerkschaften",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+661.0,25/09/2022,Verrechnungssteuergesetz,2,"SP, Grüne und Gewerkschaften",2,1,2,interest_group,1,left,0.85,0.85,0
+662.0,18/06/2023,OECD-Mindeststeuer für Unternehmen,1,.,0,0,0,none,,none,1.0,1.0,0
+663.0,18/06/2023,Klimagesetz,2,SVP,1,0,1,party,1,right,0.85,0.85,0
+664.0,18/06/2023,Änderung des Covid-19-Gesetzes (5. Revision),2,"Freunde der Verfassung, Mass-voll, Freiheitstrychler, EDU, JSVP und weitere Organisationen",6,1,1,party,1,right,0.85,0.85,0
+665.0,03/03/2024,Initiative für eine 13. AHV-Rente,3,Gewerkschaften,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+666.0,03/03/2024,Renteninitiative,3,Jungfreisinnige,1,0,1,party,1,center,0.85,0.85,0
+667.0,09/06/2024,Prämien-Entlastungs-Initiative,3,SP,1,0,9,UNRESOLVED,0,left,0.85,0.0,1
+668.0,09/06/2024,Initiative für eine Kostenbremse im Gesundheitswesen,3,Die Mitte / CVP,1,0,1,party,1,center,0.85,0.85,0
+669.0,09/06/2024,Initiative «Für Freiheit und körperliche Unversehrtheit»,3,Freiheitliche Bewegung Schweiz,1,0,4,movement,0,right,0.85,0.85,0
+670.0,09/06/2024,Stromgesetz (Mantelerlass Energie),2,"Fondation Franz Weber, Verband Freie Landschaft Schweiz und kleinere Organisationen",3,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+671.0,22/09/2024,Biodiversitäts-Initiative,3,"Pro Natura, BirdLife, Heimatschutz, Stiftung Landschaftsschutz, Fischereiverband, Casafair, Fairfish",7,1,2,interest_group,1,nonpartisan,0.5,0.85,1
+672.0,22/09/2024,Reform der beruflichen Vorsorge,2,"Gewerkschaften, SP, Grüne, Konsument:innen-Magazin K-Tipp",3,1,6,coalition_mixed,1,left,0.85,0.6,0
+673.0,24/11/2024,Ausbau des Autobahnnetzes,2,"VCS, unterstützt durch SP, Grüne, GLP und diverse Umweltorganisationen",5,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+674.0,24/11/2024,Bedingungen für Untermiete,2,"Mieterinnen- und Mieterverband, unterstützt durch SP, Grüne, SGB, Travail.Suisse, Verband der Schweizer Studierendenschaften (VSS) und WeCollect",8,1,2,interest_group,1,left,0.85,0.85,0
+675.0,24/11/2024,Kündigung wegen Eigenbedarfs (Mietrecht),2,"Mieterinnen- und Mieterverband, unterstützt durch SP, Grüne, SGB, Travail.Suisse, Verband der Schweizer Studierendenschaften (VSS) und WeCollect",8,1,2,interest_group,1,left,0.85,0.85,0
+676.0,24/11/2024,Einheitliche Finanzierung ambulanter und stationärer Leistungen (EFAS),2,VPOD,1,0,2,interest_group,1,nonpartisan,0.5,0.85,1
+677.0,09/02/2025,«Umweltverantwortungsinitiative»,3,"Junge Grüne, unterstützt durch die Grünen, die SP und Umwelt- sowie Tierschutzorganisationen",5,1,1,party,1,left,0.85,0.85,0
+678.0,28/09/2025,Kantonale Besteuerung von Zweitliegenschaften,1,.,0,0,0,none,,none,1.0,1.0,0
+679.0,28/09/2025,E-ID-Gesetz,2,"Freunde der Verfassung, Mass-voll, Aufrecht Schweiz, Piratenpartei, JSVP, EDU",6,1,1,party,1,right,0.85,0.85,0
+680.0,30/11/2025,«Service-Citoyen-Initiative»,3,"Verein «Service Citoyen», unterstützt von GLP, EVP, Piratenpartei, Junger Mitte und weiteren Organisationen",6,1,6,coalition_mixed,1,center,0.85,0.6,0
+681.0,30/11/2025,«Initiative für eine Zukunft»,3,JUSO,1,0,1,party,1,left,0.85,0.85,0
+682.1,08/03/2026,Bargeld-Initiative,3,Freiheitliche Bewegung Schweiz (FBS),1,0,4,movement,0,right,0.85,0.85,0
+682.2,08/03/2026,Bundesbeschluss über Währung und Bargeldversorgung,4,Freiheitliche Bewegung Schweiz (FBS),1,0,4,movement,0,right,0.85,0.85,0
+682.3,08/03/2026,Stichfrage zu Bargeld-Initiative und Gegenentwurf,5,Freiheitliche Bewegung Schweiz (FBS),1,0,4,movement,0,right,0.85,0.85,0
+683.0,08/03/2026,SRG-Initiative «200 Franken sind genug!»,3,"Komitee mit Exponent:innen der SVP, der FDP und des Gewerbeverbands",3,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+684.0,08/03/2026,Klimafonds-Initiative,3,SP und Grüne,1,0,1,party,1,left,0.85,0.85,0
+685.0,08/03/2026,Gesetz über die Individualbesteuerung,2,"Kantonsreferendum (zehn Kantone) sowie zwei Referendumskomitees aus SVP, Mitte, EVP, EDU und IG Familie 3plus, unterstützt durch den Bauernverband",7,1,6,coalition_mixed,1,mixed,0.8,0.6,0
+686.0,14/06/2026,«Nachhaltigkeitsinitiative»,3,SVP,1,0,1,party,1,right,0.85,0.85,0
+687.0,14/06/2026,Zivildienstgesetz,2,"Zivildienstverband Civiva, Junge Grüne, SP, Grüne, EVP, GSoA und zahlreiche weitere Organisationen",6,1,6,coalition_mixed,1,mixed,0.8,0.6,0
