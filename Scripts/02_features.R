@@ -37,6 +37,42 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
   }, numeric(1))
 }
 
+# 1.1 Manual Imputation -----------------------------------------------
+## Signature Collection Section ---------------------------------------
+
+# Manually impute values as they become available from the SwissVotes data set
+# dat-start, dat-limit, sammelfrist, dat-submit, dat-success, dat-message, dat-parl, dauer_bv, dauer_abst, 
+# i-dauer_tot, i-dauer_samm, i-dauer_br, fr-dauer_samm, fr-dauer_tot, sammeltempo, sparedays
+
+library(tidyverse)
+# entering raw values as they appear on swissvotes.ch, NA means not yet known, Date format: "YYYY-MM-DD"
+sig_parl_fixes <- tibble::tribble( 
+  ~anr,   ~datum,        ~`dat-start`, ~`dat-limit`, ~`sammelfrist`, ~`dat-submit`, ~`dat-success`, ~`dat-message`, ~`dat-parl`, ~`dauer_bv`, ~`dauer_abst`, ~`i-dauer_tot`, ~`i-dauer_samm`, ~`i-dauer_br`, ~`fr-dauer_samm`, ~`fr-dauer_tot`, ~`sammeltempo`, ~`sparedays`,
+  "688",  "2026-03-08",  
+  "689",  "2026-03-08",  
+  "690",  "2026-11-29",  
+  "691",  "2026-11-29", 
+  "692",  "2026-11-29",  
+  "693",  "2026-11-29", 
+)  
+
+# Applying the overrides in place, keyed on anr.
+df <- df %>%
+  rows_update(sig_parl_fixes, by = "anr") 
+
+## Faulty nrja, nrnein count values --------------------------------
+
+# Manual corrections: one row per anr, anr must be character to match df
+nr_fixes <- tibble::tribble(
+  ~anr,        ~nrja, ~nrnein,
+  "543",      126,   58,
+  #"YYYY",      000L,   000L
+)
+
+# Applying the overrides in place, keyed on anr.
+df <- df %>%
+  rows_update(nr_fixes, by = "anr")
+
 # 2. Calendar / Structural-break controls -----------------------------
 
 #df <- df %>% filter(datum >= as.Date("1971-06-06"))
@@ -276,19 +312,6 @@ df <- df %>%
 # like 10.31 that would enter numeric selections as fake magnitudes
 #df <- df %>% select(-matches("^d[123]e[123]$"))
 
-## Imputation of faulty nrja, nrnein count values -----------------------
-
-# Manual corrections: one row per anr, anr must be character to match df
-nr_fixes <- tibble::tribble(
-  ~anr,        ~nrja, ~nrnein,
-  "543",      126,   58,
-  #"YYYY",      000L,   000L
-)
-
-# Applying the overrides in place, keyed on anr.
-df <- df %>%
-  rows_update(nr_fixes, by = "anr")
-
 # 5. Elite cues / Coalition theory ----------------------------------
 
 # Parliament seat total for participation: SR had 44 seats before the
@@ -458,7 +481,6 @@ frak_feats <- frak %>%
   )
 # Source for coaltion theory: Kriesi 2005, p.83, Jaquet, Sciarini & Gava 2022, Wagschal 2023
 
-
 ## Alternative Bloc Resolution ---------------------------------------------
 
 # Keeping G separate from S, this preserves the S/G divergence that the four-bloc version collapses
@@ -491,52 +513,7 @@ df <- df %>%
   left_join(frak_feats, by = "anr", relationship = "one-to-one")
 stopifnot(nrow(df) == n_master)
 
-# 7. Sponsors / Urheber --------------------------------------------------
-
-# See Scripts in Urheber_Poles/ for the coding and review process
-
-# coded urheber poles
-urh <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles_refined_r4.csv"),
-                show_col_types = FALSE) %>%
-  mutate(anr = as.character(anr)) %>%   # file reads anr as numeric
-  select(anr, pole_refined_r4, urheber_is_coalition = is_coalition, n_sponsors, established_actor, actor_label_r4, actor_code_r4)
-
-## Join audit, both directions -------------------------------------------
-
-message("urheber orphans (coded but not in master): ",
-        paste(anti_join(urh, df, by = "anr")$anr, collapse = " "))
-message("master rows without urheber coding: ",
-        paste(anti_join(df, urh, by = "anr")$anr, collapse = " "))
-
-df <- df %>%
-  left_join(urh, by = "anr", relationship = "one-to-one")
-stopifnot(nrow(df) == n_master)
-
-# Pole as factor with fixed levels (for tree engines and inspection)
-pole_levels <- c("none", "left", "right", "center", "mixed",
-                 "environmental", "nonpartisan")
-df <- df %>%
-  mutate(pole_refined_r4 = factor(pole_refined_r4, levels = pole_levels))
-
-# Political pole as indicator block for lm: 'none' is the all-zero baseline
-# NOTE: pole == 'none'  <=>  rechtsform == 1 -> Exact linear combination with the rechtsform dummies
-# Encoding as separate columns lets the per-fold alias guard drop exactly one indicator instead of
-# discarding the whole variable
-for (p in setdiff(pole_levels, "none")) {
-  df[[paste0("pole_", p)]] <- as.integer(df$pole_refined_r4 == p)
-}
-
-# Building regression-safe urheber features with explicit structural-missingness handling
-df <- df %>%
-  mutate(
-    has_urheber   = as.integer(actor_label_r4 != "none"),
-    # filling structurally-undefined rows with 0; the indicator absorbs the level shift
-    n_sponsors_f  = if_else(has_urheber == 1, n_sponsors, 0L),
-    is_coalition_f = if_else(has_urheber == 1, urheber_is_coalition, 0L),
-    established_f = if_else(has_urheber == 1, coalesce(established_actor, 0L), 0L)
-  )
-
-# 8. Coalition Config from 'support_coalition' -------------------------------
+# 7. Coalition Config from 'support_coalition' -------------------------------
 
 # Coalition-configuration features from support_coalition variable according to Kriesi (2005), Linder/Mueller (2021) and Wagschal (2023) 
 
@@ -554,8 +531,8 @@ for (b in all_blocs) {
 
 df <- df %>%
   mutate(
-    # Kriesi-style typology from my enumeration, plus explicit residual;
-    # 40 of the 56 residual rows are SVP-defection coalitions
+    # Enumeration is based on Kriesi 2005, s.54-61 (plus explicit residual)
+    # 40 of the 56 residual rows are SVP-defection coalitions!
     # (S+G+ME+RL etc.), the Linder/Mueller modern-era pattern
     coalition_kriesi = factor(case_when(
       is.na(support_coalition) ~ NA_character_,
@@ -570,27 +547,27 @@ df <- df %>%
     ), levels = c("grand", "center_right", "center_left", "left_wing",
                   "right_wing", "none", "other")),
     
-    # Linder/Mueller as a derived count instead of string lists: how many
-    # of the four government parties are NOT in the support coalition;
-    # monotone in the data (win rates .91 / .70 / .45 / .09 / .06)
+    # Derived count instead of string lists according to Linder/Müller (2017, s.339-340) 
+    # How many of the four government parties are NOT in the support coalition?
+    # Monotone in the data (win rates .91 / .70 / .45 / .09 / .06)
     n_gov_defectors = 4L - (coal_has_S + coal_has_ME + coal_has_RL + coal_has_V),
     
-    # who defects (Linder et al. 2008: the defector's identity matters)
+    # Who defects (Linder et al. 2008: the defector's identity matters (see Linder/Müller 2017, s.340)
     svp_defects = as.integer(coal_has_V == 0 &
                                (coal_has_S + coal_has_ME + coal_has_RL) >= 2),
     sp_defects  = as.integer(coal_has_S == 0 &
                                (coal_has_ME + coal_has_RL + coal_has_V) >= 2),
     
-    # Wagschal camp cohesion, direction-aware: the symmetric version
-    # conflates united support with united opposition and flips the
-    # sign; split by side it replicates his finding in this frame
+    # Wagschal (2023) camp cohesion, direction-aware: 
+    # The symmetric version conflates united support with united opposition and flips the sign 
+    # Splitting by side to replicate his finding in this frame
     bourgeois_pro    = as.integer(coal_has_ME == 1 & coal_has_RL == 1 & coal_has_V == 1),
     bourgeois_contra = as.integer(coal_has_ME == 0 & coal_has_RL == 0 & coal_has_V == 0),
     left_pro         = as.integer(coal_has_S == 1 & coal_has_G == 1),
     left_contra      = as.integer(coal_has_S == 0 & coal_has_G == 0),
     
-    # my thematic buckets: 3-4 rows each, below any estimability
-    # threshold; carried for tree engines and documentation only
+    # Own thematic buckets: 3-4 rows each, below any estimability threshold
+    # Carried for tree engines and documentation only
     coal_social_conserv = if_else(is.na(coal_str), NA_integer_,
                                   as.integer(support_coalition == "ME+V")),
     coal_social_lib     = if_else(is.na(coal_str), NA_integer_,
@@ -599,10 +576,70 @@ df <- df %>%
                                   as.integer(support_coalition %in% c("G", "GL", "G+GL")))
   )
 
+# 8. Sponsors / Urheber --------------------------------------------------
+
+# See Scripts in Urheber_Poles/ for the coding and review process
+
+rm(urh)
+# coded urheber poles
+urh <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles_refined_r4.csv"),
+                show_col_types = FALSE) %>%
+  mutate(anr = as.character(anr)) %>%   # file reads anr as numeric
+  select(anr, urheber_r4, pole_refined_r4, pole_refined_origin, urheber_is_coalition = is_coalition, n_sponsors, established_actor, actor_label_r4, actor_code_r4)
+
+## Join audit, both directions -------------------------------------------
+
+message("urheber orphans (coded but not in master): ",
+        paste(anti_join(urh, df, by = "anr")$anr, collapse = " "))
+message("master rows without urheber coding: ",
+        paste(anti_join(df, urh, by = "anr")$anr, collapse = " "))
+
+# df remove columns
+#df <- df %>% select(-c(urheber_r4, pole_refined_r4, pole_refined_origin, urheber_is_coalition, n_sponsors, established_actor, actor_label_r4, actor_code_r4, has_urheber, n_sponsors_f, is_coalition_f, established_f))
+#df <- df %>% select(-c(pole_left, pole_center, pole_right, pole_mixed, pole_environmental, pole_nonpartisan))
+
+df <- df %>%
+  left_join(urh, by = "anr", relationship = "one-to-one")
+stopifnot(nrow(df) == n_master)
+
+# Pole as factor with fixed levels (for tree engines and inspection)
+pole_levels <- c("none", "left", "right", "center", "mixed",
+                 "environmental", "nonpartisan")
+# pole_refined_r4 
+df <- df %>%
+  mutate(pole_refined_r4 = factor(pole_refined_r4, levels = pole_levels))
+
+# Political pole as indicator block for lm: 'none' is the all-zero baseline
+# NOTE: pole == 'none'  <=>  rechtsform == 1 -> Exact linear combination with the rechtsform dummies
+# Encoding as separate columns lets the per-fold alias guard drop exactly one indicator instead of
+# discarding the whole variable
+for (p in setdiff(pole_levels, "none")) {
+  df[[paste0("pole_r4_", p)]] <- as.integer(df$pole_refined_r4 == p)
+}
+
+# pole_refined
+df <- df %>%
+  mutate(pole_refined_origin = factor(pole_refined_origin, levels = pole_levels))
+
+for (p in setdiff(pole_levels, "none")) {
+  df[[paste0("pole_", p)]] <- as.integer(df$pole_refined_origin == p)
+}
+
+# Building regression-safe urheber features with explicit structural-missingness handling
+df <- df %>%
+  mutate(
+    has_urheber   = as.integer(actor_label_r4 != "none"),
+    # filling structurally-undefined rows with 0; the indicator absorbs the level shift
+    n_sponsors_f  = if_else(has_urheber == 1, n_sponsors, 0L),
+    is_coalition_f = if_else(has_urheber == 1, urheber_is_coalition, 0L),
+    established_f = if_else(has_urheber == 1, coalesce(established_actor, 0L), 0L)
+  )
+
 # 9. Signature / Mobilization signals ----------------------------------
 
-# Has_signature_phase strictly from rechtsform: 
-# Only initiatives (3) and optional referendums (2) collect signatures for the proposal
+# df remove signature columns
+df <- df %>% select(-c(has_signature_phase, sig_no_deadline, surplus_sig_ratio, sig_speed_pc, invalid_sig_share, spare_days_frac, sig_data_missing))
+# Has_signature_phase strictly from rechtsform: Only initiatives (3) and optional referendums (2) collect signatures for the proposal
 # The signature numbers stored on direct counterproposals (4) belong to the opposing initiative and are zeroed here deliberately
 df <- df %>%
   mutate(
@@ -626,9 +663,8 @@ df <- df %>%
     spare_days_frac   = if_else(sig_no_deadline == 1, 1, spare_days_frac)
   )
 
-# Flagging genuine within-phase missingness (old optional referendums without recorded tempo etc.), 
-# then 0-filling everything: The two indicators has_signature_phase and sig_data_missing carry the structure 
-# No mean imputation
+# Flagging genuine within-phase missingness (old optional referendums without recorded tempo etc.), then 0-filling everything: 
+# The two indicators has_signature_phase and sig_data_missing carry the structure, no mean imputation
 sig_features <- c("surplus_sig_ratio", "sig_speed_pc",
                   "invalid_sig_share", "spare_days_frac")
 
