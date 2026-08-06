@@ -1,25 +1,21 @@
-# =====================================================================
-# elite_cue_lr v3 — quellenbasierte LR-anker, harmonisiert, era-sensitiv
-# formel (verifiziert gegen v2, 265/267 rows exakt):
-#   elite_cue_lr = sum(anchor_b * support_b) / sum(support_b)
-#   = sitzgewichtete LR-position der ja-koalition
-# =====================================================================
+### 01_01_elite_cue_lr.R ###
 
-library(tidyverse)   # lubridate in tidyverse >= 2.0 enthalten
+# elite_cue_lr with LR-anchor, harmonized and era-sensitive 
+# Formula: elite_cue_lr = sum(anchor_b * support_b) / sum(support_b) 
+# -> Seat weighted LR-position of the yes-coalition
+
+# 1. Data import ------------------------------------------------------
+
+library(tidyverse)  
+
+rm(df1)
+df1 <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v2.csv"),
+               show_col_types = FALSE)
+
+# 2. Scale metadata and raw anchors -------------------------------------
 
 BLOCS <- c("S", "G", "GL", "ME", "RL", "V")
 
-df1 <- bw
-
-# ---------------------------------------------------------------------
-# 1) skalen-metadaten und rohe anker
-# ---------------------------------------------------------------------
-# defining the endpoint metadata for every source scale
-# sources: Hug & Schulz (2007, Party Politics 13(3), 322);
-#          NZZ parlamentarier-rating (-10..+10)
-# TODO: verifying against Hug & Schulz p. 322 which studies the 1990/1993/2003
-# columns stem from (1993 plausibly Huber/Inglehart 1-10, 2003 plausibly
-# Benoit/Laver 1-20) and citing the originals, not only the secondary source
 scale_defs <- tibble(
   scale_id = c("nr_21_1974", "elite_survey_10_1990", "experts_10_1993",
                "experts_20_2003", "nzz_2004_2025", "old_improvised"),
@@ -28,9 +24,19 @@ scale_defs <- tibble(
 ) %>%
   mutate(midpoint = (lo + hi) / 2, span = hi - lo)
 
-# keeping the old improvised anchors as extra column for comparison runs
-# caveat: anchors are party-level ratings mapped onto fraktionen
-# (ME vor 2021 = CVP/CEg-fraktion usw.)
+# Sources for every scale:
+
+# From Hug & Schulz (2007, p. 322):
+# NR 1974 (Scale 1–21): Kerr (1981, 1983)          
+# Survey of Mid-level elites 1990 (Scale 1–10): Finger and Sciarini (1991: 108) and Finger and Hug (1992: 298)
+# Experts 1993 (Scale 1–10): Huber and Inglehart (1995: 107)
+# Experts 2003 (1–20): Benoit and Laver (2006)
+
+# NZZ Parlamentarier-rating for 2004-2025 (Scale -10/+10)
+
+# Keeping the old improvised anchors as extra column for comparison runs
+# Caveat: anchors are party-level ratings mapped onto factions (ie. ME before 2021 = C/CEg-Faction usw.)
+
 anchors_raw <- tribble(
   ~bloc, ~nr_21_1974, ~elite_survey_10_1990, ~experts_10_1993, ~experts_20_2003, ~nzz_2004_2025, ~old_improvised,
   "G",       NA,   3.85,    NA,    4.21, -8.0, -8.0,
@@ -42,12 +48,10 @@ anchors_raw <- tribble(
 ) %>%
   mutate(across(-bloc, as.double))
 
-# ---------------------------------------------------------------------
-# 2) harmonisierung auf [-1, 1]
-# ---------------------------------------------------------------------
-# normalizing every anchor via (x - midpoint) / (span / 2); the cue is a
-# weighted mean, so only relative spacings matter and scales become
-# direkt austauschbar
+# 3. Normalization ----------------------------------------------------
+
+# Normalizing every anchor via (x - midpoint) / (span / 2) to [-1, 1]
+# The cue is a weighted mean, so only relative spacings matter and scales become interchangeable
 anchors_norm <- anchors_raw %>%
   pivot_longer(-bloc, names_to = "scale_id", values_to = "raw") %>%
   left_join(scale_defs, by = "scale_id") %>%
@@ -55,11 +59,10 @@ anchors_norm <- anchors_raw %>%
   filter(!is.na(anchor)) %>%
   select(scale_id, bloc, anchor)
 
-# ---------------------------------------------------------------------
-# 3) era-zuordnung (kompatibel mit den modell-dummies)
-# ---------------------------------------------------------------------
-# assigning the era from the PARLIAMENTARY vote date, not the referendum
-# date -- the cue measures parliament's position at decision time
+# 4. Era-sensitive attribution --------------------------------------------
+
+# Assigning the era from the parliamentary vote date (not referendum date) 
+# Cue measures parliament's position at decision time (Compatible with model dummies)
 assign_era <- function(d) {
   case_when(
     is.na(d)        ~ NA_character_,
@@ -69,43 +72,38 @@ assign_era <- function(d) {
   )
 }
 
-# mapping each era to one scale; frei editierbar
-# e1971_1990 ist fuer den cue gegenstandslos (roll-call-daten ab 1994)
+# Mapping each era to one scale
 era_scale_map <- tribble(
   ~era,          ~scale_id,
-  "e1971_1990",  "elite_survey_10_1990",
+  "e1971_1990",  "elite_survey_10_1990", # e1971_1990 meaningless (roll-call-data from 1994)
   "e1991_2007",  "experts_20_2003",
   "e2008plus",   "nzz_2004_2025"
 )
 
-# building a single-scale map for uniform runs
+# Building a single-scale map for uniform runs
 uniform_era_map <- function(sid) {
   tibble(era = c("e1971_1990", "e1991_2007", "e2008plus"), scale_id = sid)
 }
 
-# ---------------------------------------------------------------------
-# 4) pins fuer manuell fixierte vorlagen
-# ---------------------------------------------------------------------
-# pinning a vote to a bloc coalition instead of a numeric value, so the
-# override survives any change of anchor scale
-# 552.1: reine SVP-vorlage, cue = V-anker (entspricht 8.5 in v2)
+# 4. Pins for manually fixed proposals -----------------------------------
+
+# Pinning a vote to a bloc coalition instead of a numeric value, so the override survives any change of anchor scale
+# 552.1: solely a SVP proposal, cue = V-anchor (8.5 in v2)
 cue_pins <- tribble(
   ~anr,    ~pin_blocs,
   "552.1", "V"
 )
 
-# ---------------------------------------------------------------------
-# 5) berechnung
-# ---------------------------------------------------------------------
+# 5. Calculations --------------------------------------------------------
+
 compute_elite_cue <- function(df1,
                               anchors     = anchors_norm,
                               era_map     = era_scale_map,
                               pins        = cue_pins,
                               method      = c("support_mean", "net"),
                               target_half = 1) {
-  # method "support_mean" = v2-formel (position der ja-koalition)
-  # method "net" = sum(a*(sup-opp)) / sum(sup+opp), gedaempft bei
-  # gespaltenem parlament; nur als alternative, nicht default
+  # method "support_mean" = v2-formel (position of yes-coalition)
+  # method "net" = sum(a*(sup-opp)) / sum(sup+opp) - for split parliament not as default, only as alternative
   method <- match.arg(method)
   
   long <- df1 %>%
@@ -130,8 +128,7 @@ compute_elite_cue <- function(df1,
     group_by(anr, era, scale_id) %>%
     summarise(
       n_blocs_used    = sum(ok_sup),
-      # flagging blocs that HAVE data but lack an anchor under this scale
-      # (z.b. G unter experts_10_1993) -- stiller drop waere gefaehrlich
+      # Flagging blocs that have data but lack an anchor under this scale (ie. G under experts_10_1993) -> beware of silent drop
       blocs_no_anchor = paste(bloc[!is.na(support) & is.na(anchor)],
                               collapse = "+"),
       cue_sup = if (sum(support[ok_sup]) > 0)
@@ -145,7 +142,7 @@ compute_elite_cue <- function(df1,
     ) %>%
     mutate(elite_cue_lr = if (method == "support_mean") cue_sup else cue_net)
   
-  # applying coalition pins under the vote's active scale
+  # Applying coalition pins under the vote's active scale
   if (nrow(pins) > 0) {
     pin_vals <- pins %>%
       inner_join(cues %>% select(anr, scale_id), by = "anr") %>%
@@ -165,9 +162,8 @@ compute_elite_cue <- function(df1,
     select(anr, era, scale_id, n_blocs_used, blocs_no_anchor, elite_cue_lr)
 }
 
-# ---------------------------------------------------------------------
-# 6) skalenvergleich
-# ---------------------------------------------------------------------
+# 6. Scale comparison -----------------------------------------------------
+
 compare_anchor_scales <- function(df1, scale_ids, ...) {
   wide <- scale_ids %>%
     map(\(sid) compute_elite_cue(df1, era_map = uniform_era_map(sid), ...) %>%
@@ -184,45 +180,56 @@ compare_anchor_scales <- function(df1, scale_ids, ...) {
   )
 }
 
-# ---------------------------------------------------------------------
-# 7) anwendung
-# ---------------------------------------------------------------------
-# reading anr as character so decimal suffixes and pins match exactly
+# 7. Application ----------------------------------------------------------
+
+# Reading anr as character, so decimal suffixes and pins match exactly
 df1 <- read_csv(
   file.path(input_path, "Fraktionen_Blocs", "fraktionen_blocs_wide_v2.csv"),
   col_types = cols(anr = col_character())
 )
 
-# era-gemischter default (experts_20_2003 bis 2007, NZZ ab 2008)
+# Era-mixed default (experts_20_2003 until 2007, nzz from 2008)
 cue_v3 <- compute_elite_cue(df1)
 
-# single-scale robustness (r ~ 0.994 zum gemischten schema)
+# Single-scale robustness (r ~ 0.994 for mixed scheme)
 cue_nzz <- compute_elite_cue(df1, era_map = uniform_era_map("nzz_2004_2025"))
 
-# comparing all sourced scales against the old improvised one
+# Comparing all sourced scales against the old improvised one
 cmp <- compare_anchor_scales(df1, c("old_improvised", "experts_20_2003",
                                    "nzz_2004_2025", "elite_survey_10_1990"))
 round(cmp$correlation, 3)
 cmp$sign_flips
 
-# verifying the pipeline against the stored v2 column (alte anker, -10..10)
-# erwartete restdifferenz: nur anr 465.2 (-2.50 gespeichert vs. -2.40 formel)
+# Which rows flipped?
+ref_id          <- "old_improvised"                       # scale_ids[1] = reference
+comparison_ids  <- setdiff(names(cmp$values)[-1], ref_id) # the three compared scales
+
+cmp$values %>%
+  mutate(ref = .data[[ref_id]]) %>%
+  pivot_longer(all_of(comparison_ids), names_to = "scale", values_to = "value") %>%
+  # sign(NA) propagates NA, so NA rows drop out here just as na.rm did in the count
+  filter(sign(value) != sign(ref)) %>%
+  select(anr, scale, ref, value) %>%
+  arrange(scale, anr) %>%
+  print(n=52)
+
+# Verifying the pipeline against the stored v2 column (old anchors: -10..10)
 check <- compute_elite_cue(df1, era_map = uniform_era_map("old_improvised"),
                            target_half = 10) %>%
   left_join(df1 %>% transmute(anr, v2 = elite_cue_lr), by = "anr") %>%
   mutate(diff = round(elite_cue_lr, 2) - v2) %>%
   filter(abs(diff) > 0.011)
 
-# writing v3 with provenance columns
+# Writing v3 with provenance columns
 df1 <- df1 %>%
     #select(-elite_cue_lr) %>%
     rename(elite_cue_lr0 = elite_cue_lr) %>%
     left_join(cue_v3 %>% select(anr, elite_cue_lr, cue_scale_id = scale_id,
                                 cue_n_blocs = n_blocs_used),
-              by = "anr") #%>%
-    #write_csv("Input Data/Fraktionen_Blocs/fraktionen_blocs_wide_v3.csv")
+              by = "anr") %>%
+    write_csv("Input Data/Fraktionen_Blocs/fraktionen_blocs_wide_v3.csv")
 
-bw <- df1
+str(df1)
 
 ### Code Junk ###
 ## Linear min-max rescaling for comparison -------------------------------

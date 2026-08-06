@@ -402,11 +402,8 @@ sum(df$gov_parl_align == "0" & df$volk == "1", na.rm = TRUE)
 
 n_master <- nrow(df)
 
-### Before Continuing, run elite_cue_lr script to update that variable with more accurate values!!! ###
-### -> change so that the bw df automatically comes with the new values!!!!
-
 library(tidyverse)
-bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v2.csv"),
+bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v3.csv"),
                show_col_types = FALSE)
 str(bw)
 
@@ -457,6 +454,8 @@ table(bw$support_coalition)
 # Reflects only the blocs that actually existed at the time, the GL Fraction did not exist before 2012
 bloc_sum <- function(...) rowSums(cbind(...), na.rm = TRUE)
 
+options(scipen = 999)   # suppress scientific notation globally
+rm(frak_feats)
 frak_feats <- frak %>%
   transmute(
     anr,
@@ -477,6 +476,7 @@ frak_feats <- frak %>%
     
     # The weighted left-right cue score, neutral-filling its handful of gaps at the scale midpoint 0, below any estimate threshold
     elite_cue_lr    = if_else(is.na(elite_cue_lr), 0, elite_cue_lr),
+    elite_cue_lr0    = if_else(is.na(elite_cue_lr0), 0, elite_cue_lr0),
     
     # Coalition composition string, 29 distinct values: Factor for tree engines only, far too many thin levels for lm at this n
     support_coalition = factor(support_coalition)
@@ -485,6 +485,7 @@ frak_feats <- frak %>%
 
 ## Alternative Bloc Resolution ---------------------------------------------
 
+rm(frak_feats5)
 # Keeping G separate from S, this preserves the S/G divergence that the four-bloc version collapses
 frak_feats5 <- frak %>%
   transmute(
@@ -499,6 +500,7 @@ frak_feats5 <- frak %>%
                                     frak_fdp_sup > 0.5, frak_svp_sup > 0.5), na.rm = TRUE),
     frak_lr_signed  = frak_sp_sup + frak_gruene_sup - frak_svp_sup, 
     elite_cue_lr    = if_else(is.na(elite_cue_lr), 0, elite_cue_lr),
+    elite_cue_lr0    = if_else(is.na(elite_cue_lr0), 0, elite_cue_lr0),
     support_coalition = factor(support_coalition)
   )
 
@@ -729,8 +731,7 @@ feature_sets <- list(
     "nr_support",
     "roll_yes_domain"
   ),
-  ## add primitive Ideology rating feature later ("left", "right", "center")
-  
+
   m1_2 = c(
     # table 0
     "rechtsform", "parl_recommend", "gov_missing", "main_domain", "dep",
@@ -807,8 +808,8 @@ feature_sets <- list(
           "era", "season", "months_to_election"
   ),
 
-  # external blocks, joined above; kept as named blocks so model sets
-  # stay one-liners and each source can be switched in or out cleanly
+  # External blocks, joined above; kept as named blocks so model sets stay one-liners 
+  # and each source can be switched in or out cleanly
   ext_frak_lm    = c("frak_left_sup", "frak_center_sup", "frak_fdp_sup",
                      "frak_svp_sup", "frak_breadth", "elite_cue_lr"),
   ext_frak5_lm    = c("frak_sp_sup", "frak_gruene_sup", "frak_center_sup", "frak_fdp_sup",
@@ -821,8 +822,8 @@ feature_sets <- list(
                      "urheber_is_coalition"),
   
   m1_3 = character(0),   # placeholder: m1_2 + external features, later
-  # computed but reserved for tree-based engines: redundant or
-  # rank-deficient under lm dummy coding, informative for splits
+  # Computed but reserved for tree-based engines: 
+  # redundant or rank-deficient under lm dummy coding, informative for splits
   tree_extras = c("gov_recommend", "brpos_signed", "gov_parl_align",
                   "gov_parl_recommend_n", "changes_constitution",
                   "double_majority_required", "has_signature_phase",
@@ -839,15 +840,13 @@ feature_sets <- list(
 )
 
 
-# composing the model iterations from the blocks above; the frak/coal
-# sets only exist on the post-1994 frame and are evaluated there
+# Composing the model iterations from the blocks above
+# The frak/coal sets only exist on the post-1994 frame and are evaluated there
 feature_sets$m1_3    <- c(feature_sets$m1_2, feature_sets$ext_urheber_lm)
 feature_sets$m2_frak <- c(feature_sets$m1_2, feature_sets$ext_frak_lm)
 feature_sets$m2_coal <- c(feature_sets$m2_frak, feature_sets$ext_coal_lm)
 
-# guarding the registry instead of repairing it silently: with a single
-# literal a duplicate name is a typo, and every referenced column must
-# exist in the feature table or a later model script fails mid-fold
+# Guarding the registry instead of repairing it silently
 stopifnot(!any(duplicated(names(feature_sets))))
 stopifnot(all(unlist(feature_sets) %in% names(df)))
 
