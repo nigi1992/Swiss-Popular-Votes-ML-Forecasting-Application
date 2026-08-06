@@ -402,11 +402,13 @@ sum(df$gov_parl_align == "0" & df$volk == "1", na.rm = TRUE)
 
 n_master <- nrow(df)
 
+### Before Continuing, run elite_cue_lr script to update that variable with more accurate values!!! ###
+### -> change so that the bw df automatically comes with the new values!!!!
+
 library(tidyverse)
 bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v2.csv"),
                show_col_types = FALSE)
 str(bw)
-
 
 ## Orientation and Validation -------------------------------------------
 
