@@ -39,8 +39,11 @@ run_lm_set <- function(set_name, feats) {
       drop_zero_variance()
     te <- frame[folds[[b]]$test, names(tr)] %>%
       harmonize_factor_levels(ref = tr)
-    fit  <- lm(yes_share ~ ., data = tr)
-    yhat <- predict(fit, newdata = te)
+    #fit  <- lm(yes_share ~ ., data = tr)
+    #yhat <- predict(fit, newdata = te)
+    g    <- fit_lm_guarded(tr)
+    te   <- te[, names(g$data)]
+    yhat <- predict(g$fit, newdata = te)
     eval_preds(te$yes_share, yhat, set_name, b) %>%
       mutate(pred = list(tibble(row = folds[[b]]$test, yhat = yhat)))
   })

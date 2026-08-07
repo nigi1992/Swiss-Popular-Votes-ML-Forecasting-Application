@@ -44,16 +44,41 @@ harmonize_factor_levels <- function(newdata, ref) {
 
 # 3. Metric functions for yes-share reg + the derived Volksmehr ------
 
+# Regression metrics on the yes-share
+# Classification metrics on the derived Volksmehr (yes_share >= 50)
+
 mae  <- function(y, yhat) mean(abs(y - yhat), na.rm = TRUE)
 rmse <- function(y, yhat) sqrt(mean((y - yhat)^2, na.rm = TRUE))
 volksmehr_acc <- function(y, yhat) mean((yhat >= 50) == (y >= 50), na.rm = TRUE)
+
+# The Brier score uses the clipped yes-share prediction as a probability proxy 
+# (calibration diagnostic, proper probabilities come later from engines with prob output),
+brier <- function(y, yhat) {
+  p <- pmin(pmax(yhat / 100, 0), 1)
+  mean((p - as.numeric(y >= 50))^2, na.rm = TRUE)
+}
+
+# Average precision (area under the precision-recall curve) 
+# with the accepted proposal (yes_share >= 50) as the positive class
+# PR-AUC only needs a ranking score and takes yhat directly
+pr_auc <- function(y, yhat) {
+  ok <- !is.na(y) & !is.na(yhat)
+  y01 <- as.integer(y[ok] >= 50)
+  s   <- yhat[ok]
+  if (sum(y01) == 0 || sum(y01) == length(y01)) return(NA_real_)
+  ord  <- order(s, decreasing = TRUE)
+  y01  <- y01[ord]
+  prec <- cumsum(y01) / seq_along(y01)
+  sum(prec * y01) / sum(y01)
+}
 
 # 4. One row of evaluation output ------------------------------------
 
 eval_preds <- function(y, yhat, model, fold) {
   tibble::tibble(model = model, fold = fold, n = sum(!is.na(yhat)),
                  mae = mae(y, yhat), rmse = rmse(y, yhat),
-                 volksmehr_acc = volksmehr_acc(y, yhat))
+                 volksmehr_acc = volksmehr_acc(y, yhat),
+                 brier = brier(y, yhat), pr_auc = pr_auc(y, yhat))
 }
 
 # 5. Dropping zero-variance columns ----------------------------------
@@ -67,13 +92,11 @@ drop_zero_variance <- function(d, keep = "yes_share") {
   d[, setdiff(names(d), zv), drop = FALSE]
 }
 
-
 # 6. Fitting lm with alias guard ------------------------------------------
 
-# fitting lm with an alias guard: sample-contingent exact collinearity
-# (levels or numerics that become linear combinations inside a small
-# training window) gets detected via alias(), the offending source
-# columns are dropped for this fold only, and the fit is repeated
+# Fitting lm with an alias guard: 
+# Sample-contingent exact collinearity (levels or numerics that become linear combinations inside a small training window) 
+# gets detected via alias(), the offending source columns are dropped for this fold only, and the fit is repeated
 fit_lm_guarded <- function(tr, max_iter = 3) {
   for (i in seq_len(max_iter)) {
     fit <- lm(yes_share ~ ., data = tr)

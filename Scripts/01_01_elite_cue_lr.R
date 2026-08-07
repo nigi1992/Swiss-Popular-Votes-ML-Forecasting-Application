@@ -231,8 +231,9 @@ df1 <- df1 %>%
 
 str(df1)
 
-### Code Junk ###
-## Linear min-max rescaling for comparison -------------------------------
+# 8. Code Junk ------------------------------------------------------------
+
+## Linear min-max rescaling for comparison --------------------------------
 
 # Defining the endpoint metadata for every source scale in order to compare and harmonize
 # Sources:NZZ Parlamentarier Rating 2025, Hug and Schulz 2007, 322)
@@ -251,7 +252,7 @@ scale_defs <- tibble(
   midpoint = (lo + hi) / 2,
   span     = hi - lo
 )
-
+rm(rescale_lr, inv_rescale_lr)
 rescale_lr <- function(x, lo, hi, target_lo = -10, target_hi = 10) {
   # I check endpoints only on non-missing metadata so an unmatched join surfaces as an explicit error
   if (any(is.na(lo) | is.na(hi))) stop("missing scale endpoints - check the join on scale_id")
@@ -302,6 +303,7 @@ anchors_raw <- tribble(
 # Verifying that every column in anchors_raw has matching endpoint metadata before rescaling
 stopifnot(setequal(setdiff(names(anchors_raw), "bloc"), scale_defs$scale_id))
 
+rm(anchors_std, anchors_wide)
 # converting every source column to the common axis with the endpoints from scale_defs
 anchors_std <- anchors_raw %>%
   pivot_longer(-bloc, names_to = "scale_id", values_to = "raw") %>%
@@ -321,10 +323,10 @@ anchors_wide <- anchors_std %>%
   arrange(mean_std)
 
 print(anchors_wide, n = Inf)
-
+rm(scale_cols)
 # comparing every pair of standardized scales on both cardinal and ordinal agreement
 scale_cols <- anchors_wide %>% select(starts_with("std_"))
-
+rm(pair_stats)
 pair_stats <- combn(names(scale_cols), 2, simplify = FALSE) %>%
   map_dfr(function(p) {
     a <- scale_cols[[p[1]]]; b <- scale_cols[[p[2]]]
@@ -344,6 +346,7 @@ pair_stats <- combn(names(scale_cols), 2, simplify = FALSE) %>%
 
 print(pair_stats)
 
+rm(anchor_sets)
 # converting the standardized anchor table into named vectors ready for compute_cue_v2
 anchor_sets <- anchors_wide %>%
   select(bloc, starts_with("std_")) %>%
@@ -364,6 +367,7 @@ anchor_sets <- anchors_wide %>%
 stopifnot(length(anchor_sets) > 0)
 names(anchor_sets)
 
+rm(compute_cue_v())
 # computing elite_cue_lr only over blocs whose faction majority supports the proposal
 compute_cue_v2 <- function(support_vec, oppose_vec, lr_anchors) {
   in_coalition <- support_vec > oppose_vec
@@ -372,6 +376,7 @@ compute_cue_v2 <- function(support_vec, oppose_vec, lr_anchors) {
   round(sum(support_vec[in_coalition] * lr_anchors[in_coalition]) / total, 2)
 }
 
+rm(cue_variants)
 # recomputing the coalition-filtered cue under every anchor set for the MAE comparison
 cue_variants <- map_dfc(anchor_sets, function(a) {
   a <- a[blocs]  # I enforce the canonical bloc order so the columns line up
@@ -382,6 +387,7 @@ cue_variants <- map_dfc(anchor_sets, function(a) {
   })
 })
 
+rm(cue_spread)
 # checking how far the cue itself moves before I bother rerunning the models
 cue_spread <- cue_variants %>%
   mutate(row_range = pmap_dbl(., ~ {
