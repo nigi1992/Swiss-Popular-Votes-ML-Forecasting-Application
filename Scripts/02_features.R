@@ -709,28 +709,31 @@ feature_sets <- list(
   # lm sets: alias-free by construction on the 1971+ frame
   m1_0 = c("rechtsform"),
   
-  m1_1_0 = c("rechtsform", "parl_recommend", "gov_missing",
-           "main_domain", "dep"),
+  m1_1_0 = c("rechtsform", 
+             "parl_recommend", 
+             "gov_missing",
+             "main_domain", 
+             "dep"
+             ),
   
-  m1_1 = c(
-    "rechtsform", 
-    "parl_recommend", 
-    "gov_missing",
-    "main_domain", 
-    "dep"
-  ),  
+  m1_1 = c("rechtsform", 
+           "parl_recommend", 
+           "gov_missing",
+           "main_domain", 
+           "dep"
+           ),  
   
   # Rerun m1_1 as:
   m1_1a = c(
     "rechtsform",
     "nr_recommend",
-    "d1e1"		
+    "main_domain"		
   ),
   
   m1_1b = c(
     "roll_yes_rechtsform",
     "nr_recommend",
-    "d1e1"
+    "main_domain"
   ),
   
   m1_1c = c(
@@ -742,7 +745,7 @@ feature_sets <- list(
   m1_1d = c(
     "roll_yes_rechtsform",
     "nr_support",
-    "d1e1"
+    "main_domain"
   ),
   
   m1_1e = c(
