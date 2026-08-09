@@ -37,8 +37,8 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
   }, numeric(1))
 }
 
-# 1.1 Manual Imputation -----------------------------------------------
-## Signature Collection Section ---------------------------------------
+# 1.1 Manual imputation -----------------------------------------------
+## Signature collection section ---------------------------------------
 
 # Manually imputing values as they become available from the SwissVotes data set
 # dat-start, dat-limit, sammelfrist, dat-submit, dat-success, dat-message, dat-parl, dauer_bv, dauer_abst, 
@@ -118,7 +118,7 @@ df <- df %>%
     }, numeric(1))
   )
 
-## Notes for 2. -------------------------------------------------------
+## Notes for 3. -------------------------------------------------------
 
 # 'changes_constitution': 'rechtsform' 1, 3, 4 target the constitution (5 redundant)
 # approximation, since a minority of obligatory referendums concern non-constitutional objects 
@@ -178,7 +178,7 @@ colnames(df[df$vote_done == "voted", ])[colSums(is.na(df[df$vote_done == "voted"
 which(is.na(df$nrja)) # Finding row via row identifier (anr)
 df |> filter(is.na(nrja)) %>% select(anr, datum, titel_kurz_d, `bv-pos`, `nr-pos`, nrja, nrnein, `sr-pos`, srja, srnein)
 
-## Directionless Codebook values for gov-pos variables ------------------------------
+## Directionless codebook values for gov-pos variables ------------------------------
 
 # see p. 12-14 for reference
 
@@ -197,9 +197,11 @@ rm(df_gov_pos)
 
 df <- df %>%
   mutate(
+    # Institutional considerations
     changes_constitution     = as.integer(rechtsform %in% c("1", "3", "4")), # redundant
     double_majority_required = as.integer(rechtsform %in% c("1", "3", "4", "5")), # identical
     
+    # Gov. + parl. recommendations
     gov_recommend            = factor_with_miss(`br-pos`), # includes 30 NAs as 'miss', and n=3 and n=8 as their own categories
     gov_missing              = as.integer(is.na(`br-pos`)), # binary (0/1) Indicator: was there a rec. or not?
     parl_recommend           = factor_with_miss(`bv-pos`), # nr + sr recommendation
@@ -209,6 +211,7 @@ df <- df %>%
     nr_recommend             = factor_with_miss(`nr-pos`), # better approximation for elite support
     # than nr + sr, according to Trechsel/Sciarini 1998, 108
     
+    # Differentiation by domain/policy area
     main_domain              = factor(d1e1, levels = 1:12),
     #dep                      = factor_with_miss(dep)
   )
@@ -221,19 +224,20 @@ for (k in 1:12) {
   )
 }
 
+# Legislative friction: 
+# dauer_bv  as proxy for contentious parliamentary process and elite conflict/complexity
+# dauer_bv is structurally missing for pa-iv proposals (no bundesraetliche Botschaft exists, 34 of 38 NAs), 
+# so pa_iv doubles as the missingness indicator and the fill is 0
+df <- df %>%
+  mutate(pa_iv        = as.numeric(`pa-iv`),
+         log_dauer_bv = log1p(if_else(is.na(dauer_bv), 0, dauer_bv)))
+
 ## Notes for more "dumb" institutional features ---------------------
 
-# anzahl - Proxy for Voter fatigue? 
+# anzahl - Proxy for Voter fatigue? -> No! Not worth it
 
-# pa_iv = (0/1)	- Low cardinality binary, Parliamentary initiatives with better chances of passing?
-
-# Are these variables proxies for a contentious parliamentary process? 
-# -> Idea that lengthy deliberation does not bode well for proposal
-
-# entwurf_nr - the higher the number, the more complicated the deliberation process?
-
-# deliberation_duration in parlamentary consultation process, if pa_iv = 1 -> NA
-# dauer_bv  - Proxy for elite conflict/complexity?
+# entwurf_nr - the higher the number, the more complicated the deliberation process? 
+# -> No! (It counts bundled drafts within a bill, not deliberation complexity)
 
 
 ## From Codebook, s.15-18:
@@ -357,7 +361,7 @@ df <- df %>%
     parl_consensus = if_else(is.na(parl_consensus), 0.5, parl_consensus)
   )
 
-## Some Data Discovery ------------------------------------------------
+## Some data discovery ------------------------------------------------
 
 sum(df$`nr-pos` == "1" & df$volk == "1", na.rm = TRUE) + sum(df$`nr-pos` == "2" & df$volk == "0", na.rm = TRUE)
 sum(df$`nr-pos` == "2" & df$volk == "1", na.rm = TRUE) + sum(df$`nr-pos` == "1" & df$volk == "0", na.rm = TRUE)
@@ -404,12 +408,12 @@ sum(df$gov_parl_align == "0" & df$volk == "1", na.rm = TRUE)
 n_master <- nrow(df)
 
 library(tidyverse)
-# Run 01_01_elite_cues.R first to get the df with updated values for elite cues
+# Run 01b_elite_cues.R first to get the df with updated values for elite cues
 bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v3.csv"),
                show_col_types = FALSE)
 str(bw)
 
-## Orientation and Validation -------------------------------------------
+## Orientation and validation -------------------------------------------
 
 # Validating every roll call against the official final-vote totals before anything gets joined
 # The *_support/*_oppose columns are proposal-oriented (SwissVotes also counts nrja/nrnein proposal-oriented)
@@ -445,8 +449,10 @@ frak <- bw %>%
 ## Bloc features --------------------------------------------------------
 
 # 4 period-stable blocs: 
-# left = S (Social Democrats) + G (Grüne), center = Mitte (CVP + BDP + EVP) + GLP (GLP folded in because its Fraktion only exists from 2007), 
-# fdp = RL, svp = V. Shares over cast direction votes only, abstentions excluded
+# left = S (Social Democrats) + G (Grüne), center = Mitte (CVP + BDP + EVP) + GLP, fdp = RL, svp = V. 
+# Shares over cast direction votes only, abstentions excluded 
+# GLP folded in because its faction only exists since 2012 -> frak_breadth needs a fixed bloc count
+
 share <- function(sup, opp) if_else((sup + opp) > 0, sup / (sup + opp), NA_real_)
 
 # table support_coaltion
@@ -457,6 +463,7 @@ table(bw$support_coalition)
 bloc_sum <- function(...) rowSums(cbind(...), na.rm = TRUE)
 
 options(scipen = 999)   # suppress scientific notation globally
+
 rm(frak_feats)
 frak_feats <- frak %>%
   transmute(
@@ -488,7 +495,7 @@ frak_feats <- frak %>%
   )
 # Source for coaltion theory: Kriesi 2005, p.83, Jaquet, Sciarini & Gava 2022, Wagschal 2023
 
-## Alternative Bloc Resolution ---------------------------------------------
+## Alternative bloc resolution ---------------------------------------------
 
 rm(frak_feats5)
 # Keeping G separate from S, this preserves the S/G divergence that the four-bloc version collapses
@@ -532,7 +539,26 @@ df <- df %>%
             by = "anr", relationship = "one-to-one")
 stopifnot(nrow(df) == n_master)
 
-# 7. Coalition Config from 'support_coalition' ---------------------------
+
+## Electorate-weighted faction support -----------------------------------
+
+# Σ (bloc yes-share x bloc voter share at the last NR election) / Σ (bloc voter share) 
+# Party-to-bloc weights follow faction membership: 
+# LPS -> RL; Lega, MCG -> V; GLP weight sits in the center bloc
+# Blocs without a cast share drop from both sums (Grüne in 3 roll calls)
+wsum <- function(...) rowSums(cbind(...), na.rm = TRUE)
+W <- tibble(sp     = df$`w-sp`,
+            gruene = df$`w-gps`,
+            center = wsum(df$`w-cvp`, df$`w-bdp`, df$`w-evp`, df$`w-mitte`, df$`w-glp`),
+            fdp    = wsum(df$`w-fdp`, df$`w-lps`),
+            svp    = wsum(df$`w-svp`, df$`w-lega`, df$`w-mcg`))
+S <- tibble(sp = df$frak_sp_sup, gruene = df$frak_gruene_sup,
+            center = df$frak_center_sup, fdp = df$frak_fdp_sup, svp = df$frak_svp_sup)
+num <- rowSums(as.matrix(S) * as.matrix(W), na.rm = TRUE)
+den <- rowSums(as.matrix(W) * !is.na(as.matrix(S)), na.rm = TRUE)
+df$weighted_parl_support <- if_else(is.na(df$frak_left_sup), NA_real_, num / den)
+
+# 7. Coalition config from 'support_coalition' ---------------------------
 
 # Coalition-configuration features from support_coalition variable according to Kriesi (2005), Linder/Mueller (2021) and Wagschal (2023) 
 
@@ -597,7 +623,7 @@ df <- df %>%
 
 # 8. Sponsors / Urheber --------------------------------------------------
 
-# See Scripts in Urheber_Poles/ for the coding and review process
+# See Scripts in /Urheber Scripts for the coding and review process
 
 rm(urh)
 # coded urheber poles
@@ -654,7 +680,16 @@ df <- df %>%
     established_f = if_else(has_urheber == 1, coalesce(established_actor, 0L), 0L)
   )
 
-# 9. Signature / Mobilization signals ----------------------------------
+## Sponsor track record ----------------------------------------------------
+
+# As-of failure rate of earlier initiatives from the same urheber pole
+fail_hist <- if_else(df$vote_done == "voted" & as.character(df$rechtsform) == "3",
+                     as.numeric(as.character(df$volk) == "0"), NA_real_)
+df$author_prior_fail_rate <- asof_stat(df$datum, fail_hist,
+                                       group = as.character(df$pole_refined_r4),
+                                       fallback = 0.5)
+
+# 9. Signature / Mobilization signals ------------------------------------
 
 # df remove signature columns
 #df <- df %>% select(-c(has_signature_phase, sig_no_deadline, surplus_sig_ratio, sig_speed_pc, invalid_sig_share, spare_days_frac, sig_data_missing))
@@ -695,205 +730,8 @@ df <- df %>%
     across(all_of(sig_features), ~ if_else(is.na(.x), 0, .x))
   )
 
-# 10. Feature-set registry ---------------------------------------------
-
-# Model iterations differ by column selection, not by pipeline
-# m1_3 extends m1_2 once the external features (coded urheber/sponsor, roll-call factions) are joined in
-
-feature_sets <- list(
-  ## M0
-  # naive benchmark: only the era-sensitive rechtsform dummy, no other features
-  m0   = c("roll_yes_rechtsform"),
-  
-  ## M1 Variations
-  # lm sets: alias-free by construction on the 1971+ frame
-  m1_0 = c("rechtsform"),
-  
-  m1_1_0 = c("rechtsform", 
-             "parl_recommend", 
-             "gov_missing",
-             "main_domain", 
-             "dep"
-             ),
-  
-  m1_1 = c("rechtsform", 
-           "parl_recommend", 
-           "gov_missing",
-           "main_domain", 
-           "dep"
-           ),  
-  
-  # Rerun m1_1 as:
-  m1_1a = c(
-    "rechtsform",
-    "nr_recommend",
-    "main_domain"		
-  ),
-  
-  m1_1b = c(
-    "roll_yes_rechtsform",
-    "nr_recommend",
-    "main_domain"
-  ),
-  
-  m1_1c = c(
-    "roll_yes_rechtsform",
-    "nr_recommend",
-    "roll_yes_domain"
-  ),
-  
-  m1_1d = c(
-    "roll_yes_rechtsform",
-    "nr_support",
-    "main_domain"
-  ),
-  
-  m1_1e = c(
-    "roll_yes_rechtsform",
-    "nr_support",
-    "roll_yes_domain"
-  ),
-
-  m1_2 = c(
-    # table 0
-    "rechtsform", "parl_recommend", "gov_missing", "main_domain", "dep",
-    # table A (parl_consensus excluded: exact mean of the two shares)
-    "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-    "parl_support_signed", "elite_consensus", "parl_participation",
-    # table B (has_signature_phase excluded from lm: = 1[rechtsform in {2,3}])
-    "surplus_sig_ratio", "sig_speed_pc", "invalid_sig_share",
-    "spare_days_frac", "sig_no_deadline", "sig_data_missing",
-    # table C
-    "roll_yes_rechtsform", "roll_yes_domain", "roll_acc_rechtsform",
-    "last_domain_outcome", "time_since_domain_vote",
-    # table D
-    "era", "season", "months_to_election"
-  ),
-  
-  # Elite consensus features:
-  #1. nr_support > par_support_signed > parl_consensus
-  #2. interchamber_disagree
-  #3. gov_parl_align/brpos_signed
-  
-  
-  m1_2a = c(
-    # table 0
-    "rechtsform", "anzahl", "nr_recommend", "main_domain", 
-    # table A 
-    "nr_support", "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-    # table C
-    "roll_yes_rechtsform", "roll_yes_domain",
-    "last_domain_outcome", "time_since_domain_vote",
-    # table D
-    "era", "season", "months_to_election"	
-  ),  
-    
-  m1_2b = c(
-      # table 0
-      "rechtsform", "anzahl", "main_domain", 
-      # table A 
-      "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-      "parl_support_signed", "parl_participation", 
-      "gov_parl_align",
-      # table C
-      "roll_yes_rechtsform", "roll_yes_domain",
-      "last_domain_outcome", "time_since_domain_vote",
-      # table D
-      "era", "season", "months_to_election"
-  ),      
-      
-  m1_2c = c(
-        # table 0
-        "rechtsform", "anzahl", "main_domain", 
-        # table A 
-        "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-        "nr_support", "parl_participation", 
-        "brpos_signed", 
-        # table C
-        "roll_yes_rechtsform", "roll_yes_domain",
-        "last_domain_outcome", "time_since_domain_vote",
-        # table D
-        "era", "season", "months_to_election"
-  ),        
-        
-  m1_2d = c(
-          # table 0
-          "rechtsform", "anzahl", "nr_recommend", "main_domain", "dep",
-          # table A
-          "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-          "nr_support", "parl_support_signed", "elite_consensus", "parl_participation",
-          "gov_parl_align",
-          # table C
-          "roll_yes_rechtsform", "roll_yes_domain", "roll_acc_rechtsform",
-          "last_domain_outcome", "time_since_domain_vote",
-          # table D
-          "era", "season", "months_to_election"
-  ),
-  
-  m1_3 = character(0),   # placeholder: m1_2 + external features for later
-  
-  # External blocks, joined above; kept as named blocks so model sets stay one-liners 
-  # and each source can be switched in or out cleanly
-  ext_frak_lm  = c("frak_left_sup", "frak_center_sup", "frak_fdp_sup",
-                   "frak_svp_sup", "frak_breadth", "frak_enth_share", "elite_cue_lr" #, "elite_cue_lr"0
-                   ),
-  ext_frak5_lm = c("frak_sp_sup", "frak_gruene_sup", "frak_center_sup", "frak_fdp_sup",
-                   "frak_svp_sup", "frak_breadth", "frak_enth_share", "elite_cue_lr" #, "elite_cue_lr"0
-                   ),
-  ext_coal_lm    = c("coalition_kriesi", "n_gov_defectors",
-                     "svp_defects", "sp_defects",
-                     "bourgeois_pro", "bourgeois_contra",
-                     "left_pro", "left_contra"
-                     ),
-  ext_frak_enth = c("frak_enth_share"
-                    ),
-  ext_urheber_lm = c(paste0("pole_r4_", setdiff(pole_levels, "none")),
-                     #paste0("pole_", setdiff(pole_levels, "none")),
-                     "has_urheber", "n_sponsors_f", "established_f", "actor_code_r4",
-                     "urheber_is_coalition"),
-  
-  
-  # Computed but reserved for tree-based engines: 
-  # Redundant or rank-deficient under lm dummy coding, informative for splits
-  tree_extras = c("gov_recommend", "brpos_signed", "gov_parl_align",
-                  "gov_parl_recommend_n", "changes_constitution",
-                  "double_majority_required", "has_signature_phase",
-                  "parl_vote_missing", "parl_consensus",
-                  # deliberation process features
-                  "pa-iv", "entwurf_nr", "dauer_bv", "dauer_abst",
-                  "sparedays", 
-                  "legislatur", "nr-wahl", "months_since_election",
-                  # coalition theory + sponsor theory features
-                  "frak_lr_signed", "support_coalition", 
-                  "pole_refined_r4", "actor_label_r4", "actor_code_r4",
-                  paste0("coal_has_", all_blocs),
-                  "coal_social_conserv", "coal_social_lib", "coal_environ",
-                  sprintf("policy_%02d", 1:12))
-)
-
-# Composing the model iterations from the blocks above:
-# Urheber set
-feature_sets$m1_3    <- c(feature_sets$m1_2, feature_sets$ext_urheber_lm)
-
-## M2
-# The frak/coal sets only exist on the post-1994 frame and are evaluated there
-feature_sets$m2_frak <- c(feature_sets$m1_2, feature_sets$ext_frak_lm)
-feature_sets$m2_coal <- c(feature_sets$m2_frak, feature_sets$ext_coal_lm)
-feature_sets$m2_enth <- c(feature_sets$m2_coal, feature_sets$ext_frak_enth)
-
-feature_sets$m2_urh   <- c(feature_sets$m2_frak, feature_sets$ext_urheber_lm)
-feature_sets$m2_urh2   <- c(feature_sets$m2_coal, feature_sets$ext_urheber_lm)
-feature_sets$m2_all   <- c(feature_sets$m2_enth, feature_sets$ext_urheber_lm)
-
-#Alternative frak5
-feature_sets$m2_frak5 <- c(feature_sets$m1_2, feature_sets$ext_frak5_lm)
-
-# Guarding the registry instead of repairing it silently
-stopifnot(!any(duplicated(names(feature_sets))))
-stopifnot(all(unlist(feature_sets) %in% names(df)))
-
-# 11. Saving dataset for the ML pipeline -------------------------------
+# 10. Saving dataset for the ML pipeline -------------------------------
 
 saveRDS(df, file.path(input_path, "swissvotes_features.rds"))
 
-saveRDS(feature_sets, file.path(input_path, "feature_sets.rds"))
+#saveRDS(feature_sets, file.path(input_path, "feature_sets.rds"))

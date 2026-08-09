@@ -72,7 +72,12 @@ run_m2_set <- function(set_name, feats, train_frame = "short") {
 
 # 4. Running references and M2 sets -----------------------------------
 
-run_these_m2 <- c("m2_frak", "m2_coal", "m2_enth", "m2_urh", "m2_urh2", "m2_all", "m2_frak5")
+run_these_m2 <- c("m2_frak", "m2_coal", "m2_urh", "m2_all", "m2_frak5",
+                  # Leaner models for testing
+                  "m2_lean", "m2_lean2", "m2_wps", "m2_wps2",
+                  "frak_sup_lm", "frak5_sup_lm", "frak_breadth_lm", "frak_enth_share", 
+                  "elite_cue_lr_lm", "kriesi_lm", "linder_mueller_lm", "linder_lm", "wagschal_lm", 
+                  )
 
 results <- bind_rows(
   run_m2_set("A_m1_2_trainLong",  feature_sets$m1_2,  train_frame = "long"),

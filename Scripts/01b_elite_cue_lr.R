@@ -1,4 +1,4 @@
-### 01_01_elite_cue_lr.R ###
+### 01b_elite_cue_lr.R ###
 
 # elite_cue_lr with LR-anchor, harmonized and era-sensitive 
 # Formula: elite_cue_lr = sum(anchor_b * support_b) / sum(support_b) 
