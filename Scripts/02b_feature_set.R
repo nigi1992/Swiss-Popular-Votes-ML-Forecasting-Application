@@ -1,4 +1,4 @@
-### 02_features.R ###
+### 02_feature_set.R ###
 
 # 1. Data import ------------------------------------------------------
 
@@ -221,7 +221,7 @@ m1_2e = c(
 
 ## Composing the model iterations from the blocks above ------------------
 
-# Urheber set
+# Adding urheber set
 feature_sets$m1_3    <- c(feature_sets$m1_2, feature_sets$ext_urheber_lm)
 feature_sets$m1_3b    <- c(feature_sets$m1_2e, feature_sets$ext_urheber_lm)
 
@@ -240,20 +240,33 @@ feature_sets$m2_frak5 <- c(feature_sets$m1_2, feature_sets$ext_frak5_lm)
 ## Lean external blocks for testing
 # Coalition Theory Variants
 # frak_lm
-feature_sets$frak_sup_lm <- c(feature_sets$m1_1e, frak_sup_lm)
-feature_sets$frak5_sup_lm <- c(feature_sets$m1_1e, frak5_sup_lm)
-feature_sets$frak_breadth_lm <- c(feature_sets$m1_1e, frak_breadth_lm)
-feature_sets$frak_enth_share <- c(feature_sets$m1_1e, frak_enth_share)
-feature_sets$elite_cue_lr_lm <- c(feature_sets$m1_1e, elite_cue_lr_lm)
+feature_sets$m2_frak_lean  <- c(feature_sets$m1_1e, feature_sets$frak_sup_lm)
+feature_sets$m2_frak_lean2 <- c(feature_sets$m1_1e, feature_sets$frak_breadth_lm)
+feature_sets$m2_frak_lean3 <- c(feature_sets$m1_1e, feature_sets$frak_enth_share)
+feature_sets$m2_frak_lean4 <- c(feature_sets$m1_1e, feature_sets$elite_cue_lr_lm)
+
+feature_sets$m2_frak_lean_urh  <- c(feature_sets$m1_1e, feature_sets$frak_sup_lm,     feature_sets$ext_urheber_lm)
+feature_sets$m2_frak_lean2_urh <- c(feature_sets$m1_1e, feature_sets$frak_breadth_lm, feature_sets$ext_urheber_lm)
+feature_sets$m2_frak_lean3_urh <- c(feature_sets$m1_1e, feature_sets$frak_enth_share, feature_sets$ext_urheber_lm)
+feature_sets$m2_frak_lean4_urh <- c(feature_sets$m1_1e, feature_sets$elite_cue_lr_lm, feature_sets$ext_urheber_lm)
 
 # coal_lm
-feature_set$kriesi_lm <- c(feature_sets$m1_1e, kriesi_lm)
-feature_set$linder_mueller_lm <- c(feature_sets$m1_1e, linder_mueller_lm)
-feature_set$linder_lm <- c(feature_sets$m1_1e, linder_lm)
-feature_set$wagschal_lm <- c(feature_sets$m1_1e, wagschal_lm)
+feature_sets$m2_coal_lean  <- c(feature_sets$m1_1e, feature_sets$kriesi_lm)
+feature_sets$m2_coal_lean2 <- c(feature_sets$m1_1e, feature_sets$linder_mueller_lm)
+feature_sets$m2_coal_lean3 <- c(feature_sets$m1_1e, feature_sets$linder_lm)
+feature_sets$m2_coal_lean4 <- c(feature_sets$m1_1e, feature_sets$wagschal_lm)
+
+feature_sets$m2_coal_lean_urh  <- c(feature_sets$m1_1e, feature_sets$kriesi_lm,         feature_sets$ext_urheber_lm)
+feature_sets$m2_coal_lean2_urh <- c(feature_sets$m1_1e, feature_sets$linder_mueller_lm, feature_sets$ext_urheber_lm)
+feature_sets$m2_coal_lean3_urh <- c(feature_sets$m1_1e, feature_sets$linder_lm,         feature_sets$ext_urheber_lm)
+feature_sets$m2_coal_lean4_urh <- c(feature_sets$m1_1e, feature_sets$wagschal_lm,       feature_sets$ext_urheber_lm)
+
+# Alternative frak5
+feature_sets$m2_frak5_lean    <- c(feature_sets$m1_1e, feature_sets$frak5_sup_lm)
+feature_sets$m2_frak5_lean_urh <- c(feature_sets$m1_1e, feature_sets$frak5_sup_lm, feature_sets$ext_urheber_lm)
 
 
-# Leaner probes
+## Leaner probe champions
 feature_sets$m2_lean <- feature_sets$m2_lean
 feature_sets$m2_lean2 <- feature_sets$m2_lean2
 

@@ -73,10 +73,20 @@ run_m2_set <- function(set_name, feats, train_frame = "short") {
 # 4. Running references and M2 sets -----------------------------------
 
 run_these_m2 <- c("m2_frak", "m2_coal", "m2_urh", "m2_all", "m2_frak5",
-                  # Leaner models for testing
+                  
+                  ## Leaner models for testing
+                  "m2_frak_lean", "m2_frak_lean2", "m2_frak_lean3", "m2_frak_lean4", 
+                  "m2_frak_lean_urh", "m2_frak_lean_urh2", "m2_frak_lean_urh3", "m2_frak_lean_urh4",
+                  "m2_coal_lean", "m2_coal_lean2", "m2_coal_lean3", "m2_coal_lean4",
+                  "m2_coal_lean_urh", "m2_coal_lean_urh2", "m2_coal_lean_urh3", "m2_coal_lean_urh4",
+                  "m2_frak5_lean", "m2_frak5_lean2",
+                  
+                  # Leaner Probe Champions
                   "m2_lean", "m2_lean2", "m2_wps", "m2_wps2",
-                  "frak_sup_lm", "frak5_sup_lm", "frak_breadth_lm", "frak_enth_share", 
-                  "elite_cue_lr_lm", "kriesi_lm", "linder_mueller_lm", "linder_lm", "wagschal_lm", 
+                  
+                  # Simple
+                  #"frak_sup_lm", "frak5_sup_lm", "frak_breadth_lm", "frak_enth_share", 
+                  #"elite_cue_lr_lm", "kriesi_lm", "linder_mueller_lm", "linder_lm", "wagschal_lm", 
                   )
 
 results <- bind_rows(

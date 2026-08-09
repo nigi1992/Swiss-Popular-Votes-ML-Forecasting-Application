@@ -539,7 +539,6 @@ df <- df %>%
             by = "anr", relationship = "one-to-one")
 stopifnot(nrow(df) == n_master)
 
-
 ## Electorate-weighted faction support -----------------------------------
 
 # Σ (bloc yes-share x bloc voter share at the last NR election) / Σ (bloc voter share) 
@@ -680,7 +679,7 @@ df <- df %>%
     established_f = if_else(has_urheber == 1, coalesce(established_actor, 0L), 0L)
   )
 
-## Sponsor track record ----------------------------------------------------
+## Sponsor track record --------------------------------------------------
 
 # As-of failure rate of earlier initiatives from the same urheber pole
 fail_hist <- if_else(df$vote_done == "voted" & as.character(df$rechtsform) == "3",
@@ -688,6 +687,43 @@ fail_hist <- if_else(df$vote_done == "voted" & as.character(df$rechtsform) == "3
 df$author_prior_fail_rate <- asof_stat(df$datum, fail_hist,
                                        group = as.character(df$pole_refined_r4),
                                        fallback = 0.5)
+
+
+## Oriented sponsor track record -----------------------------------------
+
+# The campaign outcome from the actor's perspective 
+# For initiatives the urheber wants a Ja, for optional referendums the committee wants a Nein -> defeat flips orientation
+# Committee loss rate .683 vs initiative loss rate .894 -> pooling the two histories would also mix two different base rates
+lost_init <- if_else(df$vote_done == "voted" & as.character(df$rechtsform) == "3",
+                     as.numeric(as.character(df$volk) == "0"), NA_real_)
+lost_ref  <- if_else(df$vote_done == "voted" & as.character(df$rechtsform) == "2",
+                     as.numeric(as.character(df$volk) == "1"), NA_real_)
+
+# Leak-free fallback: the expanding grand loss rate, never a full-sample mean
+grand_init <- asof_stat(df$datum, lost_init, fallback = 0.5)
+grand_ref  <- asof_stat(df$datum, lost_ref,  fallback = 0.5)
+
+# Gated per rechtsform (signature-block pattern): 
+# Each feature is active on its own rows and 0 elsewhere 
+# No lm coefficient has to carry the sign flip between the two rechtsformen
+df <- df %>%
+  mutate(
+    pole_init_loss = asof_stat(datum, lost_init, group = as.character(pole_refined_r4)),
+    pole_init_loss = if_else(as.character(rechtsform) == "3",
+                             coalesce(pole_init_loss, grand_init), 0),
+    pole_ref_loss  = asof_stat(datum, lost_ref, group = as.character(pole_refined_r4)),
+    pole_ref_loss  = if_else(as.character(rechtsform) == "2",
+                             coalesce(pole_ref_loss, grand_ref), 0)
+  )
+
+# Identity history shrunk toward the pole rate by prior count (empirical-Bayes backoff, m = 3 pseudo-observations): 
+# 229 of the sponsor rows are one-off actors and would otherwise sit on the fallback, while repeat players keep their own record
+n_actor    <- asof_stat(df$datum, lost_init, group = as.character(df$urheber_r4),
+                        fun = length, fallback = 0)
+rate_actor <- asof_stat(df$datum, lost_init, group = as.character(df$urheber_r4))
+df <- df %>%
+  mutate(actor_init_loss = if_else(as.character(rechtsform) == "3",
+                                   (n_actor * coalesce(rate_actor, 0) + 3 * pole_init_loss) / (n_actor + 3), 0))
 
 # 9. Signature / Mobilization signals ------------------------------------
 
