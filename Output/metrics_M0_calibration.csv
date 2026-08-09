@@ -1,0 +1,5 @@
+rechtsform,n,predicted,actual,bias,mae,acceptance_rate,volksmehr_acc
+1 obligat. Ref.,23,65.1,64.4,0.7,11.4,0.83,0.826
+2 fak. Ref.,86,54.6,55.3,-0.7,10,0.72,0.721
+3 Volksinitiative,115,35.1,36.1,-1,9,0.13,0.87
+4 Gegenentwurf,14,55.7,61.1,-5.4,16.9,0.57,0.571

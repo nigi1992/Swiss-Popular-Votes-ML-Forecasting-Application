@@ -69,9 +69,9 @@ print(bind_rows(mgrand_pooled, m0_pooled))
 
 # -> Rechtsform is the benchmark for all later models, not grand mean
 
-# Keep the grand-mean row anyway, because it makes a methodological point: 
-# On MAE it looks merely 4 points worse, while on the binary metrics it is below random
-# A predictor parked on the decision boundary can be mediocre as a regressor and useless as a classifier
+# Keeping the grand-mean row anyway, because it makes a methodological point: 
+# On MAE it looks only 4 points worse, while on the binary metrics it's below random
+# A predictor parked on the decision boundary can be suppar as a regressor and useless as a classifier
 
 
 # Per-rechtsform pooled error: where the base rate carries and where not
@@ -80,6 +80,10 @@ print(test_all %>%
         summarise(n = n(),
                   mae = mae(yes_share, roll_yes_rechtsform),
                   volksmehr_acc = volksmehr_acc(yes_share, roll_yes_rechtsform)))
+# 1. Best for predicting popular initiatives (acc. > 85%, MAE > 9.9) 
+# 2. A bit worse for obligatory referendem (acc. > 80%, MAE > 11.5)
+# 3. Even worse for fak. referendum (acc. < 75%, MAE = 9.9) 
+# 4. Almost useless for counterproposal (acc. < 60%, MAE > 16.5)
 
 # 4. Fold baselines ---------------------------------------------------
 
@@ -113,7 +117,7 @@ pooled_baseline <- tibble(fold = NA_integer_, n = nrow(test_all),
 baselines <- bind_rows(fold_baselines, pooled_baseline) %>%
   mutate(across(prevalence:pr_auc_baseline, ~ round(.x, 3)))
 
-print(baselines)
+print(baselines) # For comparison against the acc. metrics from section 3.
 
 # 5. M0 against its baselines -----------------------------------------
 
@@ -130,7 +134,7 @@ m0_vs_base <- m0_fold %>%
             pr_auc, pr_auc_baseline,
             pr_auc_skill = round(pr_auc - pr_auc_baseline, 3))
 
-print(m0_vs_base)
+print(m0_vs_base) # Overview for m0_fold baseline comparison
 
 # 6. Calibration per rechtsform ---------------------------------------
 
@@ -156,6 +160,17 @@ m0_calibration <- test_all %>%
   mutate(rechtsform = recode(as.character(rechtsform), !!!rechtsform_labels))
 
 print(m0_calibration)
+
+# 'bias' separates systematic error from scatter: 
+# 'rechtsform' 1–3 are essentially unbiased (bias ≤ 1%) while MAE between 9 and 11.5, 
+# so the base rate has the right center and simply cannot resolve within-group variation
+# 'rechtsform' 4 has a very strong bias and bad MAE of almost 17 (but also small n=14)
+
+# volksmehr_acc per group tracks acceptance_rate almost exactly (0.826/0.83, 0.721/0.72, 0.571/0.57),
+# because within a rechtsform the base rate is one constant, so its binary call is identical for every proposal in the group. 
+# —> So, the accuracy is just the majority-class share. 
+# Only rechtsform 3 breaks the pattern upward (0.870 vs 0.13), because the constant sits on the correct side there, predicting rejection for 87% true rejections. 
+# That is the most important take-away of  M0's benchmark classifier: Popular initiatives will fail most likely.
 
 # 4. Saving datasets for the ML pipeline ------------------------------
 
