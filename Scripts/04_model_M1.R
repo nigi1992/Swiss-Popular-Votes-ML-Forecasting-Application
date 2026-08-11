@@ -51,9 +51,9 @@ run_lm_set <- function(set_name, feats) {
 
 run_these <- c(
               "m1_0", "m1_1", "m1_1a", "m1_1b", "m1_1c", "m1_1d", "m1_1e",
-              "m1_1f", "m1_1g", "m1_1h", "m1_1i", "m1_1k",
+              "m1_1f", "m1_1g", "m1_1h", "m1_1i", "m1_1k", "m1_1l",
               "m1_2", "m1_2a", "m1_2b", "m1_2c", "m1_2d", "m1_2e",
-              if (length(feature_sets$m1_3) > 0) "m1_3", "m1_3a"
+              if (length(feature_sets$m1_3) > 0) "m1_3", "m1_3a", "m1_3b"
               )
 
 results <- map_dfr(run_these, function(s) run_lm_set(s, feature_sets[[s]]))
@@ -76,7 +76,11 @@ pooled <- results %>%
                        "M0_rechtsform", NA_integer_))
 
 print(results %>% select(-pred))
+print(results %>% select(-pred), n = Inf)
+
 print(pooled %>% arrange(mae))
+
+print(pooled %>% arrange(desc(volksmehr_acc)))
 
 # 5. Saving dataset for the ML pipeline ------------------------------
 

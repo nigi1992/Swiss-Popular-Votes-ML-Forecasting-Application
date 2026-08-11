@@ -9,28 +9,32 @@ input_path  <- file.path(base_path, "Input Data")
 
 df <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 
+## Current probe champion combination ---------------------------------
+
+champ_m1_1e <- c("roll_yes_rechtsform", "nr_support", "roll_yes_domain")
+
 # 2. Feature-set registry ---------------------------------------------
 
 # Model iterations differ by column selection, not by pipeline
 # m1_3 extends m1_2 once the external features (coded urheber/sponsor, roll-call factions) are joined in
 
 feature_sets <- list(
-  ## M0
+## m0 benchmark -------------------------------------------------------
   # naive benchmark: only the era-sensitive rechtsform dummy, no other features
   m0   = c("roll_yes_rechtsform"),
 
-  ## M1 Variations
+## m1_1 variations ----------------------------------------------------
   # lm sets: alias-free by construction on the 1971+ frame
-  m1_0 = c("rechtsform"),
+  m1_0 = c("rechtsform"), # roll_yes_rechtsform > rechtsform
   
-  m1_1 = c("rechtsform", 
+  m1_1 = c("rechtsform",  # Original proposition for base model
            "parl_recommend", 
            "gov_missing",
            "main_domain", 
            "dep"
   ),  
   
-  # Rerun m1_1 as:
+  # Rerunning m1_1 in different combinations to probe the marginal contribution of each feature family:
   m1_1a = c("rechtsform",
             "nr_recommend",
             "main_domain"		
@@ -51,105 +55,90 @@ feature_sets <- list(
             "main_domain"
   ),
   
-  m1_1e = c("roll_yes_rechtsform",
-            "nr_support",
-            "roll_yes_domain"
-  ),
-  
-  # Tier 1: Champion + One-df probes (04, long frame)
-  m1_1f = c(feature_sets$m1_1e, "interchamber_disagree"),
-  
-  m1_1g = c(feature_sets$m1_1e, "time_since_domain_vote"),
-  
-  m1_1h  = c(feature_sets$m1_1e, "pa_iv"),
-  m1_1i  = c(feature_sets$m1_1e, "pa_iv", "log_dauer_bv"),
-  m1_1k  = c(feature_sets$m1_1e, "author_prior_fail_rate"),
-# Of five theory-motivated feature families, four were absorbed or refuted by two base rates and one chamber share
+  #m1_1e = c("roll_yes_rechtsform", "nr_support", "roll_yes_domain"),
 
-## m1_2_ --------------------------------------------------------------
+  # Best Combination for base model with 3 features from 3 different feature families 
+  # (2 base rates (rechtsform + policy area) + 1 parliament support share):
+  # roll_yes_rechtsform > rechtsform
+  # nr_support > nr_recommend
+  # roll_yes_domain > main_domain
+
+  # Probe champion + One-df probes (04, long frame)
+  m1_1e = champ_m1_1e, # Of 5 theory-motivated feature families, 4 were absorbed or refuted by 2 base rates and 1 chamber share
+
+  m1_1f = c(champ_m1_1e, "interchamber_disagree"),
+
+  m1_1g = c(champ_m1_1e, "time_since_domain_vote"),
+
+  m1_1h = c(champ_m1_1e, "pa_iv"),
+  m1_1i = c(champ_m1_1e, "pa_iv", "log_dauer_bv"),
+
+  m1_1k = c(champ_m1_1e, "author_prior_fail_rate"),
+
+  m1_1l = c(champ_m1_1e, "author_prior_fail_rate", "pole_r4_left", 
+            "spare_days_frac", "pole_ref_loss", "surplus_sig_ratio"),
+  
+## m1_2 variations ----------------------------------------------------
 
 m1_2 = c(
   # table 0
-  "rechtsform", "parl_recommend", "gov_missing", "main_domain", "dep",
+  #"rechtsform", "parl_recommend", "gov_missing", "main_domain", "dep",
+  
   # table A (parl_consensus excluded: exact mean of the two shares)
-  "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-  "parl_support_signed", "elite_consensus", "parl_participation",
+  #"nr_yes_share", "sr_yes_share", "interchamber_disagree", "elite_consensus", "parl_participation",
+  "parl_support_signed", 
+  
   # table B (has_signature_phase excluded from lm: = 1[rechtsform in {2,3}])
-  "surplus_sig_ratio", "sig_speed_pc", "invalid_sig_share",
-  "spare_days_frac", "sig_no_deadline", "sig_data_missing",
+  #"sig_speed_pc", "invalid_sig_share", "sig_no_deadline", "sig_data_missing",
+  "surplus_sig_ratio", "spare_days_frac", 
+  
   # table C
-  "roll_yes_rechtsform", "roll_yes_domain", "roll_acc_rechtsform",
-  "last_domain_outcome", "time_since_domain_vote",
+  #"roll_acc_rechtsform", "last_domain_outcome", 
+  "roll_yes_rechtsform", "roll_yes_domain", "author_prior_fail_rate",
+  
   # table D
-  "era", "season", "months_to_election"
-),
+  #"era", "season", "months_to_election"
+  ),
 
 m1_2a = c(
-    # table 0
-    "rechtsform", "anzahl", "nr_recommend", "main_domain", 
-    # table A 
-    "nr_support", "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-    # table C
-    "roll_yes_rechtsform", "roll_yes_domain",
-    "last_domain_outcome", "time_since_domain_vote",
-    # table D
-    "era", "season", "months_to_election"	
-  ),  
+    "nr_yes_share", "sr_yes_share",
+    "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
+    "surplus_sig_ratio", "spare_days_frac", 
+    "pole_r4_left", "pole_ref_loss"
+    ),  
   
 m1_2b = c(
-    # table 0
-    "rechtsform", "anzahl", "main_domain", 
-    # table A 
-    "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-    "parl_support_signed", "parl_participation", 
-    "gov_parl_align",
-    # table C
-    "roll_yes_rechtsform", "roll_yes_domain",
-    "last_domain_outcome", "time_since_domain_vote",
-    # table D
-    "era", "season", "months_to_election"
-  ),      
+    "nr_support", "sr_support",
+    "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
+    "surplus_sig_ratio", "spare_days_frac", 
+    "pole_r4_left", "pole_ref_loss"
+    ),      
   
 m1_2c = c(
-    # table 0
-    "rechtsform", "anzahl", "main_domain", 
-    # table A 
-    "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-    "nr_support", "parl_participation", 
-    "brpos_signed", 
-    # table C
-    "roll_yes_rechtsform", "roll_yes_domain",
-    "last_domain_outcome", "time_since_domain_vote",
-    # table D
-    "era", "season", "months_to_election"
-  ),        
+    "nr_yes_share", "sr_yes_share", 
+    "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
+    "pole_r4_left", "pole_ref_loss"
+    ),        
   
 m1_2d = c(
-  # table 0
-  "rechtsform", "anzahl", "nr_recommend", "main_domain", "dep",
-  # table A
-  "nr_yes_share", "sr_yes_share", "interchamber_disagree",
-  "nr_support", "parl_support_signed", "elite_consensus", "parl_participation",
-  "gov_parl_align",
-  # table C
-  "roll_yes_rechtsform", "roll_yes_domain", "roll_acc_rechtsform",
-  "last_domain_outcome", "time_since_domain_vote",
-  # table D
-  "era", "season", "months_to_election"
-),
+    "nr_support", "sr_support",
+    "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
+    "pole_r4_left", "pole_ref_loss"
+    ),
 
 m1_2e = c(
-  "anzahl", "nr_support",
-  "roll_yes_rechtsform", "roll_yes_domain", "last_domain_outcome", "time_since_domain_vote",
-  "era", "season", "months_to_election"
-),
+    "parl_support_signed", # Best Combo?
+    "roll_yes_rechtsform", 
+    "roll_yes_domain", 
+    "author_prior_fail_rate",
+    ),
   
   m1_3 = character(0),   # placeholder: m1_2 + external features for later
 
+## External blocks for m2 variations -------------------------------------
 
-## External blocks ------------------------------------------------------
-
-  # External blocks joined above. Kept as named blocks so model sets stay one-liners 
+  # External blocks for m2 variations in 05 Script for shorter 1994+ time frame. 
+  # Can be joined with model variations above. Kept as named blocks so model sets stay one-liners 
   # and each source can be switched in or out cleanly for Script 05
   ext_frak_lm  = c("frak_left_sup", "frak_center_sup", "frak_fdp_sup",
                    "frak_svp_sup", "frak_breadth", "frak_enth_share", "elite_cue_lr" #, "elite_cue_lr"0
@@ -162,13 +151,13 @@ m1_2e = c(
                      "bourgeois_pro", "bourgeois_contra",
                      "left_pro", "left_contra"
   ),
-  ext_urheber_lm = c(paste0("pole_r4_", setdiff(pole_levels, "none")),
+  ext_urheber_lm = c(paste0("pole_r4_", setdiff(pole_levels, "none"))#, # needs to be computed in 02_features.R!!!
                      #paste0("pole_", setdiff(pole_levels, "none")),
                      #"has_urheber", "n_sponsors_f", "established_f", "actor_code_r4",
-                     "urheber_is_coalition"
+                     #"urheber_is_coalition"
                      ),
 
-## Leaner external blocks for testing ------------------------------------
+## Leaner external blocks for testing -----------------------------------
 
   # frak_lm
   frak_sup_lm = c("frak_left_sup", "frak_center_sup", "frak_fdp_sup",
@@ -196,8 +185,8 @@ m1_2e = c(
   # —> Plausible for elite_cue_lr, because it weights who supports rather than how many, unlikely for anything wider. 
   # If they fail, the finding for thesis is: "campaign-start elite information is essentially exhausted by two base rates and one chamber share" 
   
-  m2_wps  = c(feature_sets$m1_1e, "weighted_parl_support"),
-  m2_wps2 = c(feature_sets$m1_1e, "weighted_parl_support", "elite_cue_lr"),
+  m2_wps  = c(champ_m1_1e, "weighted_parl_support"),
+  m2_wps2 = c(champ_m1_1e, "weighted_parl_support", "elite_cue_lr"),
   
   # Computed but reserved for tree-based engines: 
   # Redundant or rank-deficient under lm dummy coding, informative for splits
@@ -206,32 +195,32 @@ m1_2e = c(
                   "double_majority_required", "has_signature_phase",
                   "parl_vote_missing", "parl_consensus",
                   # deliberation process features
-                  "anzahl", "pa-iv", "entwurf_nr", "dauer_bv", "dauer_abst",
+                  "anzahl", "pa_iv", "entwurf_nr", "dauer_bv", "dauer_abst",
                   "sparedays", 
                   "legislatur", "nr-wahl", "months_since_election",
                   # coalition theory + sponsor theory features
                   "frak_lr_signed", "support_coalition", 
                   "has_urheber", "n_sponsors_f", "established_f",
                   "pole_refined_r4", "actor_label_r4", "actor_code_r4",
-                  paste0("coal_has_", all_blocs),
+                  paste0("coal_has_", all_blocs),  # needs to be computed in 02_features.R!!!
                   "coal_social_conserv", "coal_social_lib", "coal_environ",
                   sprintf("policy_%02d", 1:12))
 )
 
-
 ## Composing the model iterations from the blocks above ------------------
 
 # Adding urheber set
-feature_sets$m1_3    <- c(feature_sets$m1_2, feature_sets$ext_urheber_lm)
-feature_sets$m1_3b    <- c(feature_sets$m1_2e, feature_sets$ext_urheber_lm)
+feature_sets$m1_3   <- c(feature_sets$m1_2, feature_sets$ext_urheber_lm)
+feature_sets$m1_3a  <- c(feature_sets$m1_1e, feature_sets$ext_urheber_lm)
+feature_sets$m1_3b  <- c(feature_sets$m1_2e, feature_sets$ext_urheber_lm)
 
 ## M2
 # The frak/coal sets only exist on the post-1994 frame and are evaluated there
 feature_sets$m2_frak <- c(feature_sets$m1_2, feature_sets$ext_frak_lm)
 feature_sets$m2_coal <- c(feature_sets$m2_frak, feature_sets$ext_coal_lm)
 
-feature_sets$m2_urh   <- c(feature_sets$m2_frak, feature_sets$ext_urheber_lm)
-feature_sets$m2_all   <- c(feature_sets$m2_coal, feature_sets$ext_urheber_lm)
+feature_sets$m2_urh <- c(feature_sets$m2_frak, feature_sets$ext_urheber_lm)
+feature_sets$m2_all <- c(feature_sets$m2_coal, feature_sets$ext_urheber_lm)
 
 # Alternative frak5
 feature_sets$m2_frak5 <- c(feature_sets$m1_2, feature_sets$ext_frak5_lm)
@@ -262,13 +251,13 @@ feature_sets$m2_coal_lean3_urh <- c(feature_sets$m1_1e, feature_sets$linder_lm, 
 feature_sets$m2_coal_lean4_urh <- c(feature_sets$m1_1e, feature_sets$wagschal_lm,       feature_sets$ext_urheber_lm)
 
 # Alternative frak5
-feature_sets$m2_frak5_lean    <- c(feature_sets$m1_1e, feature_sets$frak5_sup_lm)
+feature_sets$m2_frak5_lean     <- c(feature_sets$m1_1e, feature_sets$frak5_sup_lm)
 feature_sets$m2_frak5_lean_urh <- c(feature_sets$m1_1e, feature_sets$frak5_sup_lm, feature_sets$ext_urheber_lm)
 
 
 ## Leaner probe champions
-feature_sets$m2_lean <- feature_sets$m2_lean
-feature_sets$m2_lean2 <- feature_sets$m2_lean2
+#feature_sets$m2_lean  <- feature_sets$m2_lean
+#feature_sets$m2_lean2 <- feature_sets$m2_lean2
 
 # Building on probe champion m1e1
 feature_sets$m2_wps  <- c(feature_sets$m1_1e, "weighted_parl_support")

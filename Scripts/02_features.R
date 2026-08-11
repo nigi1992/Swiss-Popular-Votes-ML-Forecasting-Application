@@ -73,7 +73,7 @@ nr_fixes <- tibble::tribble(
 df <- df %>%
   rows_update(nr_fixes, by = "anr")
 
-# 2. Calendar / Structural-break controls -----------------------------
+# 2. Calendar / Structural-break controls --------------------------
 
 #df <- df %>% filter(datum >= as.Date("1971-06-06"))
 #str(df)
@@ -118,7 +118,7 @@ df <- df %>%
     }, numeric(1))
   )
 
-## Notes for 3. -------------------------------------------------------
+## Notes for 3. ---------------------------------------------------
 
 # 'changes_constitution': 'rechtsform' 1, 3, 4 target the constitution (5 redundant)
 # approximation, since a minority of obligatory referendums concern non-constitutional objects 
@@ -178,7 +178,7 @@ colnames(df[df$vote_done == "voted", ])[colSums(is.na(df[df$vote_done == "voted"
 which(is.na(df$nrja)) # Finding row via row identifier (anr)
 df |> filter(is.na(nrja)) %>% select(anr, datum, titel_kurz_d, `bv-pos`, `nr-pos`, nrja, nrnein, `sr-pos`, srja, srnein)
 
-## Directionless codebook values for gov-pos variables ------------------------------
+## Directionless codebook values for gov-pos variables ----------------
 
 # see p. 12-14 for reference
 
@@ -327,6 +327,7 @@ df <- df %>%
     sr_yes_share  = srja / (srja + srnein), # state support
     
     nr_support = (nrja - nrnein) / (nrja + nrnein), # NR support
+    sr_support = (srja - srnein) / (srja + srnein), # SR support
     
     parl_support_signed = (nrja + srja - nrnein - srnein) /
       (nrja + srja + nrnein + srnein), # Pooled signed support (NR-weighted by size)
@@ -338,7 +339,7 @@ df <- df %>%
     brpos_signed = case_when( # for gov-parl alignment
       `br-pos` == "1" ~  1,
       `br-pos` == "2" ~ -1,
-      TRUE            ~  0    # keine Empfehlung, Stichfrage codes, missing
+      TRUE            ~  0    # no recommendation, Stichfrage codes, missing
     ),
     gov_parl_align = as.integer( # Government-parliament alignment
       (`br-pos` == "1" & parl_support_signed > 0) |
@@ -394,7 +395,7 @@ sum(df$gov_parl_align == "0" & df$volk == "1", na.rm = TRUE)
 # Gov-parl alignment is a miserable predictor of outcome, nr-pos is a way better predictor
 
 
-# 6. Faction blocs --------------------------------------------------------
+# 6. Faction blocs ----------------------------------------------------
 
 # Faction roll-call voting blocs from about 1994 to present (Nationalrat Schlussabstimmung)
 # Voting blocs in upper chamber as a proxy for party paroles (as these are not available at campaign start)
@@ -413,7 +414,7 @@ bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v3.
                show_col_types = FALSE)
 str(bw)
 
-## Orientation and validation -------------------------------------------
+## Orientation and validation ----------------------------------------
 
 # Validating every roll call against the official final-vote totals before anything gets joined
 # The *_support/*_oppose columns are proposal-oriented (SwissVotes also counts nrja/nrnein proposal-oriented)
@@ -495,7 +496,7 @@ frak_feats <- frak %>%
   )
 # Source for coaltion theory: Kriesi 2005, p.83, Jaquet, Sciarini & Gava 2022, Wagschal 2023
 
-## Alternative bloc resolution ---------------------------------------------
+## Alternative bloc resolution -----------------------------------------
 
 rm(frak_feats5)
 # Keeping G separate from S, this preserves the S/G divergence that the four-bloc version collapses
@@ -516,7 +517,7 @@ frak_feats5 <- frak %>%
     support_coalition = factor(support_coalition)
   )
 
-## Join audit, both directions -------------------------------------------
+## Join audit, both directions -----------------------------------------
 
 message("frak orphans (validated roll calls without master row): ",
         nrow(anti_join(frak_feats, df, by = "anr")))
@@ -539,7 +540,7 @@ df <- df %>%
             by = "anr", relationship = "one-to-one")
 stopifnot(nrow(df) == n_master)
 
-## Electorate-weighted faction support -----------------------------------
+## Electorate-weighted faction support ---------------------------------
 
 # Σ (bloc yes-share x bloc voter share at the last NR election) / Σ (bloc voter share) 
 # Party-to-bloc weights follow faction membership: 
@@ -557,7 +558,7 @@ num <- rowSums(as.matrix(S) * as.matrix(W), na.rm = TRUE)
 den <- rowSums(as.matrix(W) * !is.na(as.matrix(S)), na.rm = TRUE)
 df$weighted_parl_support <- if_else(is.na(df$frak_left_sup), NA_real_, num / den)
 
-# 7. Coalition config from 'support_coalition' ---------------------------
+# 7. Coalition config from 'support_coalition' -------------------------
 
 # Coalition-configuration features from support_coalition variable according to Kriesi (2005), Linder/Mueller (2021) and Wagschal (2023) 
 
@@ -620,7 +621,7 @@ df <- df %>%
                                   as.integer(support_coalition %in% c("G", "GL", "G+GL")))
   )
 
-# 8. Sponsors / Urheber --------------------------------------------------
+# 8. Sponsors / Urheber -----------------------------------------------
 
 # See Scripts in /Urheber Scripts for the coding and review process
 
@@ -631,7 +632,7 @@ urh <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles_refined
   mutate(anr = as.character(anr)) %>%   # file reads anr as numeric
   select(anr, urheber_r4, pole_refined_r4, pole_refined_origin, urheber_is_coalition = is_coalition, n_sponsors, established_actor, actor_label_r4, actor_code_r4)
 
-## Join audit, both directions -------------------------------------------
+## Join audit, both directions ---------------------------------------
 
 message("urheber orphans (coded but not in master): ",
         paste(anti_join(urh, df, by = "anr")$anr, collapse = " "))
@@ -679,7 +680,7 @@ df <- df %>%
     established_f = if_else(has_urheber == 1, coalesce(established_actor, 0L), 0L)
   )
 
-## Sponsor track record --------------------------------------------------
+## Sponsor track record -----------------------------------------------
 
 # As-of failure rate of earlier initiatives from the same urheber pole
 fail_hist <- if_else(df$vote_done == "voted" & as.character(df$rechtsform) == "3",
@@ -689,7 +690,7 @@ df$author_prior_fail_rate <- asof_stat(df$datum, fail_hist,
                                        fallback = 0.5)
 
 
-## Oriented sponsor track record -----------------------------------------
+## Oriented sponsor track record --------------------------------------
 
 # The campaign outcome from the actor's perspective 
 # For initiatives the urheber wants a Ja, for optional referendums the committee wants a Nein -> defeat flips orientation
@@ -766,7 +767,7 @@ df <- df %>%
     across(all_of(sig_features), ~ if_else(is.na(.x), 0, .x))
   )
 
-# 10. Saving dataset for the ML pipeline -------------------------------
+# 10. Saving dataset for the ML pipeline ----------------------------
 
 saveRDS(df, file.path(input_path, "swissvotes_features.rds"))
 
