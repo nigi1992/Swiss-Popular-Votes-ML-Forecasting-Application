@@ -81,34 +81,34 @@ feature_sets <- list(
 ## m1_2 variations ----------------------------------------------------
 
 m1_2 = c(
-  # table 0
-  #"rechtsform", "parl_recommend", "gov_missing", "main_domain", "dep",
+    # table 0
+    #"rechtsform", "parl_recommend", "gov_missing", "main_domain", "dep",
   
-  # table A (parl_consensus excluded: exact mean of the two shares)
-  #"nr_yes_share", "sr_yes_share", "interchamber_disagree", "elite_consensus", "parl_participation",
-  "parl_support_signed", 
+    # table A (parl_consensus excluded: exact mean of the two shares)
+    #"nr_yes_share", "sr_yes_share", "interchamber_disagree", "elite_consensus", "parl_participation",
+    "parl_support_signed", 
   
-  # table B (has_signature_phase excluded from lm: = 1[rechtsform in {2,3}])
-  #"sig_speed_pc", "invalid_sig_share", "sig_no_deadline", "sig_data_missing",
-  "surplus_sig_ratio", "spare_days_frac", 
+    # table B (has_signature_phase excluded from lm: = 1[rechtsform in {2,3}])
+    #"sig_speed_pc", "invalid_sig_share", "sig_no_deadline", "sig_data_missing",
+    #"surplus_sig_ratio", "spare_days_frac", 
   
-  # table C
-  #"roll_acc_rechtsform", "last_domain_outcome", 
-  "roll_yes_rechtsform", "roll_yes_domain", "author_prior_fail_rate",
+    # table C
+    #"roll_acc_rechtsform", "last_domain_outcome", 
+    "roll_yes_rechtsform", "roll_yes_domain", "author_prior_fail_rate"
   
-  # table D
-  #"era", "season", "months_to_election"
-  ),
+    # table D
+    #"era", "season", "months_to_election"
+    ),
 
 m1_2a = c(
-    "nr_yes_share", "sr_yes_share",
+    "nr_yes_share", "sr_yes_share", 
     "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
     "surplus_sig_ratio", "spare_days_frac", 
     "pole_r4_left", "pole_ref_loss"
     ),  
   
 m1_2b = c(
-    "nr_support", "sr_support",
+    "nr_support", "sr_support", "interchamber_disagree",
     "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
     "surplus_sig_ratio", "spare_days_frac", 
     "pole_r4_left", "pole_ref_loss"
@@ -131,8 +131,18 @@ m1_2e = c(
     "roll_yes_rechtsform", 
     "roll_yes_domain", 
     "author_prior_fail_rate",
+    "surplus_sig_ratio", "spare_days_frac" 
     ),
-  
+
+m1_2f = c(
+    "parl_support_signed",
+    "roll_yes_rechtsform", 
+    "roll_yes_domain", 
+    "author_prior_fail_rate",
+    "surplus_sig_ratio", "spare_days_frac",
+    "pole_r4_left", "pole_ref_loss"
+    ),
+
   m1_3 = character(0),   # placeholder: m1_2 + external features for later
 
 ## External blocks for m2 variations -------------------------------------
@@ -160,19 +170,20 @@ m1_2e = c(
 ## Leaner external blocks for testing -----------------------------------
 
   # frak_lm
-  frak_sup_lm = c("frak_left_sup", "frak_center_sup", "frak_fdp_sup",
-               "frak_svp_sup"),
-  frak5_sup_lm = c("frak_sp_sup", "frak_gruene_sup", "frak_center_sup", "frak_fdp_sup",
-                 "frak_svp_sup"),
-  frak_breadth_lm = "frak_breadth", 
-  frak_enth_share = "frak_enth_share",
-  elite_cue_lr_lm = "elite_cue_lr",
-  
+  frak_sup_lm    = c("frak_left_sup", "frak_center_sup", "frak_fdp_sup",
+                     "frak_svp_sup"),
+  frak5_sup_lm   = c("frak_sp_sup", "frak_gruene_sup", "frak_center_sup", "frak_fdp_sup",
+                     "frak_svp_sup"),
+  frak_breadth_lm =  "frak_breadth", 
+  frak_enth_share =  "frak_enth_share",
+  elite_cue_lr_lm =  "elite_cue_lr",
+  weighted_support=  "weighted_parl_support",
+
   # coal_lm
-  kriesi_lm = "coalition_kriesi",
+  kriesi_lm         = "coalition_kriesi",
   linder_mueller_lm = "n_gov_defectors",
-  linder_lm = c("svp_defects", "sp_defects"),
-  wagschal_lm = "bourgeois_contra",
+  linder_lm         = c("svp_defects", "sp_defects"),
+  wagschal_lm       = "bourgeois_contra",
 
   # In lean faction probes (05, short frame) bourgeois_contra was the single strongest coalition discriminator
   # elite_cue_lr had the densest faction signal
@@ -188,6 +199,9 @@ m1_2e = c(
   m2_wps  = c(champ_m1_1e, "weighted_parl_support"),
   m2_wps2 = c(champ_m1_1e, "weighted_parl_support", "elite_cue_lr"),
   
+  # m2_base for solo feature probes with 2 base rates -> swapping different chamber shares in and out to see which is strongest
+  m2_base = c("roll_yes_rechtsform", "roll_yes_domain"),
+
   # Computed but reserved for tree-based engines: 
   # Redundant or rank-deficient under lm dummy coding, informative for splits
   tree_extras = c("gov_recommend", "brpos_signed", "gov_parl_align",
@@ -202,12 +216,12 @@ m1_2e = c(
                   "frak_lr_signed", "support_coalition", 
                   "has_urheber", "n_sponsors_f", "established_f",
                   "pole_refined_r4", "actor_label_r4", "actor_code_r4",
-                  paste0("coal_has_", all_blocs),  # needs to be computed in 02_features.R!!!
+                  paste0("coal_has_", all_blocs),  # needs to be computed in 02_features.R!!!                  
                   "coal_social_conserv", "coal_social_lib", "coal_environ",
                   sprintf("policy_%02d", 1:12))
 )
 
-## Composing the model iterations from the blocks above ------------------
+## Composing the model iterations from the blocks above -----------------
 
 # Adding urheber set
 feature_sets$m1_3   <- c(feature_sets$m1_2, feature_sets$ext_urheber_lm)
@@ -263,6 +277,19 @@ feature_sets$m2_frak5_lean_urh <- c(feature_sets$m1_1e, feature_sets$frak5_sup_l
 feature_sets$m2_wps  <- c(feature_sets$m1_1e, "weighted_parl_support")
 feature_sets$m2_wps2 <- c(feature_sets$m1_1e, "weighted_parl_support", "elite_cue_lr")
 
+# m2_base swaps
+feature_sets$m2_base  <- c(feature_sets$m2_base)
+feature_sets$m2_base1 <- c(feature_sets$m2_base, "parl_support_signed")
+feature_sets$m2_base2 <- c(feature_sets$m2_base, "sr_yes_share")
+feature_sets$m2_base3 <- c(feature_sets$m2_base, "nr_yes_share")
+feature_sets$m2_base4 <- c(feature_sets$m2_base, "frak_breadth")
+feature_sets$m2_base5 <- c(feature_sets$m2_base, "n_gov_defectors")
+feature_sets$m2_base6 <- c(feature_sets$m2_base, "weighted_parl_support")
+
+feature_sets$m2_base7 <- c(feature_sets$m2_base, "weighted_parl_support", feature_sets$ext_urheber_lm)
+feature_sets$m2_base8 <- c(feature_sets$m2_base, "nr_yes_share", feature_sets$ext_urheber_lm)
+feature_sets$m2_base9 <- c(feature_sets$m2_base, "parl_support_signed", feature_sets$ext_urheber_lm)
+feature_sets$m2_base10 <- c(feature_sets$m2_base, "parl_support_signed", "author_prior_fail_rate", feature_sets$ext_urheber_lm)
 
 # Guarding the registry instead of repairing it silently
 stopifnot(!any(duplicated(names(feature_sets))))

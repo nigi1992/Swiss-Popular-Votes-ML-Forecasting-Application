@@ -621,6 +621,8 @@ df <- df %>%
                                   as.integer(support_coalition %in% c("G", "GL", "G+GL")))
   )
 
+attr(df, "all_blocs")   <- all_blocs
+
 # 8. Sponsors / Urheber -----------------------------------------------
 
 # See Scripts in /Urheber Scripts for the coding and review process
@@ -689,7 +691,6 @@ df$author_prior_fail_rate <- asof_stat(df$datum, fail_hist,
                                        group = as.character(df$pole_refined_r4),
                                        fallback = 0.5)
 
-
 ## Oriented sponsor track record --------------------------------------
 
 # The campaign outcome from the actor's perspective 
@@ -725,6 +726,8 @@ rate_actor <- asof_stat(df$datum, lost_init, group = as.character(df$urheber_r4)
 df <- df %>%
   mutate(actor_init_loss = if_else(as.character(rechtsform) == "3",
                                    (n_actor * coalesce(rate_actor, 0) + 3 * pole_init_loss) / (n_actor + 3), 0))
+
+attr(df, "pole_levels") <- pole_levels
 
 # 9. Signature / Mobilization signals ------------------------------------
 
