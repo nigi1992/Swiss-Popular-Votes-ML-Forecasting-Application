@@ -26,8 +26,8 @@ frame <- df %>%
   filter(vote_done == "voted", rechtsform %in% c("1", "2", "3", "4")) %>%
   mutate(rechtsform = droplevels(rechtsform),
          yes_share  = `volkja-proz`) %>%
-  arrange(datum)
-
+  arrange(datum, anr) # making the tie-break explicit so the folds depend only on the data, not on row order
+  
 folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6)
 
 # 3. Evaluation ------------------------------------------------------
@@ -164,7 +164,7 @@ print(m0_calibration)
 # 'bias' separates systematic error from scatter: 
 # 'rechtsform' 1–3 are essentially unbiased (bias ≤ 1%) while MAE between 9 and 11.5, 
 # so the base rate has the right center and simply cannot resolve within-group variation
-# 'rechtsform' 4 has a very strong bias and bad MAE of almost 17 (but also small n=14)
+# 'rechtsform' 4 has a very strong bias (-5.4) and bad MAE of almost 17 (but also small n=14)
 
 # volksmehr_acc per group tracks acceptance_rate almost exactly (0.826/0.83, 0.721/0.72, 0.571/0.57),
 # because within a rechtsform the base rate is one constant, so its binary call is identical for every proposal in the group. 

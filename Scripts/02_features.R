@@ -1,8 +1,8 @@
 ### 02_features.R ###
 
 # Building all campaign-start (T) features derivable from SwissVotes +
-# other open-source datasets: Tables 0, A, B, C, D of my predictor list; 
-# later sources (roll calls, coded urheber, text) get their own 02x scripts and join on anr
+# other open-source datasets: Tables from updated predictor list 
+# Later sources (roll calls, coded urheber, text) get their own 02x scripts and join on anr
 
 # 1. Data import ------------------------------------------------------
 
@@ -16,7 +16,7 @@ df <- readRDS(file.path(input_path, "swissvotes_prepared.rds"))
 
 n_master <- nrow(df) # for later joins by key (anr) to check for row loss from other df's
 
-## Small helpers -----------------------------------------------------
+# 1.1 Small helpers --------------------------------------------------
 
 # Turning NA in a factor into an explicit 'miss' level so lm keeps the row
 # Recoding missingness as own category treats "missing" as potentially informative rather than random.
@@ -37,7 +37,7 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
   }, numeric(1))
 }
 
-# 1.1 Manual imputation -----------------------------------------------
+# 1.2 Manual imputation -----------------------------------------------
 ## Signature collection section ---------------------------------------
 
 # Manually imputing values as they become available from the SwissVotes data set
@@ -46,19 +46,18 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
 
 library(tidyverse)
 # entering raw values as they appear on swissvotes.ch, NA means not yet known, Date format: "YYYY-MM-DD"
-sig_parl_fixes <- tibble::tribble( 
-  ~anr,   ~datum,        ~`dat-start`, ~`dat-limit`, ~`sammelfrist`, ~`dat-submit`, ~`dat-success`, ~`dat-message`, ~`dat-parl`, ~`dauer_bv`, ~`dauer_abst`, ~`i-dauer_tot`, ~`i-dauer_samm`, ~`i-dauer_br`, ~`fr-dauer_samm`, ~`fr-dauer_tot`, ~`sammeltempo`, ~`sparedays`,
-  "688",  "2026-03-08",  
-  "689",  "2026-03-08",  
-  "690",  "2026-11-29",  
-  "691",  "2026-11-29", 
-  "692",  "2026-11-29",  
-  "693",  "2026-11-29", 
-)  
+#sig_parl_fixes <- tibble::tribble( 
+#  ~anr,   ~datum,        ~`dat-start`, ~`dat-limit`, ~`sammelfrist`, ~`dat-submit`, ~`dat-success`, ~`dat-message`, ~`dat-parl`, ~`dauer_bv`, ~`dauer_abst`, ~`i-dauer_tot`, ~`i-dauer_samm`, ~`i-dauer_br`, ~`fr-dauer_samm`, ~`fr-dauer_tot`, ~`sammeltempo`, ~`sparedays`,
+#  "688",  "2026-03-08",  
+#  "689",  "2026-03-08",  
+#  "690",  "2026-11-29",  
+#  "691",  "2026-11-29", 
+#  "692",  "2026-11-29",  
+#  "693",  "2026-11-29", 
+#)  
 
 # Applying the overrides in place, keyed on anr.
-df <- df %>%
-  rows_update(sig_parl_fixes, by = "anr") 
+#df <- df %>% rows_update(sig_parl_fixes, by = "anr") 
 
 ## Faulty nrja, nrnein count values --------------------------------
 
@@ -72,6 +71,12 @@ nr_fixes <- tibble::tribble(
 # Applying the overrides in place, keyed on anr.
 df <- df %>%
   rows_update(nr_fixes, by = "anr")
+
+## Missing dep value -----------------------------------------------
+
+# Manual dep corrections
+df <- df %>%
+  mutate(dep = if_else(anr == 293, "8", dep))
 
 # 2. Calendar / Structural-break controls --------------------------
 
@@ -315,6 +320,7 @@ df <- df %>%
 # Dropping the raw policy slot columns after multi-hot encoding
 # d1e1 lives on as main_domain; the level-2/3 slots hold hierarchical codes,
 # like 10.31 that would enter numeric selections as fake magnitudes
+
 #df <- df %>% select(-matches("^d[123]e[123]$"))
 
 # 5. Elite cues / Coalition theory ----------------------------------
@@ -357,7 +363,7 @@ df <- df %>%
   mutate( # imputing neutrality and letting the indicator carry the information
     parl_vote_missing = as.integer(is.na(nr_yes_share) | is.na(sr_yes_share)),
     across(c(nr_yes_share, sr_yes_share),        ~ if_else(is.na(.x), 0.5, .x)),
-    across(c(interchamber_disagree, parl_support_signed, nr_support,
+    across(c(interchamber_disagree, parl_support_signed, nr_support, sr_support,
              elite_consensus, parl_participation), ~ if_else(is.na(.x), 0, .x)),
     parl_consensus = if_else(is.na(parl_consensus), 0.5, parl_consensus)
   )
@@ -395,13 +401,15 @@ sum(df$gov_parl_align == "0" & df$volk == "1", na.rm = TRUE)
 # Gov-parl alignment is a miserable predictor of outcome, nr-pos is a way better predictor
 
 
-# 6. Faction blocs ----------------------------------------------------
+
+# 6. Roll call dataset features for shorter time frame ------------------
 
 # Faction roll-call voting blocs from about 1994 to present (Nationalrat Schlussabstimmung)
 # Voting blocs in upper chamber as a proxy for party paroles (as these are not available at campaign start)
 # Joining the external feature datasets onto the master feature table by Proposal ID (anr) as key 
 # Data originates from parlament.ch, for more details on how faction blocs were derived from roll call data,
 # see other GitHub Repository with the accompanying Python scripts and documentation:
+
 # ... 
 
 # Every join is audited in both directions and type-checked
@@ -412,9 +420,10 @@ library(tidyverse)
 # Run 01b_elite_cues.R first to get the df with updated values for elite cues
 bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v3.csv"),
                show_col_types = FALSE)
-str(bw)
+#str(bw)
 
-## Orientation and validation ----------------------------------------
+# 6a. Faction blocs ----------------------------------------------------
+## Orientation and validation ------------------------------------------
 
 # Validating every roll call against the official final-vote totals before anything gets joined
 # The *_support/*_oppose columns are proposal-oriented (SwissVotes also counts nrja/nrnein proposal-oriented)
@@ -427,7 +436,8 @@ str(bw)
 blocs <- c("S", "G", "GL", "ME", "RL", "V")   # left -> right (excluding 'other')
 
 # Indicative left-right placements on a -10 to +10 scale, according to Hug and Schulz 2007 and NZZ Parlamentarier Rating 2025
-# LR anchors for bloc weighting: S = -6.5, G = -8.0, GL = -1.5, ME = 1.5, RL = 5.5, V = 8.5
+# LR anchors for bloc weighting: S = -6.5, G = -8.0, GL = -2.5, ME = 0.0, RL = 2.0, V = 7.5
+
 rm(frak) # clearing any previous version of frak to avoid confusion)
 frak <- bw %>%
   mutate(
@@ -447,7 +457,7 @@ frak <- bw %>%
   filter(cue_valid == 1) %>%
   distinct(anr, .keep_all = TRUE)
 
-## Bloc features --------------------------------------------------------
+# 6b. Bloc features ----------------------------------------------------
 
 # 4 period-stable blocs: 
 # left = S (Social Democrats) + G (Grüne), center = Mitte (CVP + BDP + EVP) + GLP, fdp = RL, svp = V. 
@@ -457,7 +467,7 @@ frak <- bw %>%
 share <- function(sup, opp) if_else((sup + opp) > 0, sup / (sup + opp), NA_real_)
 
 # table support_coaltion
-table(bw$support_coalition)
+#table(bw$support_coalition)
 
 # Summing bloc columns with na.rm 
 # Reflects only the blocs that actually existed at the time, the GL Fraction did not exist before 2012
@@ -496,7 +506,7 @@ frak_feats <- frak %>%
   )
 # Source for coaltion theory: Kriesi 2005, p.83, Jaquet, Sciarini & Gava 2022, Wagschal 2023
 
-## Alternative bloc resolution -----------------------------------------
+# 6c. Alternative bloc resolution -------------------------------------
 
 rm(frak_feats5)
 # Keeping G separate from S, this preserves the S/G divergence that the four-bloc version collapses
@@ -540,7 +550,7 @@ df <- df %>%
             by = "anr", relationship = "one-to-one")
 stopifnot(nrow(df) == n_master)
 
-## Electorate-weighted faction support ---------------------------------
+# 6d. Electorate-weighted faction support -----------------------------
 
 # Σ (bloc yes-share x bloc voter share at the last NR election) / Σ (bloc voter share) 
 # Party-to-bloc weights follow faction membership: 
@@ -558,7 +568,7 @@ num <- rowSums(as.matrix(S) * as.matrix(W), na.rm = TRUE)
 den <- rowSums(as.matrix(W) * !is.na(as.matrix(S)), na.rm = TRUE)
 df$weighted_parl_support <- if_else(is.na(df$frak_left_sup), NA_real_, num / den)
 
-# 7. Coalition config from 'support_coalition' -------------------------
+# 6e. Coalition config from 'support_coalition' ----------------------
 
 # Coalition-configuration features from support_coalition variable according to Kriesi (2005), Linder/Mueller (2021) and Wagschal (2023) 
 
@@ -622,6 +632,127 @@ df <- df %>%
   )
 
 attr(df, "all_blocs")   <- all_blocs
+
+# 7. Partei- und Verbandsparolen ---------------------------------------
+
+# Parolen are fixed at delegate assemblies during the campaign (T1), not at campaign start (T0)
+# The faction blocs from above are the T0 proxy for exactly these, keeping these two tiers strictly separate
+# Purpose of this block: measuring the proxy gap (roll-call blocs vs real paroles) and the value of waiting for T1
+# Coverage: anr 225-693 -> full 1971+ frame, unlike the post-1994 frak features
+
+n_master <- nrow(df)
+
+paro_raw <- read_csv(file.path(input_path, "Partei_Parolen/parteiparolen_df.csv"),
+                     col_types = cols(.default = col_character())) %>%
+  rename(p_center = `p-cvp/mitte`) %>%  # p-cvp -> p-mitte
+  rename_with(~ str_replace(.x, "^p-", "p_"), starts_with("p-")) %>%
+  select(-p_cvp, -p_mitte, -p_edu)  # composite replaces cvp/mitte; edu has no faction anchor and ~20% missing
+
+# Signed directional cue: Ja = +1, Nein = -1, everything else 0
+# 3 (keine Parole), 4 (leer), 5 (Stimmfreigabe), '.' (unbekannt), 9999 (existiert nicht), '' (future vote) -> 0
+# 8/9 (Stichfragen-Praeferenz) carry direction only relative to the paired item, not this item -> 0 (3-4 rows per actor)
+parole_signed <- function(x) case_when(x == "1" ~  1,
+                                       x == "2" ~ -1,
+                                       TRUE     ~  0)
+
+paro_parties  <- c("fdp", "sps", "svp", "center", "evp", "gps", "glp", "bdp")
+paro_verbands <- c("eco", "sgv", "sbv", "sgb", "travs", "sav")
+
+core_p <- paste0("p_", c("fdp", "sps", "svp", "center", "evp", "gps", "glp"))
+
+paro <- paro_raw %>%
+  mutate(
+    anr = as.character(anr),
+    across(all_of(paste0("p_", c(paro_parties, paro_verbands))),
+           parole_signed, .names = "cue_{str_remove(.col, 'p_')}"),
+    # Elite-unease analogue of frak_enth_share: declared non-directional paroles (3/4/5)
+    # as a share of parties that exist and have a known parole; '.' stays out of both counts
+    parole_abstain_share = rowSums(across(all_of(core_p), ~ .x %in% c("3", "4", "5"))) /
+      pmax(rowSums(across(all_of(core_p),
+                          ~ !is.na(.x) & !(.x %in% c("9999", "", ".")))), 1)
+  ) %>%
+  select(anr, starts_with("cue_"), parole_abstain_share)
+
+## Join audit, both directions -----------------------------------------
+
+message("parole orphans (parole row without master row): ",
+        paste(anti_join(paro, df, by = "anr")$anr, collapse = " "))
+message("master rows without parole data (expected: pre-1971): ",
+        nrow(anti_join(df, paro, by = "anr")))
+
+df <- df %>%
+  left_join(paro, by = "anr", relationship = "one-to-one")
+stopifnot(nrow(df) == n_master)
+
+# Coverage gate + 0-fill, following the has_urheber pattern:
+# the indicator absorbs the level shift so pre-1971 zeros cannot masquerade as neutral paroles
+df <- df %>%
+  mutate(
+    parole_covered = as.integer(!is.na(cue_fdp)),
+    across(c(starts_with("cue_"), parole_abstain_share), ~ if_else(is.na(.x), 0, .x))
+  )
+
+## Weighted parole aggregates ------------------------------------------
+
+# LR anchors assigned strictly via faction membership (Parlamentswörterbuch Faktenblatt Fraktionen", p.5)
+# Reusing the bloc anchor scale from Hug & Schulz 2007 / NZZ Parlamentarier Rating 2025:
+# sps -> S, gps -> G, glp -> GL, center -> ME, evp -> ME, bdp -> ME, fdp -> RL, svp -> V
+# No new anchor is invented, edu is excluded because it belongs to no faction
+paro_anchor <- c(fdp = 2.0, sps = -6.5, svp = 7.5, center = 0.0,
+                 evp = 0.0, gps = -8.0, glp = -2.5, bdp = 0.0)
+
+Wpar <- tibble(fdp    = df$`w-fdp`,
+               sps    = df$`w-sp`,
+               svp    = df$`w-svp`,
+               center = wsum(df$`w-cvp`, df$`w-mitte`),
+               evp    = df$`w-evp`,
+               gps    = df$`w-gps`,
+               glp    = df$`w-glp`,
+               bdp    = df$`w-bdp`)
+Cpar <- df %>% select(all_of(paste0("cue_", names(paro_anchor)))) %>% as.matrix()
+Wm   <- as.matrix(Wpar); Wm[is.na(Wm)] <- 0
+
+ja_m  <- Cpar ==  1
+dir_m <- Cpar !=  0
+
+# parole_cue_lr: voter-share-weighted mean LR anchor of the Ja camp -> direct T1 analogue of elite_cue_lr
+num_lr <- rowSums(sweep(ja_m * Wm, 2, paro_anchor, `*`))
+den_ja <- rowSums(ja_m * Wm)
+df$parole_cue_lr <- if_else(den_ja > 0, num_lr / den_ja, 0)
+
+# parole_wsup: electorate-weighted Ja share among parties with a directional parole -> direct T1 analogue of weighted_parl_support
+# Neutral fill at 0.5, gated by parole_covered
+den_dir <- rowSums(dir_m * Wm)
+df$parole_wsup <- if_else(den_dir > 0, den_ja / den_dir, 0.5)
+
+df <- df %>%
+  mutate(
+    # T1 analogue of n_gov_defectors: Nein-Parolen among the 4 permanent-seat government parties
+    # BDP's 2008-2015 seat is deliberately ignored to keep the count era-constant
+    parole_gov_defectors = (cue_fdp == -1) + (cue_sps == -1) +
+      (cue_svp == -1) + (cue_center == -1),
+    # T1 analogue of frak_breadth over the same 4 period-stable blocs
+    parole_breadth = (cue_sps + cue_gps > 0) +
+      (cue_center + cue_glp + cue_evp > 0) +
+      (cue_fdp > 0) + (cue_svp > 0)
+  )
+
+## Verband composites ---------------------------------------------------
+
+# Capital-labor cleavage as two directional means plus their gap (Kriesi 2005 on economic campaign dominance)
+# sbv stays standalone: agrarian cleavage cuts across capital-labor
+dir_mean <- function(...) {
+  m <- cbind(...)
+  n <- rowSums(m != 0)
+  if_else(n > 0, rowSums(m) / n, 0)
+}
+
+df <- df %>%
+  mutate(
+    verband_econ_cue  = dir_mean(cue_eco, cue_sgv, cue_sav),
+    verband_labor_cue = dir_mean(cue_sgb, cue_travs),
+    econ_labor_gap    = verband_econ_cue - verband_labor_cue
+  )
 
 # 8. Sponsors / Urheber -----------------------------------------------
 

@@ -41,6 +41,7 @@ frame <- df %>%
 
 frame_frak <- frame %>% filter(!is.na(frak_left_sup))
 
+# k = 4 because of shorter post 1994+ time frame
 folds <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4)
 
 # 3. Expanding-window evaluation of one feature set -------------------
@@ -88,8 +89,10 @@ run_these_m2 <- c(
                   "m2_frak5_lean", "m2_frak5_lean_urh",
                   "m2_base", "m2_base1", "m2_base2", "m2_base3", "m2_base4", "m2_base5", "m2_base6", "m2_base7", "m2_base8", "m2_base9", "m2_base10",
                   # Leaner Probe Champions
-                  "m2_lean", "m2_lean2", "m2_wps", "m2_wps2"
-
+                  "m2_lean", "m2_lean2", "m2_wps", "m2_wps2",
+                  # Proxy-gap head-to-heads on the identical post-1994 folds:
+                  # m3_par_cue vs m2_frak_lean4, m3_par_wsup vs m2_wps
+                  "m3_par_cue", "m3_par_wsup", "m3_par_agg", "m3_verband"
                   )
 
 results <- bind_rows(
@@ -116,7 +119,7 @@ pooled <- results %>%
   bind_rows(eval_preds(test_all$yes_share, test_all$roll_yes_rechtsform,
                        "M0_rechtsform", NA_integer_))
 
-print(results %>% select(-pred))
+#print(results %>% select(-pred))
 print(results %>% select(-pred), n = Inf)
 
 print(pooled %>% arrange(mae))

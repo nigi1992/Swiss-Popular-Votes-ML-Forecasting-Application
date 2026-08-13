@@ -55,32 +55,35 @@ feature_sets <- list(
             "main_domain"
   ),
   
-  #m1_1e = c("roll_yes_rechtsform", "nr_support", "roll_yes_domain"),
 
   # Best Combination for base model with 3 features from 3 different feature families 
   # (2 base rates (rechtsform + policy area) + 1 parliament support share):
+
   # roll_yes_rechtsform > rechtsform
   # nr_support > nr_recommend
   # roll_yes_domain > main_domain
 
+  #m1_1e = c("roll_yes_rechtsform", "nr_support", "roll_yes_domain"),
+
   # Probe champion + One-df probes (04, long frame)
-  m1_1e = champ_m1_1e, # Of 5 theory-motivated feature families, 4 were absorbed or refuted by 2 base rates and 1 chamber share
+  m1_1e = champ_m1_1e, # Of several theory-motivated feature families, all but one were absorbed or refuted by 2 base rates and 1 chamber share
 
   m1_1f = c(champ_m1_1e, "interchamber_disagree"),
 
   m1_1g = c(champ_m1_1e, "time_since_domain_vote"),
 
-  m1_1h = c(champ_m1_1e, "pa_iv"),
-  m1_1i = c(champ_m1_1e, "pa_iv", "log_dauer_bv"),
+  m1_1h = c(champ_m1_1e, "pa_iv"), # pa-iv has a notable bivariate — parliamentary initiatives pass 77.1% vs 46.4% (yes-share 59.7 vs 49.0)
+  m1_1i = c(champ_m1_1e, "pa_iv", "log_dauer_bv"), # dauer_bv correlates at −0.147 with the yes-share 
+  # -> the longer deliberation process, the lower the yes-share (bivariate), but not a strong signal in the multivariate model
 
-  m1_1k = c(champ_m1_1e, "author_prior_fail_rate"),
+  m1_1k = c(champ_m1_1e, "author_prior_fail_rate"), # Sponsor track record: Count of failed initiatives by same urheber bloc before date 
 
   m1_1l = c(champ_m1_1e, "author_prior_fail_rate", "pole_r4_left", 
             "spare_days_frac", "pole_ref_loss", "surplus_sig_ratio"),
   
 ## m1_2 variations ----------------------------------------------------
 
-m1_2 = c(
+  m1_2 = c(
     # table 0
     #"rechtsform", "parl_recommend", "gov_missing", "main_domain", "dep",
   
@@ -98,50 +101,50 @@ m1_2 = c(
   
     # table D
     #"era", "season", "months_to_election"
-    ),
+  ),
 
-m1_2a = c(
+  m1_2a = c(
     "nr_yes_share", "sr_yes_share", 
     "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
     "surplus_sig_ratio", "spare_days_frac", 
     "pole_r4_left", "pole_ref_loss"
-    ),  
+  ),  
   
-m1_2b = c(
+  m1_2b = c(
     "nr_support", "sr_support", "interchamber_disagree",
     "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
     "surplus_sig_ratio", "spare_days_frac", 
     "pole_r4_left", "pole_ref_loss"
-    ),      
+  ),      
   
-m1_2c = c(
+  m1_2c = c(
     "nr_yes_share", "sr_yes_share", 
     "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
     "pole_r4_left", "pole_ref_loss"
-    ),        
+  ),        
   
-m1_2d = c(
+  m1_2d = c(
     "nr_support", "sr_support",
     "roll_yes_rechtsform", "roll_yes_domain", "time_since_domain_vote",
     "pole_r4_left", "pole_ref_loss"
-    ),
+  ),
 
-m1_2e = c(
+  m1_2e = c(
     "parl_support_signed", # Best Combo?
     "roll_yes_rechtsform", 
     "roll_yes_domain", 
     "author_prior_fail_rate",
     "surplus_sig_ratio", "spare_days_frac" 
-    ),
+  ),
 
-m1_2f = c(
+  m1_2f = c(
     "parl_support_signed",
     "roll_yes_rechtsform", 
     "roll_yes_domain", 
     "author_prior_fail_rate",
     "surplus_sig_ratio", "spare_days_frac",
     "pole_r4_left", "pole_ref_loss"
-    ),
+  ),
 
   m1_3 = character(0),   # placeholder: m1_2 + external features for later
 
@@ -165,7 +168,17 @@ m1_2f = c(
                      #paste0("pole_", setdiff(pole_levels, "none")),
                      #"has_urheber", "n_sponsors_f", "established_f", "actor_code_r4",
                      #"urheber_is_coalition"
-                     ),
+  ),
+
+## Parole blocks: T1 information tier (m3) ------------------------------
+
+  # Kept strictly out of every m1/m2 set: paroles are fixed during the campaign, not at T0
+  ext_parole_big4  = c("cue_fdp", "cue_sps", "cue_svp", "cue_center"
+  ),
+  ext_parole_agg   = c("parole_cue_lr", "parole_wsup", "parole_gov_defectors", "parole_breadth"
+  ),
+  ext_verband_lm   = c("verband_econ_cue", "verband_labor_cue", "cue_sbv"
+  ),
 
 ## Leaner external blocks for testing -----------------------------------
 
@@ -221,16 +234,17 @@ m1_2f = c(
                   sprintf("policy_%02d", 1:12))
 )
 
-## Composing the model iterations from the blocks above -----------------
+# 3. Composing the model iterations from the blocks above ---------------
 
 # Adding urheber set
-feature_sets$m1_3   <- c(feature_sets$m1_2, feature_sets$ext_urheber_lm)
+feature_sets$m1_3   <- c(feature_sets$m1_2,  feature_sets$ext_urheber_lm)
 feature_sets$m1_3a  <- c(feature_sets$m1_1e, feature_sets$ext_urheber_lm)
 feature_sets$m1_3b  <- c(feature_sets$m1_2e, feature_sets$ext_urheber_lm)
 
-## M2
+## m2: short time frame -------------------------------------------------
+
 # The frak/coal sets only exist on the post-1994 frame and are evaluated there
-feature_sets$m2_frak <- c(feature_sets$m1_2, feature_sets$ext_frak_lm)
+feature_sets$m2_frak <- c(feature_sets$m1_2,    feature_sets$ext_frak_lm)
 feature_sets$m2_coal <- c(feature_sets$m2_frak, feature_sets$ext_coal_lm)
 
 feature_sets$m2_urh <- c(feature_sets$m2_frak, feature_sets$ext_urheber_lm)
@@ -287,14 +301,41 @@ feature_sets$m2_base5 <- c(feature_sets$m2_base, "n_gov_defectors")
 feature_sets$m2_base6 <- c(feature_sets$m2_base, "weighted_parl_support")
 
 feature_sets$m2_base7 <- c(feature_sets$m2_base, "weighted_parl_support", feature_sets$ext_urheber_lm)
-feature_sets$m2_base8 <- c(feature_sets$m2_base, "nr_yes_share", feature_sets$ext_urheber_lm)
-feature_sets$m2_base9 <- c(feature_sets$m2_base, "parl_support_signed", feature_sets$ext_urheber_lm)
-feature_sets$m2_base10 <- c(feature_sets$m2_base, "parl_support_signed", "author_prior_fail_rate", feature_sets$ext_urheber_lm)
+feature_sets$m2_base8 <- c(feature_sets$m2_base, "nr_yes_share",          feature_sets$ext_urheber_lm)
+feature_sets$m2_base9 <- c(feature_sets$m2_base, "parl_support_signed",   feature_sets$ext_urheber_lm)
+feature_sets$m2_base10 <- c(feature_sets$m2_base,"parl_support_signed",   "author_prior_fail_rate", feature_sets$ext_urheber_lm)
 
-# Guarding the registry instead of repairing it silently
+## m3: T1 parole tier ---------------------------------------------------
+
+# Head-to-head probes against the T0 champion; each aggregate solo first, raw big-4 as reference
+feature_sets$m3_par_big4 <- c(feature_sets$m1_1e, feature_sets$ext_parole_big4)
+feature_sets$m3_par_agg  <- c(feature_sets$m1_1e, feature_sets$ext_parole_agg)
+
+# The two decisive proxy-gap comparisons, one added df each:
+# m3_par_cue  vs m2_frak_lean4 (elite_cue_lr)          -> parole cue vs roll-call cue
+# m3_par_wsup vs m2_wps        (weighted_parl_support) -> parole weighting vs faction weighting
+feature_sets$m3_par_cue  <- c(feature_sets$m1_1e, "parole_cue_lr")
+feature_sets$m3_par_wsup <- c(feature_sets$m1_1e, "parole_wsup")
+feature_sets$m3_par_gov  <- c(feature_sets$m1_1e, "parole_gov_defectors")
+
+feature_sets$m3_verband  <- c(feature_sets$m1_1e, feature_sets$ext_verband_lm)
+feature_sets$m3_verb_gap <- c(feature_sets$m1_1e, "econ_labor_gap")
+
+feature_sets$m3_full     <- c(feature_sets$m1_1e, feature_sets$ext_parole_agg,
+                              "verband_econ_cue", "verband_labor_cue", "cue_sbv")
+
+# Singles for tree engines: every raw cue plus the unease share
+feature_sets$tree_extras <- c(feature_sets$tree_extras,
+                              paste0("cue_", c("fdp", "sps", "svp", "center", "evp",
+                                               "gps", "glp", "bdp", "eco", "sgv",
+                                               "sbv", "sgb", "travs", "sav")),
+                              "parole_abstain_share")
+
+
+## Guarding the registry instead of repairing it silently
 stopifnot(!any(duplicated(names(feature_sets))))
 stopifnot(all(unlist(feature_sets) %in% names(df)))
 
-# 3. Saving dataset for the ML pipeline -------------------------------
+# 4. Saving dataset for the ML pipeline -------------------------------
 
 saveRDS(feature_sets, file.path(input_path, "feature_sets.rds"))
