@@ -27,7 +27,7 @@ frame <- df %>%
   mutate(rechtsform = droplevels(rechtsform),
          yes_share  = `volkja-proz`) %>%
   arrange(datum, anr) # making the tie-break explicit so the folds depend only on the data, not on row order
-  
+
 folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6)
 
 # 3. Evaluation ------------------------------------------------------

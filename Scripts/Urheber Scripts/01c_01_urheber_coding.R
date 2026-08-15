@@ -1,4 +1,4 @@
-### 01_urheber_coding.R ###
+### 01c_01_urheber_coding.R ###
 
 # Base urheber coding: sponsor counts, actor type, established flag, party-based pole
 
@@ -6,8 +6,9 @@ library(tidyverse)
 
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
 input_path  <- file.path(base_path, "Input Data")
+output_path <- file.path(base_path, "Output")
 
-df_urheber <- read_csv("Urheber_Poles/urheber_df.csv", show_col_types = FALSE)
+df_urheber <- read_csv(file.path(input_path, "Urheber_Poles/urheber_df.csv", show_col_types = FALSE))
 
 # 1. Keyword dictionaries (lowercase, substring match) ------------------
 
@@ -123,7 +124,7 @@ out <- df_urheber %>%
   select(anr, datum, titel_kurz_d, rechtsform, urheber, n_sponsors, is_coalition,
          actor_code, actor_label, established_actor, pole, pole_conf, confidence, needs_review)
 
-write_excel_csv(out, "Urheber_Poles/urheber_coded_poles.csv")
+write_excel_csv(out, file.path(input_path, "Urheber_Poles/urheber_coded_poles.csv"))
 
 # Printing verification distributions
 print(count(out, actor_label, sort = TRUE))

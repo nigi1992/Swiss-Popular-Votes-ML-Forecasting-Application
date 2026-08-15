@@ -259,7 +259,6 @@ print(sort(unique(df$`unter-quorum`)))
 
 class(df$`w-kvp`)
 
-
 ## Deleting reference columns ------------------------------------------
 
 SwissVotes_Df1 <- df

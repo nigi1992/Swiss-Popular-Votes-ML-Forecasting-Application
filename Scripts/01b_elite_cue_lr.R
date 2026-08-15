@@ -10,7 +10,7 @@ library(tidyverse)
 
 rm(df1)
 df1 <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v2.csv"),
-               show_col_types = FALSE)
+                show_col_types = FALSE)
 
 # 2. Scale metadata and raw anchors -------------------------------------
 
@@ -196,7 +196,7 @@ cue_nzz <- compute_elite_cue(df1, era_map = uniform_era_map("nzz_2004_2025"))
 
 # Comparing all sourced scales against the old improvised one
 cmp <- compare_anchor_scales(df1, c("old_improvised", "experts_20_2003",
-                                   "nzz_2004_2025", "elite_survey_10_1990"))
+                                    "nzz_2004_2025", "elite_survey_10_1990"))
 round(cmp$correlation, 3)
 cmp$sign_flips
 
@@ -222,14 +222,14 @@ check <- compute_elite_cue(df1, era_map = uniform_era_map("old_improvised"),
 
 # Writing v3 with provenance columns
 df1 <- df1 %>%
-    #select(-elite_cue_lr) %>%
-    rename(elite_cue_lr0 = elite_cue_lr) %>%
-    left_join(cue_v3 %>% select(anr, elite_cue_lr, cue_scale_id = scale_id,
-                                cue_n_blocs = n_blocs_used),
-              by = "anr") %>%
-    write_csv("Input Data/Fraktionen_Blocs/fraktionen_blocs_wide_v3.csv")
+  #select(-elite_cue_lr) %>%
+  rename(elite_cue_lr0 = elite_cue_lr) %>%
+  left_join(cue_v3 %>% select(anr, elite_cue_lr, cue_scale_id = scale_id,
+                              cue_n_blocs = n_blocs_used),
+            by = "anr") %>%
+  write_csv("Input Data/Fraktionen_Blocs/fraktionen_blocs_wide_v3.csv")
 
-str(df1)
+#str(df1)
 
 # 8. Code Junk ------------------------------------------------------------
 

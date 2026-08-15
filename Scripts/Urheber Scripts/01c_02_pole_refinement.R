@@ -1,4 +1,4 @@
-### 02_pole_refinement.R ###
+### 01c_02_pole_refinement.R ###
 
 # Refining the 'nonpartisan' pole codes with interest-group keyword dictionaries
 
@@ -6,8 +6,9 @@ library(tidyverse)
 
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
 input_path  <- file.path(base_path, "Input Data")
+output_path <- file.path(base_path, "Output")
 
-df_urheber_ref <- read_csv("Urheber_Poles/urheber_coded_poles.csv", show_col_types = FALSE)
+df_urheber_ref <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles.csv", show_col_types = FALSE))
 
 # 1. Keyword dictionaries (lowercase, substring match) ------------------
 
@@ -87,12 +88,11 @@ out <- df_urheber_ref %>%
     pole_autocoded = as.integer(pole == "nonpartisan" & pole_refined != "nonpartisan")
   )
 
-write_excel_csv(out, "Urheber_Poles/urheber_coded_poles_refined.csv")
+write_excel_csv(out, file.path(input_path, "Urheber_Poles/urheber_coded_poles_refined.csv"))
 
 # Printing verification distributions
 print(count(out, pole_refined, sort = TRUE))
 cat("auto-recoded rows:", sum(out$pole_autocoded), "\n")
-
 
 # 3. Notes on final df ending in _r4.csv -----------------------------
 

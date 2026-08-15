@@ -95,8 +95,8 @@ df <- df %>%
       datum <  as.Date("2008-01-01") ~ "e1991_2007",
       TRUE                           ~ "e2008plus"
     ), levels = c(
-                  #"pre1971", 
-                  "e1971_1990", "e1991_2007", "e2008plus")),
+      #"pre1971", 
+      "e1971_1990", "e1991_2007", "e2008plus")),
     season = factor(paste0("Q", quarter(datum)), levels = paste0("Q", 1:4))
   )
 
@@ -122,6 +122,8 @@ df <- df %>%
       as.numeric(d - max(nr_election_dates[nr_election_dates <= d])) / 30.44
     }, numeric(1))
   )
+
+cal_features <- c("era", "season", "months_to_election", "months_since_election")
 
 ## Notes for 3. ---------------------------------------------------
 
@@ -183,9 +185,8 @@ colnames(df[df$vote_done == "voted", ])[colSums(is.na(df[df$vote_done == "voted"
 which(is.na(df$nrja)) # Finding row via row identifier (anr)
 df |> filter(is.na(nrja)) %>% select(anr, datum, titel_kurz_d, `bv-pos`, `nr-pos`, nrja, nrnein, `sr-pos`, srja, srnein)
 
-## Directionless codebook values for gov-pos variables ----------------
 
-# see p. 12-14 for reference
+## Directionless codebook values for gov-pos variables, see p. 12-14 for reference
 
 # Creating separate df, where d1e2 = 1.4, select columns 'anr', 'titel_off_d', 'd1e2', 'dep'
 df_gov_pos <- df %>%
@@ -193,8 +194,8 @@ df_gov_pos <- df %>%
   select(anr, datum, titel_kurz_d, rechtsform, init_formul, `br-pos`, `bv-pos`, `nr-pos`, `sr-pos`)
 rm(df_gov_pos)
 ## 3 instances in which all three chambers have code = 3 
-# -> For lm.predict(), recode as "miss", because 3 is too few to estimate a reliable standalone coefficient
-# -> For tree-based engines (Random Forest or XGBoost), keep as 3, because they can split on it and learn from it.
+# -> For lm.predict(), recoding as "miss", because 3 is too few to estimate a reliable standalone coefficient
+# -> For tree-based engines (Random Forest or XGBoost), keeping as 3, because they can split on it and learn from it.
 
 ## 2 instances in which bv-pos = 3, but nr and sr have differing recommendations -> leave them be.
 
@@ -229,6 +230,12 @@ for (k in 1:12) {
   )
 }
 
+inst_features <- c("changes_constitution", "double_majority_required",
+                   "gov_recommend", "gov_missing", "parl_recommend",
+                   "nr_recommend", "main_domain")
+
+## More "dumb" classifiers -------------------------------------------
+
 # Legislative friction: 
 # dauer_bv  as proxy for contentious parliamentary process and elite conflict/complexity
 # dauer_bv is structurally missing for pa-iv proposals (no bundesraetliche Botschaft exists, 34 of 38 NAs), 
@@ -236,6 +243,8 @@ for (k in 1:12) {
 df <- df %>%
   mutate(pa_iv        = as.numeric(`pa-iv`),
          log_dauer_bv = log1p(if_else(is.na(dauer_bv), 0, dauer_bv)))
+
+dumb_features <- c("pa_iv", "log_dauer_bv", "anzahl", "dep", "d1e1", paste0("policy_", sprintf("%02d", 1:12)))
 
 ## Notes for more "dumb" institutional features ---------------------
 
@@ -312,9 +321,9 @@ df <- df %>%
                                   3650, na.rm = FALSE), # capped at 10 years
     time_since_domain_vote = if_else(is.na(time_since_domain_vote),
                                      3650, time_since_domain_vote)#,
-    # together with anzahl a voter fatigue proxy?
-    # author_prior_failures =, Sponsor track record; count of failed initiatives by same urheber bloc before date
-    # party_weighted_support =,	Σ (w-party × historical party tendency in domain, past data only)	Expected support from party-strength × past positions (not proposal specific – domain average)
+    # author_prior_failures = Sponsor track record: Count of failed initiatives by same urheber bloc before date -> see Section 8
+    # party_weighted_support =	Σ w-party x historical party tendency in domain (past data only) -> not same as Section 6c!	
+    # -> Expected support from party-strength x past positions (not proposal specific - domain average) 
   )
 
 # Dropping the raw policy slot columns after multi-hot encoding
@@ -322,6 +331,9 @@ df <- df %>%
 # like 10.31 that would enter numeric selections as fake magnitudes
 
 #df <- df %>% select(-matches("^d[123]e[123]$"))
+
+hist_features <- c("roll_yes_grand", "roll_yes_rechtsform", "roll_acc_rechtsform",
+                   "roll_yes_domain", "last_domain_outcome", "time_since_domain_vote")
 
 # 5. Elite cues / Coalition theory ----------------------------------
 
@@ -367,6 +379,11 @@ df <- df %>%
              elite_consensus, parl_participation), ~ if_else(is.na(.x), 0, .x)),
     parl_consensus = if_else(is.na(parl_consensus), 0.5, parl_consensus)
   )
+
+elite_features <- c("nr_yes_share", "sr_yes_share", "nr_support", "sr_support",
+                    "parl_support_signed", "parl_consensus", "interchamber_disagree",
+                    "elite_consensus", "brpos_signed", "gov_parl_align",
+                    "parl_vote_missing", "parl_participation")
 
 ## Some data discovery ------------------------------------------------
 
@@ -422,7 +439,6 @@ bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v3.
                show_col_types = FALSE)
 #str(bw)
 
-# 6a. Faction blocs ----------------------------------------------------
 ## Orientation and validation ------------------------------------------
 
 # Validating every roll call against the official final-vote totals before anything gets joined
@@ -457,7 +473,7 @@ frak <- bw %>%
   filter(cue_valid == 1) %>%
   distinct(anr, .keep_all = TRUE)
 
-# 6b. Bloc features ----------------------------------------------------
+# 6a. Bloc features ----------------------------------------------------
 
 # 4 period-stable blocs: 
 # left = S (Social Democrats) + G (Grüne), center = Mitte (CVP + BDP + EVP) + GLP, fdp = RL, svp = V. 
@@ -496,7 +512,7 @@ frak_feats <- frak %>%
     # Bloc discomfort: abstention share among all recorded positions (as a share of the faction total)
     # Catches Elite unease that the direction share misses
     frak_enth_share = rowSums(across(ends_with("_enth")), na.rm = TRUE) /
-                      rowSums(across(matches("_(ja|nein|enth|abw)$")), na.rm = TRUE),
+      rowSums(across(matches("_(ja|nein|enth|abw)$")), na.rm = TRUE),
     # The weighted left-right cue score, neutral-filling its handful of gaps at the scale midpoint 0, below any estimate threshold
     elite_cue_lr    = if_else(is.na(elite_cue_lr), 0, elite_cue_lr),
     elite_cue_lr0    = if_else(is.na(elite_cue_lr0), 0, elite_cue_lr0),
@@ -506,7 +522,7 @@ frak_feats <- frak %>%
   )
 # Source for coaltion theory: Kriesi 2005, p.83, Jaquet, Sciarini & Gava 2022, Wagschal 2023
 
-# 6c. Alternative bloc resolution -------------------------------------
+# 6b. Alternative bloc resolution -------------------------------------
 
 rm(frak_feats5)
 # Keeping G separate from S, this preserves the S/G divergence that the four-bloc version collapses
@@ -521,7 +537,7 @@ frak_feats5 <- frak %>%
     frak_svp_sup    = share(V_support,  V_oppose),
     frak_breadth5   = rowSums(cbind(frak_sp_sup > 0.5, frak_gruene_sup > 0.5, frak_center_sup > 0.5, 
                                     frak_fdp_sup > 0.5, frak_svp_sup > 0.5), na.rm = TRUE),
-    frak_lr_signed  = frak_sp_sup + frak_gruene_sup - frak_svp_sup, 
+    frak_lr_signed5  = frak_sp_sup + frak_gruene_sup - frak_svp_sup, 
     elite_cue_lr    = if_else(is.na(elite_cue_lr), 0, elite_cue_lr),
     elite_cue_lr0    = if_else(is.na(elite_cue_lr0), 0, elite_cue_lr0),
     support_coalition = factor(support_coalition)
@@ -546,11 +562,11 @@ message("master rows without faction data (expected: pre-1994 + quarantined): ",
 
 # After frak_feats5 is built (## Alternative Bloc Resolution), joining it:
 df <- df %>%
-  left_join(frak_feats5 %>% select(anr, frak_sp_sup, frak_gruene_sup),
+  left_join(frak_feats5 %>% select(anr, frak_sp_sup, frak_gruene_sup, frak_breadth5, frak_lr_signed5),
             by = "anr", relationship = "one-to-one")
 stopifnot(nrow(df) == n_master)
 
-# 6d. Electorate-weighted faction support -----------------------------
+# 6c. Electorate-weighted faction support -----------------------------
 
 # Σ (bloc yes-share x bloc voter share at the last NR election) / Σ (bloc voter share) 
 # Party-to-bloc weights follow faction membership: 
@@ -568,9 +584,10 @@ num <- rowSums(as.matrix(S) * as.matrix(W), na.rm = TRUE)
 den <- rowSums(as.matrix(W) * !is.na(as.matrix(S)), na.rm = TRUE)
 df$weighted_parl_support <- if_else(is.na(df$frak_left_sup), NA_real_, num / den)
 
-# 6e. Coalition config from 'support_coalition' ----------------------
+# 6d. Coalition config from 'support_coalition' ----------------------
 
-# Coalition-configuration features from support_coalition variable according to Kriesi (2005), Linder/Mueller (2021) and Wagschal (2023) 
+# Coalition-configuration features from support_coalition variable 
+# According to Kriesi (2005), Linder/Mueller (2021) and Wagschal (2023) 
 
 # Bloc membership is parsed from the string so every present and future pattern is covered
 gov_blocs <- c("S", "ME", "RL", "V")
@@ -632,6 +649,20 @@ df <- df %>%
   )
 
 attr(df, "all_blocs")   <- all_blocs
+
+## Roll call data feature-set ------------------------------------------
+
+frak_features  <- c("frak_left_sup", "frak_center_sup", "frak_fdp_sup", "frak_svp_sup",
+                   "frak_breadth", "frak_lr_signed", "frak_enth_share", "elite_cue_lr", #"elite_cue_lr0", 
+                   "support_coalition", "weighted_parl_support")
+
+frak_features5 <- c("frak_sp_sup", "frak_gruene_sup", "frak_center_sup", "frak_fdp_sup", "frak_svp_sup",
+                    "frak_breadth5", "frak_lr_signed5", "frak_enth_share", "elite_cue_lr", #"elite_cue_lr0", 
+                    "support_coalition", "weighted_parl_support")
+
+coal_features  <- c("coalition_kriesi", "n_gov_defectors", "svp_defects", "sp_defects",
+                    "bourgeois_pro", "bourgeois_contra", "left_pro", "left_contra",
+                    "coal_social_conserv", "coal_social_lib", "coal_environ")
 
 # 7. Partei- und Verbandsparolen ---------------------------------------
 
@@ -754,6 +785,13 @@ df <- df %>%
     econ_labor_gap    = verband_econ_cue - verband_labor_cue
   )
 
+## Parole feature-set ------------------------------------------------------
+
+parole_features <- c(paste0("cue_", paro_parties), paste0("cue_", paro_verbands),
+                    "parole_abstain_share", "parole_cue_lr", "parole_wsup",
+                    "parole_gov_defectors", "parole_breadth",
+                    "verband_econ_cue", "verband_labor_cue", "econ_labor_gap")
+
 # 8. Sponsors / Urheber -----------------------------------------------
 
 # See Scripts in /Urheber Scripts for the coding and review process
@@ -825,7 +863,7 @@ df$author_prior_fail_rate <- asof_stat(df$datum, fail_hist,
 ## Oriented sponsor track record --------------------------------------
 
 # The campaign outcome from the actor's perspective 
-# For initiatives the urheber wants a Ja, for optional referendums the committee wants a Nein -> defeat flips orientation
+# For initiatives the urheber wants a yes, for optional referendums the committee wants a no -> defeat flips orientation
 # Committee loss rate .683 vs initiative loss rate .894 -> pooling the two histories would also mix two different base rates
 lost_init <- if_else(df$vote_done == "voted" & as.character(df$rechtsform) == "3",
                      as.numeric(as.character(df$volk) == "0"), NA_real_)
@@ -860,6 +898,13 @@ df <- df %>%
 
 attr(df, "pole_levels") <- pole_levels
 
+## Urheber/Sponsor feature-set -------------------------------------------
+
+urheber_features <- c("has_urheber", "n_sponsors_f", "is_coalition_f", "established_f",
+                      "pole_refined_r4", paste0("pole_r4_", setdiff(pole_levels, "none")),
+                      #"pole_refined_origin", paste0("pole_", setdiff(pole_levels, "none")),
+                      "author_prior_fail_rate", "pole_init_loss", "pole_ref_loss", "actor_init_loss")
+
 # 9. Signature / Mobilization signals ------------------------------------
 
 # df remove signature columns
@@ -893,7 +938,7 @@ df <- df %>%
 # The two indicators has_signature_phase and sig_data_missing carry the structure, no mean imputation
 sig_features <- c("surplus_sig_ratio", "sig_speed_pc",
                   "invalid_sig_share", "spare_days_frac")
-
+ 
 df <- df %>%
   mutate(
     sig_data_missing = as.integer(has_signature_phase == 1 &
