@@ -172,7 +172,8 @@ print(m0_calibration)
 # Only rechtsform 3 breaks the pattern upward (0.870 vs 0.13), because the constant sits on the correct side there, predicting rejection for 87% true rejections. 
 # That is the most important take-away of  M0's benchmark classifier: Popular initiatives will fail most likely.
 
-# 4. Saving datasets for the ML pipeline ------------------------------
+
+# 7. Saving datasets for the ML pipeline ------------------------------
 
 write_csv(bind_rows(m0_fold, m0_pooled, mgrand_pooled),
           file.path(output_path, "metrics_M0.csv"))

@@ -28,7 +28,7 @@ frame <- df %>%
          yes_share  = `volkja-proz`) %>%
   arrange(datum, anr)
 
-folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6)
+folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6) # (k=6, n=238)
 
 # 3. Expanding-window evaluation of one feature set ------------------
 
@@ -54,7 +54,7 @@ run_these <- c(
   "m1_1f", "m1_1g", "m1_1h", "m1_1i", "m1_1k", "m1_1l",
   "m1_2", "m1_2a", "m1_2b", "m1_2c", "m1_2d", "m1_2e", "m1_2f",
   # Urheber features on the long frame (1971+)
-  if (length(feature_sets$m1_3) > 0) "m1_3", "m1_3a", "m1_3b"
+  if (length(feature_sets$m1_3) > 0) "m1_3", "m1_3a", "m1_3b", "m1_3c"
 )
 
 results <- map_dfr(run_these, function(s) run_lm_set(s, feature_sets[[s]]))
@@ -110,7 +110,8 @@ paired_vs <- function(ref, wide = mae_wide) {
 }
 
 print(paired_vs("m1_1e"), n = Inf)
-print(paired_vs("m1_2"),  n = Inf)
+print(paired_vs("m1_1f"), n = Inf)
+print(paired_vs("m1_2a"),  n = Inf)
 print(paired_vs("m1_2e"),  n = Inf)
 
 # Checking whether PR-AUC/accuracy gap are a threshold problem rather than a ranking one
@@ -130,12 +131,57 @@ var_decomp <- results %>%
   )
 print(var_decomp)
 
+# Decomposing fold-level MAE into additive model, fold and residual components
+var_decomp_full <- results %>%
+  select(model, fold, mae) %>%
+  mutate(mu     = mean(mae),
+         m_eff  = ave(mae, model, FUN = mean) - mu,
+         f_eff  = ave(mae, fold,  FUN = mean) - mu,
+         resid  = mae - mu - m_eff - f_eff) %>%
+  summarise(var_model = var(m_eff),
+            var_fold  = var(f_eff),
+            var_resid = var(resid)) %>%
+  mutate(across(everything(), ~ .x / sum(c_across(everything())), .names = "share_{.col}"))
+
+print(var_decomp_full)
+
+### Brier Score is degenerated and therefore meaningless. Needs to be fixed or just be used for tree engines!!!
+
 # Flagging degenerate models: Brier pinned at 0.25 means predictions collapsed to ~0.5
 degenerate <- results %>%
   group_by(model) %>%
   summarise(brier_sd = sd(brier), brier_mean = mean(brier), prauc = mean(pr_auc)) %>%
   filter(brier_mean > 0.24 | prauc < 0.60)
 print(degenerate)
+
+## Expanding vs. Rolling Folds ----------------------------------------
+
+# Separating period difficulty from training-set size by holding the training window fixed
+make_rolling_folds <- function(dates, window_days, k) {
+  d   <- sort(unique(dates))
+  cut <- d[round(seq(length(d) * 0.5, length(d), length.out = k + 1))]
+  map(seq_len(k), function(b) {
+    t_lo <- cut[b]; t_hi <- cut[b + 1]
+    list(train = which(dates < t_lo & dates >= t_lo - window_days),
+         test  = which(dates >= t_lo & dates < t_hi))
+  })
+}
+
+# Comparing the fold gradient under expanding vs fixed-length training windows
+grad <- bind_rows(
+  tibble(scheme = "expanding",
+         fold   = seq_along(folds),
+         mae    = map_dbl(folds, ~ mean(abs(frame$yes_share[.x$test] -
+                                              frame$roll_yes_rechtsform[.x$test])))),
+  tibble(scheme = "rolling20y",
+         fold   = seq_len(6),
+         mae    = map_dbl(make_rolling_folds(frame$datum, 365.25 * 20, 6),
+                          ~ mean(abs(frame$yes_share[.x$test] -
+                                       frame$roll_yes_rechtsform[.x$test]))))
+)
+
+# A gradient that survives the fixed window is an era effect; one that flattens was a sample-size effect
+print(grad %>% pivot_wider(names_from = scheme, values_from = mae))
 
 # 6. Saving dataset for the ML pipeline ------------------------------
 

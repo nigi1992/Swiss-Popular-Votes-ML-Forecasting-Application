@@ -28,7 +28,7 @@ frame <- df %>%
          yes_share  = `volkja-proz`) %>%
   arrange(datum, anr)
 
-folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6)
+folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6) # (k=6, n=238)
 
 # 3. Expanding-window evaluation of one feature set ------------------
 
@@ -38,7 +38,8 @@ run_lm_set <- function(set_name, feats) {
       droplevels() %>%
       drop_zero_variance()
     te <- frame[folds[[b]]$test, names(tr)] %>%
-      harmonize_factor_levels(ref = tr)
+      #harmonize_factor_levels(ref = tr)
+      harmonize_factor_levels(ref = g$data)
     #fit  <- lm(yes_share ~ ., data = tr)
     #yhat <- predict(fit, newdata = te)
     g    <- fit_lm_guarded(tr)
@@ -50,12 +51,13 @@ run_lm_set <- function(set_name, feats) {
 }
 
 run_these <- c(
-  "m1_0", "m1_1", "m1_1e", "m1_1f", "m1_2", "m1_2e", "m1_2f",
+  "m1_0", "m1_1", "m1_1e", "m1_1f", "m1_2a", "m1_2e", "m1_2f",
   # M3: T1 parole tier on the long frame (paroles cover 1971+, unlike frak)
   "m3_par_big4", "m3_par_agg", "m3_par_cue", "m3_par_wsup",
   "m3_par_gov", "m3_verband", "m3_verb_gap", "m3_full"
   # Urheber features on the long frame (1971+)
   #if (length(feature_sets$m1_3) > 0) "m1_3", "m1_3a", "m1_3b"
+
 )
 
 results <- map_dfr(run_these, function(s) run_lm_set(s, feature_sets[[s]]))
@@ -95,8 +97,8 @@ write_csv(pooled, file.path(output_path, "metrics_M3_pooled.csv"))
 # Shorter time frame --------------------------------------------------
 # 1. Modeling frames --------------------------------------------------
 
-df           <- readRDS(file.path(input_path, "swissvotes_features.rds"))
-feature_sets <- readRDS(file.path(input_path, "feature_sets.rds"))
+#df           <- readRDS(file.path(input_path, "swissvotes_features.rds"))
+#feature_sets <- readRDS(file.path(input_path, "feature_sets.rds"))
 
 # Long frame identical to 03/04; short frame = rows with validated
 # faction data (1994+); folds are built on the short frame, so every
@@ -106,12 +108,12 @@ frame <- df %>%
   filter(vote_done == "voted", rechtsform %in% c("1", "2", "3", "4")) %>%
   mutate(rechtsform = droplevels(rechtsform),
          yes_share  = `volkja-proz`) %>%
-  arrange(datum)
+  arrange(datum, anr)
 
 frame_frak <- frame %>% filter(!is.na(frak_left_sup))
 
 # k = 4 because of shorter post 1994+ time frame
-folds <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4)
+folds <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4) # (k=4, n=131)
 
 # 2. Expanding-window evaluation of one feature set -------------------
 
@@ -143,23 +145,22 @@ run_m2_set <- function(set_name, feats, train_frame = "short") {
 # 3. Running references and M2 sets -----------------------------------
 
 run_these_m2 <- c(
-  "m2_frak_lean", "m2_frak_lean2", "m2_frak_lean3", "m2_frak_lean4", 
   "m2_frak_lean_urh", "m2_frak_lean2_urh", "m2_frak_lean3_urh", "m2_frak_lean4_urh",
-  "m2_coal_lean", "m2_coal_lean2", "m2_coal_lean3", "m2_coal_lean4",
   "m2_coal_lean_urh", "m2_coal_lean2_urh", "m2_coal_lean3_urh", "m2_coal_lean4_urh",
+  "champ_m1_1eA", "champ_m1_1eB", "champ_m1_1eC",
   "m2_base", "m2_base1", "m2_base2", "m2_base3", "m2_base4", "m2_base5", "m2_base6", 
   "m2_base7", "m2_base8", "m2_base9", "m2_base10",
-  # Leaner Probe Champions
-  "m2_lean", "m2_lean2", "m2_wps", "m2_wps2",
+  
   # Proxy-gap head-to-heads on the identical post-1994 folds:
   # m3_par_cue vs m2_frak_lean4, m3_par_wsup vs m2_wps
   "m3_par_cue", "m3_par_wsup", "m3_par_agg", "m3_verband"
 )
 
 results <- bind_rows(
-  run_m2_set("A_m1_2_trainLong",  feature_sets$m1_2,  train_frame = "long"),
+  run_m2_set("A_m3_full_trainLong",  feature_sets$m3_full,  train_frame = "long"),
   run_m2_set("A_m1_1e_trainLong", feature_sets$m1_1e, train_frame = "long"),
-  run_m2_set("B_m1_2_trainShort", feature_sets$m1_2,  train_frame = "short"),
+  run_m2_set("B_m3_full_trainShort", feature_sets$m3_full,  train_frame = "short"),
+  run_m2_set("A_m1_1e_trainShort", feature_sets$m1_1e, train_frame = "short"),
   map_dfr(run_these_m2, function(s) run_m2_set(s, feature_sets[[s]]))
 )
 

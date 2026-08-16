@@ -10,12 +10,14 @@
 
 # 1. Data import ----------------------------------------------------------
 
+#install.packages(c("glmnet", "rpart", "ranger", "gbm", "xgboost", "FNN"))
+
 library(tidyverse)
-library (gimnet)
+library (glmnet)
 library(rpart)
-library( ranger)
+library(ranger)
 library(gbm)
-Library (FNN)
+library(FNN)
 hasxgb <- requireNamespace("xgboost", quietly = TRUE)
 
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"

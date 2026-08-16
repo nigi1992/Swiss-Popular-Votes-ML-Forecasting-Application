@@ -37,12 +37,12 @@ frame <- df %>%
   filter(vote_done == "voted", rechtsform %in% c("1", "2", "3", "4")) %>%
   mutate(rechtsform = droplevels(rechtsform),
          yes_share  = `volkja-proz`) %>%
-  arrange(datum)
+  arrange(datum, anr)
 
 frame_frak <- frame %>% filter(!is.na(frak_left_sup))
 
 # k = 4 because of shorter post 1994+ time frame
-folds <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4)
+folds <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4) # (k=4, n=131)
 
 # 3. Expanding-window evaluation of one feature set -------------------
 
@@ -77,25 +77,24 @@ run_these_m2 <- c(
   # Bigger models with more extensive feature sets
   "m2_frak", "m2_coal", "m2_urh", "m2_all", "m2_frak5",
   
-  # Simple building blocks for testing
-  #"frak_sup_lm", "frak5_sup_lm", "frak_breadth_lm", "frak_enth_share", 
-  #"elite_cue_lr_lm", "kriesi_lm", "linder_mueller_lm", "linder_lm", "wagschal_lm", 
-  
   ## Leaner models for testing
   "m2_frak_lean", "m2_frak_lean2", "m2_frak_lean3", "m2_frak_lean4", 
   "m2_frak_lean_urh", "m2_frak_lean2_urh", "m2_frak_lean3_urh", "m2_frak_lean4_urh",
   "m2_coal_lean", "m2_coal_lean2", "m2_coal_lean3", "m2_coal_lean4",
   "m2_coal_lean_urh", "m2_coal_lean2_urh", "m2_coal_lean3_urh", "m2_coal_lean4_urh",
   "m2_frak5_lean", "m2_frak5_lean_urh",
-  "m2_base", "m2_base1", "m2_base2", "m2_base3", "m2_base4", "m2_base5", "m2_base6", "m2_base7", "m2_base8", "m2_base9", "m2_base10",
-  # Leaner Probe Champions
-  "m2_lean", "m2_lean2", "m2_wps", "m2_wps2",
+  
+  # Champ features m1_1e & m1_2a
+  "champ_m1_1eA", "champ_m1_1eB", "champ_m1_1eC",
+  "m2_base", "m2_base1", "m2_base2", "m2_base3", "m2_base4", "m2_base5", "m2_base6", "m2_base7", "m2_base8", "m2_base9", "m2_base10"
+
 )
 
 results <- bind_rows(
-  run_m2_set("A_m1_2_trainLong",  feature_sets$m1_2,  train_frame = "long"),
+  run_m2_set("A_m1_2a_trainLong",  feature_sets$m1_2a,  train_frame = "long"),
   run_m2_set("A_m1_1e_trainLong", feature_sets$m1_1e, train_frame = "long"),
-  run_m2_set("B_m1_2_trainShort", feature_sets$m1_2,  train_frame = "short"),
+  run_m2_set("B_m1_2a_trainShort", feature_sets$m1_2a,  train_frame = "short"),
+  run_m2_set("A_m1_1e_trainShort", feature_sets$m1_1e, train_frame = "short"),
   map_dfr(run_these_m2, function(s) run_m2_set(s, feature_sets[[s]]))
 )
 
