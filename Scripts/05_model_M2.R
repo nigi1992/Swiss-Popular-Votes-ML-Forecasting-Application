@@ -1,15 +1,10 @@
 ### 05_model_M2.R ###
 
-# External-source models on the post-1994 faction frame:
-#   m2_frak   m1_2 + faction bloc shares (4 blocs) + elite_cue_lr
-#   m2_frak5  m1_2 + faction bloc shares (5 blocs) + elite_cue_lr
-#   m2_coal   m2_frak + coalition-configuration features
-#   m2_urh    m2_frak + urheber pole features
-#   m2_all    m2_coal + urheber pole features
+# External-source models on the post-1994 faction frame
 
-# Every model is tested on the identical post-1994 test blocks, against
-# three reference cells: m1_2 trained long (1971+), m1_2 trained short
-# (1994+), the current best M1 set trained long, plus the M0 anchor
+# Every model is tested on the identical post-1994 test blocks, against 4 reference cells: 
+# m1_2 trained long (1971+), m1_2 trained short (1994+)
+# The current best M1 set trained long and short plus the M0 anchor
 # The long-vs-short reference pair measures what capping at 1994 costs
 
 # Engine: lm as the transparent baseline; tree engines slot in later
@@ -29,9 +24,9 @@ feature_sets <- readRDS(file.path(input_path, "feature_sets.rds"))
 
 # 2. Modeling frames --------------------------------------------------
 
-# Long frame identical to 03/04; short frame = rows with validated
-# faction data (1994+); folds are built on the short frame, so every
-# model in this script is judged on the same test votes
+# Long frame identical to 03/04
+# Short frame = rows with validated faction data (1994+)
+# Folds are built on the short frame, so every model in this script is judged on the same test votes
 
 frame <- df %>%
   filter(vote_done == "voted", rechtsform %in% c("1", "2", "3", "4")) %>%
@@ -45,6 +40,24 @@ frame_frak <- frame %>% filter(!is.na(frak_left_sup))
 folds <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4) # (k=4, n=131)
 
 # 3. Expanding-window evaluation of one feature set -------------------
+
+# Fitting lm with alias guard
+# Sample-contingent exact collinearity (levels or numerics that become linear combinations inside a small training window) 
+# gets detected via alias(), the offending source columns are dropped for this fold only, and the fit is repeated
+fit_lm_guarded <- function(tr, max_iter = 3) {
+  for (i in seq_len(max_iter)) {
+    fit <- lm(yes_share ~ ., data = tr)
+    al  <- alias(fit)$Complete
+    if (is.null(al)) return(list(fit = fit, data = tr))
+    bad_terms <- rownames(al)
+    src <- names(tr)[vapply(names(tr), function(cl)
+      any(startsWith(bad_terms, cl)), logical(1))]
+    src <- setdiff(src, "yes_share")
+    message("dropping aliased in fold: ", paste(src, collapse = ", "))
+    tr <- tr[, setdiff(names(tr), src), drop = FALSE]
+  }
+  list(fit = lm(yes_share ~ ., data = tr), data = tr)
+}
 
 # train_frame = "long" trains on all votes before the test block,
 # "short" only on post-1994 votes before the test block
@@ -86,8 +99,8 @@ run_these_m2 <- c(
   
   # Champ features m1_1e & m1_2a
   "champ_m1_1eA", "champ_m1_1eB", "champ_m1_1eC",
-  "m2_base", "m2_base1", "m2_base2", "m2_base3", "m2_base4", "m2_base5", "m2_base6", "m2_base7", "m2_base8", "m2_base9", "m2_base10"
-
+  "m2_base", "m2_base1", "m2_base2", "m2_base3", "m2_base4", "m2_base5", "m2_base6", 
+  "m2_base7", "m2_base8", "m2_base9", "m2_base10"
 )
 
 results <- bind_rows(
@@ -127,3 +140,13 @@ print(pooled %>% arrange(desc(volksmehr_acc)))
 write_csv(results %>% select(-pred), file.path(output_path, "metrics_M2_folds.csv"))
 
 write_csv(pooled, file.path(output_path, "metrics_M2_pooled.csv"))
+
+# Saving row-level predictions so paired tests can be run at row level, not fold level
+rm(preds_long)
+preds_long <- results %>%
+  select(model, fold, pred) %>%
+  unnest(pred) %>%
+  left_join(frame %>% mutate(row = row_number()) %>% select(row, anr, datum, yes_share),
+            by = "row")
+
+write_csv(preds_long, file.path(output_path, "preds_M2_rows.csv"))

@@ -2,7 +2,7 @@
 
 # Naive benchmark: expanding as-of mean yes-share by rechtsform
 # No fitting required, the prediction column comes ready-made from 02_features
-# evaluated on the same temporal folds as every later model
+# Evaluated on the same temporal folds as every later model
 
 # 1. Data import -----------------------------------------------------
 
@@ -171,7 +171,6 @@ print(m0_calibration)
 # —> So, the accuracy is just the majority-class share. 
 # Only rechtsform 3 breaks the pattern upward (0.870 vs 0.13), because the constant sits on the correct side there, predicting rejection for 87% true rejections. 
 # That is the most important take-away of  M0's benchmark classifier: Popular initiatives will fail most likely.
-
 
 # 7. Saving datasets for the ML pipeline ------------------------------
 

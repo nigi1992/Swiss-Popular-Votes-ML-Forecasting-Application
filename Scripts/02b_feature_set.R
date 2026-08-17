@@ -9,7 +9,6 @@ input_path  <- file.path(base_path, "Input Data")
 
 df <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 
-
 # 2. Feature-set collection -------------------------------------------
 
 # table 0: gov recommendations, policy area

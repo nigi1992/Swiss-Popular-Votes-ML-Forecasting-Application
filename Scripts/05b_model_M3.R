@@ -32,7 +32,70 @@ folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6) # (k=6, n=238)
 
 # 3. Expanding-window evaluation of one feature set ------------------
 
+fit_lm_guarded <- function(tr, max_iter = 3, response = "yes_share") {
+  dropped <- character(0)
+  for (i in seq_len(max_iter + 1)) {
+    preds <- setdiff(names(tr), response)
+    if (length(preds) == 0)
+      return(list(fit = NULL, data = tr, dropped = dropped, status = "degenerate"))
+    
+    fit <- lm(stats::as.formula(paste(response, "~ .")), data = tr)
+    al  <- alias(fit)$Complete
+    if (is.null(al))
+      return(list(fit = fit, data = tr, dropped = dropped, status = "ok"))
+    if (i > max_iter)
+      return(list(fit = fit, data = tr, dropped = dropped, status = "rank_deficient"))
+    
+    mm   <- model.matrix(fit)
+    asgn <- attr(mm, "assign")               # 0 marks the intercept
+    labs <- attr(terms(fit), "term.labels")
+    idx  <- asgn[colnames(mm) %in% rownames(al)]
+    idx  <- idx[idx > 0]
+    src  <- setdiff(unique(labs[idx]), response)
+    if (length(src) == 0)
+      return(list(fit = fit, data = tr, dropped = dropped, status = "rank_deficient"))
+    
+    message("dropping aliased in fold: ", paste(src, collapse = ", "))
+    dropped <- c(dropped, src)
+    tr <- tr[, setdiff(names(tr), src), drop = FALSE]
+  }
+}
+
 run_lm_set <- function(set_name, feats) {
+  if (length(feats) == 0)
+    stop("empty feature set: ", set_name) 
+  map_dfr(seq_along(folds), function(b) {
+    tr <- frame[folds[[b]]$train, c("yes_share", feats)] %>%
+      droplevels() %>%
+      drop_zero_variance()
+    zv_dropped <- setdiff(feats, names(tr))
+    te <- frame[folds[[b]]$test, names(tr)] %>%
+      harmonize_factor_levels(ref = tr)
+    g <- fit_lm_guarded(tr)
+    # Recoding the degenerate fold as NA rather than scoring a train-mean baseline 
+    # under the label of this feature set
+    if (g$status == "degenerate") {
+      warning(sprintf("fold %d of '%s' lost all predictors", b, set_name))
+      return(tibble(model = set_name, fold = b, n = 0L,
+                    mae = NA_real_, rmse = NA_real_, volksmehr_acc = NA_real_,
+                    brier = NA_real_, pr_auc = NA_real_,
+                    status = "degenerate",
+                    dropped = list(c(zv_dropped, g$dropped)),
+                    pred = list(tibble())))
+    }
+    te   <- te[, names(g$data), drop = FALSE]
+    yhat <- predict(g$fit, newdata = te) # na.action = na.pass keeps length == nrow(te)
+    
+    eval_preds(te$yes_share, yhat, set_name, b) %>%
+      mutate(status  = g$status,
+             dropped = list(c(zv_dropped, g$dropped)), # Keeping the per-fold drop log 
+             pred    = list(tibble(anr  = frame$anr[folds[[b]]$test],
+                                   row  = folds[[b]]$test,
+                                   yhat = yhat)))
+  })
+}
+
+#run_lm_set <- function(set_name, feats) {
   map_dfr(seq_along(folds), function(b) {
     tr <- frame[folds[[b]]$train, c("yes_share", feats)] %>%
       droplevels() %>%
@@ -50,15 +113,18 @@ run_lm_set <- function(set_name, feats) {
   })
 }
 
+
 run_these <- c(
   "m1_0", "m1_1", "m1_1e", "m1_1f", "m1_2a", "m1_2e", "m1_2f",
   # M3: T1 parole tier on the long frame (paroles cover 1971+, unlike frak)
   "m3_par_big4", "m3_par_agg", "m3_par_cue", "m3_par_wsup",
-  "m3_par_gov", "m3_verband", "m3_verb_gap", "m3_full"
+  "m3_par_gov", "m3_verband", "m3_verb_gap", "m3_full",
   # Urheber features on the long frame (1971+)
-  #if (length(feature_sets$m1_3) > 0) "m1_3", "m1_3a", "m1_3b"
-
+  "m1_3", "m1_3a", "m1_3b", "m1_3c"
 )
+
+run_these <- run_these[vapply(run_these,
+                              function(s) length(feature_sets[[s]]) > 0, logical(1))]
 
 results <- map_dfr(run_these, function(s) run_lm_set(s, feature_sets[[s]]))
 
@@ -94,15 +160,25 @@ write_csv(results %>% select(-pred), file.path(output_path, "metrics_M3_folds.cs
 
 write_csv(pooled, file.path(output_path, "metrics_M3_pooled.csv"))
 
+# Saving row-level predictions so paired tests can be run at row level, not fold level
+rm(preds_long)
+preds_long <- results %>%
+  select(model, fold, pred) %>%
+  unnest(pred) %>%
+  left_join(frame %>% mutate(row = row_number()) %>% select(row, datum, yes_share),
+            by = "row")
+
+write_csv(preds_long, file.path(output_path, "preds_M3_rows.csv"))
+
 # Shorter time frame --------------------------------------------------
 # 1. Modeling frames --------------------------------------------------
 
 #df           <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 #feature_sets <- readRDS(file.path(input_path, "feature_sets.rds"))
 
-# Long frame identical to 03/04; short frame = rows with validated
-# faction data (1994+); folds are built on the short frame, so every
-# model in this script is judged on the same test votes
+# Long frame identical to 03/04
+# Short frame = rows with validated faction data (1994+)
+# Folds are built on the short frame, so every model in this script is judged on the same test votes
 
 frame <- df %>%
   filter(vote_done == "voted", rechtsform %in% c("1", "2", "3", "4")) %>%
@@ -116,6 +192,24 @@ frame_frak <- frame %>% filter(!is.na(frak_left_sup))
 folds <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4) # (k=4, n=131)
 
 # 2. Expanding-window evaluation of one feature set -------------------
+
+# Fitting lm with alias guard
+# Sample-contingent exact collinearity (levels or numerics that become linear combinations inside a small training window) 
+# gets detected via alias(), the offending source columns are dropped for this fold only, and the fit is repeated
+fit_lm_guarded <- function(tr, max_iter = 3) {
+  for (i in seq_len(max_iter)) {
+    fit <- lm(yes_share ~ ., data = tr)
+    al  <- alias(fit)$Complete
+    if (is.null(al)) return(list(fit = fit, data = tr))
+    bad_terms <- rownames(al)
+    src <- names(tr)[vapply(names(tr), function(cl)
+      any(startsWith(bad_terms, cl)), logical(1))]
+    src <- setdiff(src, "yes_share")
+    message("dropping aliased in fold: ", paste(src, collapse = ", "))
+    tr <- tr[, setdiff(names(tr), src), drop = FALSE]
+  }
+  list(fit = lm(yes_share ~ ., data = tr), data = tr)
+}
 
 # train_frame = "long" trains on all votes before the test block,
 # "short" only on post-1994 votes before the test block
@@ -193,3 +287,13 @@ print(pooled %>% arrange(desc(volksmehr_acc)))
 write_csv(results %>% select(-pred), file.path(output_path, "metrics_M3b_folds.csv"))
 
 write_csv(pooled, file.path(output_path, "metrics_M3b_pooled.csv"))
+
+# Saving row-level predictions so paired tests can be run at row level, not fold level
+rm(preds_long)
+preds_long <- results %>%
+  select(model, fold, pred) %>%
+  unnest(pred) %>%
+  left_join(frame %>% mutate(row = row_number()) %>% select(row, anr, datum, yes_share),
+            by = "row")
+
+write_csv(preds_long, file.path(output_path, "preds_M3b_rows.csv"))
