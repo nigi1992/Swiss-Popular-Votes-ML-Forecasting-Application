@@ -95,25 +95,6 @@ run_lm_set <- function(set_name, feats) {
   })
 }
 
-#run_lm_set <- function(set_name, feats) {
-  map_dfr(seq_along(folds), function(b) {
-    tr <- frame[folds[[b]]$train, c("yes_share", feats)] %>%
-      droplevels() %>%
-      drop_zero_variance()
-    te <- frame[folds[[b]]$test, names(tr)] %>%
-      #harmonize_factor_levels(ref = tr)
-      harmonize_factor_levels(ref = g$data)
-    #fit  <- lm(yes_share ~ ., data = tr)
-    #yhat <- predict(fit, newdata = te)
-    g    <- fit_lm_guarded(tr)
-    te   <- te[, names(g$data)]
-    yhat <- predict(g$fit, newdata = te)
-    eval_preds(te$yes_share, yhat, set_name, b) %>%
-      mutate(pred = list(tibble(row = folds[[b]]$test, yhat = yhat)))
-  })
-}
-
-
 run_these <- c(
   "m1_0", "m1_1", "m1_1e", "m1_1f", "m1_2a", "m1_2e", "m1_2f",
   # M3: T1 parole tier on the long frame (paroles cover 1971+, unlike frak)
