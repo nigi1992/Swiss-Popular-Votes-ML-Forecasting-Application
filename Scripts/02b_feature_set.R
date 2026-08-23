@@ -23,7 +23,7 @@ elite_features <- c("nr_yes_share", "sr_yes_share", "nr_support", "sr_support",
                     "parl_vote_missing", "parl_participation")
 
 # table B: Signature/mobilization signals: surplus signatures, signature speed, invalid signature share, spare days
-sig_features    <- c("surplus_sig_ratio", "sig_speed_pc", "invalid_sig_share", "spare_days_frac")
+sig_features   <- c("surplus_sig_ratio", "sig_speed_pc", "invalid_sig_share", "spare_days_frac")
 
 # table C: historical base rates: yes-shares (rechtsform + policy area), time passed
 hist_features  <- c("roll_yes_grand", "roll_yes_rechtsform", "roll_acc_rechtsform",
@@ -60,19 +60,53 @@ parole_features<- c(paste0("cue_", paro_parties), paste0("cue_", paro_verbands),
 # table Z: deliberation process, voter fatigue, policy area
 dumb_features  <- c("pa_iv", "log_dauer_bv", "anzahl", "dep", "d1e1", paste0("policy_", sprintf("%02d", 1:12)))
 
+# decision-tree extras: redundant or rank-deficient under lm dummy coding, informative for splits
+tree_features  <- c("gov_parl_recommend_n", "br-pos", "bv-pos", "nr-pos", "sr-pos", "nrja", "nrnein", "srja", "srnein", 
+                    "entwurf_nr", "init_formul", "dauer_bv", "dauer_abst", "`i-dauer_tot`", "urheber", "sammelfrist",
+                    "unter-quorum", "`i-dauer_samm`", "`i-dauer_br`", "`fr-dauer_samm`", "`fr-dauer_tot`", "unter_g", "unter_u",
+                    "sammeltempo", "sparedays", "has_signature_phase", "sig_no_deadline", "sig_data_missing",
+                    "d1e2", "d1e3", "d2e1", "d2e2", "d2e3", "d3e1", "d3e2", "d3e3",
+                    "legislatur", "nr-wahl", paste0("w_", Wpar)
+                    #"urheber", "berecht", paste0("", sprintf("%02d", 1:21))
+                    #"pole_refined_origin", paste0("pole_", setdiff(pole_levels, "none"))
+                    )
 
 ## Attributes ---------------------------------------------------------
 
 pole_levels <- c("none", "left", "right", "center", "mixed", "environmental", "nonpartisan")
-all_blocs <- c("S", "G", "GL", "ME", "RL", "V")
+all_blocs   <- c("S", "G", "GL", "ME", "RL", "V")
 
 paro_parties  <- c("fdp", "sps", "svp", "center", "evp", "gps", "glp", "bdp")
 paro_verbands <- c("eco", "sgv", "sbv", "sgb", "travs", "sav")
 # so they are stored in Session 02b
 
+## Variance Inflation Factor (VIF) -----------------------------------------
+
+# identify factor/character columns with fewer than 2 levels
+factor_cols <- sapply(df, function(x) is.factor(x) || is.character(x))
+problem_cols <- sapply(df[, factor_cols, drop = FALSE], function(x) {
+  length(unique(na.omit(x))) < 2
+})
+
+# these are the culprits
+names(problem_cols[problem_cols])
+
+# numeric columns with zero or near-zero variance
+num_cols <- sapply(df, is.numeric)
+zero_var <- sapply(df[, num_cols, drop = FALSE], function(x) {
+  var(x, na.rm = TRUE) == 0 || length(unique(na.omit(x))) < 2
+})
+
+names(zero_var[zero_var])
+
+# drop single-level factors and zero-variance numerics
+drop_cols <- c(names(problem_cols[problem_cols]), names(zero_var[zero_var]))
+
+### See 02c_VIF.R for VIF computation and collinearity analysis ###
+
 ## Current probe champion combination ---------------------------------
 
-champ_m1_1e <- c("roll_yes_rechtsform", "nr_support", "roll_yes_domain")
+champ_m1_1e  <- c("roll_yes_rechtsform", "nr_support", "roll_yes_domain")
 
 champ_m1_2a  <- c("roll_yes_rechtsform", "parl_support_signed","roll_yes_domain", "author_prior_fail_rate")
 
@@ -154,7 +188,7 @@ feature_sets <- list(
   
   m1_2 = c(
     # table 0 (changes_constitution + double_majority_required irrelevant)
-    "rechtsform", "gov_recommend", "parl_recommend", "gov_missing", "main_domain", "dep",
+    "rechtsform", "gov_recommend", "nr_recommend", "parl_recommend", "gov_missing", "main_domain", "dep",
     
     # table A (parl_consensus excluded: exact mean of the two shares)
     "nr_yes_share", "sr_yes_share", "nr_support", "sr_support", "interchamber_disagree", 
@@ -175,8 +209,16 @@ feature_sets <- list(
     "author_prior_fail_rate", "pole_init_loss", "pole_ref_loss", "actor_init_loss",
     
     # table Z: deliberation process, voter fatigue, policy area
-    "pa_iv", "log_dauer_bv", "anzahl", "dep", "d1e1", paste0("policy_", sprintf("%02d", 1:12))
+    "pa_iv", "log_dauer_bv", "anzahl", "d1e1", paste0("policy_", sprintf("%02d", 1:12))
   ),  
+  
+  m1_2_lm = c( # New base model for lm() engine -> No multi-collinearity, no rank deficiency, no zero-variance features
+    "parl_support_signed", "elite_consensus", "interchamber_disagree", "gov_parl_align",
+    "sig_speed_pc", "invalid_sig_share", "surplus_sig_ratio", "spare_days_frac",
+    "roll_yes_domain", "roll_yes_rechtsform", "last_domain_outcome", "time_since_domain_vote",
+    "era", "season", "months_since_election", "pa_iv", "log_dauer_bv", "anzahl", "main_domain", 
+    "author_prior_fail_rate"
+    ),
   
   m1_2a = c(
     "parl_support_signed", 
@@ -244,6 +286,12 @@ feature_sets <- list(
                      #"has_urheber", "n_sponsors_f", "established_f", "actor_code_r4",
                      #"urheber_is_coalition"
   ),
+  frak_lm_no_col = c("parl_support_signed", "elite_consensus", "interchamber_disagree", "parl_participation", "gov_parl_align",
+                      "sig_speed_pc", "invalid_sig_share", "surplus_sig_ratio", "spare_days_frac",
+                      "roll_yes_domain", "roll_yes_rechtsform", "last_domain_outcome", "time_since_domain_vote",
+                      "season", "months_since_election", "author_prior_fail_rate", "pa_iv", "anzahl", 
+                      "frak_enth_share", "elite_cue_lr"
+  ),
   
   ## Leaner external blocks for testing -------------------------------
   
@@ -273,6 +321,9 @@ feature_sets <- list(
   # Kept strictly out of every m1/m2 set: paroles are fixed during the campaign, not at T0
   ext_parole_big4  = c("cue_fdp", "cue_sps", "cue_svp", "cue_center"
   ),
+  ext_parole_all   = c("cue_fdp", "cue_sps", "cue_svp", "cue_center",
+                       "cue_evp", "cue_gps", "cue_glp", "cue_bdp"
+  ),
   ext_parole_agg   = c("parole_cue_lr", "parole_wsup", "parole_gov_defectors", "parole_breadth"
   ),
   ext_verband_lm   = c("verband_econ_cue", "verband_labor_cue", "cue_sbv"
@@ -282,22 +333,24 @@ feature_sets <- list(
 
   # Computed but reserved for tree-based engines: 
   # Redundant or rank-deficient under lm dummy coding, informative for splits
-  tree_extras = c("gov_recommend", "brpos_signed", "gov_parl_align",
-                  "gov_parl_recommend_n", "changes_constitution",
-                  "double_majority_required", "has_signature_phase",
-                  "parl_vote_missing", "parl_consensus",
-                  # deliberation process features
-                  "anzahl", "pa_iv", "entwurf_nr", "dauer_bv", "dauer_abst",
-                  "sparedays", "dep", "d1e1", 
-                  "d1e2", "d1e3", "d2e1", "d2e2", "d2e3", "d3e1", "d3e2", "d3e3",
-                  "legislatur", "nr-wahl", "months_since_election",
-                  # coalition theory + sponsor theory features
-                  "frak_lr_signed", "support_coalition", 
-                  "has_urheber", "n_sponsors_f", "established_f",
-                  "pole_refined_r4", "actor_label_r4", "actor_code_r4",
-                  paste0("coal_has_", all_blocs),  # needs to be computed in 02_features.R!!!                  
-                  "coal_social_conserv", "coal_social_lib", "coal_environ",
-                  sprintf("policy_%02d", 1:12))
+  tree_extras = c(
+                      "gov_parl_recommend_n", "br-pos", "bv-pos", "nr-pos", "sr-pos", "nrja", "nrnein", "srja", "srnein",
+                      "changes_constitution", "double_majority_required", "parl_consensus", "parl_seats",
+                      "unter-quorum", "i-dauer_samm", "i-dauer_br", "fr-dauer_samm", "fr-dauer_tot", "unter_g", "unter_u",
+                      "entwurf_nr", "init_formul", "dauer_bv", "dauer_abst", "i-dauer_tot", "sammelfrist",
+                      "sammeltempo", "sparedays", "has_signature_phase", "sig_no_deadline", "sig_data_missing",
+                      "d1e2", "d1e3", "d2e1", "d2e2", "d2e3", "d3e1", "d3e2", "d3e3",
+                      "legislatur", "nr-wahl", "months_to_election", #paste0("w_", Wpar),
+                      #"urheber", "berecht", paste0("", sprintf("%02d", 1:21))
+                     
+                      "has_urheber", "n_sponsors_f", "established_f",
+                      "pole_refined_r4", "actor_label_r4", "actor_code_r4",
+                      #"pole_refined_origin", paste0("pole_", setdiff(pole_levels, "none"))
+                      
+                      "frak_lr_signed", "support_coalition", 
+                      paste0("coal_has_", all_blocs),  # needs to be computed in 02_features.R!!!                  
+                      "coal_social_conserv", "coal_social_lib", "coal_environ"
+                      )
 )
 
 # 4. Composing the model iterations from the blocks above ---------------
@@ -308,6 +361,7 @@ feature_sets$m1_3   <- c(feature_sets$m1_2,  feature_sets$ext_urheber_lm)
 feature_sets$m1_3a  <- c(feature_sets$m1_1e, feature_sets$ext_urheber_lm)
 feature_sets$m1_3b  <- c(feature_sets$m1_2a, feature_sets$ext_urheber_lm)
 feature_sets$m1_3c  <- c(feature_sets$m1_2e, feature_sets$ext_urheber_lm)
+feature_sets$m1_3d  <- c(feature_sets$m1_2_lm, feature_sets$ext_urheber_lm)
 
 ## M2: short time frame, extensive feature-set --------------------------
 
@@ -320,6 +374,10 @@ feature_sets$m2_all <- c(feature_sets$m2_coal, feature_sets$ext_urheber_lm)
 
 # Alternative frak5
 feature_sets$m2_frak5 <- c(feature_sets$m1_2, feature_sets$ext_frak5_lm)
+
+# Tested for no multi-collinearity, no rank deficiency, no zero-variance features
+feature_sets$m2_frak_lm     <- c(feature_sets$frak_lm_no_col)
+feature_sets$m2_frak_lm_urh <- c(feature_sets$frak_lm_no_col, feature_sets$ext_urheber_lm)
 
 ## M2: short time frame, lean feature-set -------------------------------
 
@@ -357,13 +415,13 @@ feature_sets$champ_m1_1eB <- c(feature_sets$m1_1e, "weighted_parl_support", "eli
 feature_sets$champ_m1_1eC <- c(feature_sets$m1_1e, "bourgeois_contra", "elite_cue_lr") 
 # In lean faction probes (05, short frame) elite_cue_lr had the densest faction signal, bourgeois_contra was the single strongest coalition discriminator")
 
-## Building on champ m1_2a --------------------------------------------
+## Building on Champ m1_2a --------------------------------------------
 
-# In Script 05: m1_2a -> A_m1_2a_trainLong or # B_m1_2a_trainShort
+# In Script 05: m1_2a -> A_m1_2a_trainLong or B_m1_2a_trainShort
 # m1_2a: parl_support_signed, roll_yes_rechtsform, roll_yes_domain, author_prior_fail_rate
 
 # M2_base swaps
-feature_sets$m2_base  <- c(feature_sets$m2_base)
+feature_sets$m2_base  <- c("roll_yes_rechtsform", "roll_yes_domain")
 feature_sets$m2_base1 <- c(feature_sets$m2_base, "parl_support_signed")
 feature_sets$m2_base2 <- c(feature_sets$m2_base, "parl_support_signed",   feature_sets$ext_urheber_lm)
 feature_sets$m2_base3 <- c(feature_sets$m2_base,  "parl_support_signed",  "author_prior_fail_rate", feature_sets$ext_urheber_lm)
@@ -394,7 +452,7 @@ feature_sets$m3_par_gov  <- c(feature_sets$m1_1e, "parole_gov_defectors")
 feature_sets$m3_verband  <- c(feature_sets$m1_1e, feature_sets$ext_verband_lm)
 feature_sets$m3_verb_gap <- c(feature_sets$m1_1e, "econ_labor_gap")
 
-feature_sets$m3_full     <- c(feature_sets$m1_1e, feature_sets$ext_parole_agg,
+feature_sets$m3_full     <- c(feature_sets$m1_1e, feature_sets$ext_parole_all,
                               "verband_econ_cue", "verband_labor_cue", "cue_sbv")
 
 # Singles for tree engines: every raw cue plus the unease share

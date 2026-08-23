@@ -28,13 +28,13 @@ frame <- df %>%
          yes_share  = `volkja-proz`) %>%
   arrange(datum, anr)
 
-folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6) # (k=6, n=238)
+folds <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6) # (k=6, 238 test rows)
 
 # 3. Expanding-window evaluation of one feature set ------------------
 
 run_lm_set <- function(set_name, feats) {
   if (length(feats) == 0)
-    stop("empty feature set: ", set_name) 
+    stop("empty feature set: ", set_name)
   map_dfr(seq_along(folds), function(b) {
     tr <- frame[folds[[b]]$train, c("yes_share", feats)] %>%
       droplevels() %>%
@@ -43,7 +43,7 @@ run_lm_set <- function(set_name, feats) {
     te <- frame[folds[[b]]$test, names(tr)] %>%
       harmonize_factor_levels(ref = tr)
     g <- fit_lm_guarded(tr)
-    # Recoding the degenerate fold as NA rather than scoring a train-mean baseline 
+    # Recoding the degenerate fold as NA rather than scoring a train-mean baseline
     # under the label of this feature set
     if (g$status == "degenerate") {
       warning(sprintf("fold %d of '%s' lost all predictors", b, set_name))
@@ -52,25 +52,30 @@ run_lm_set <- function(set_name, feats) {
                     brier = NA_real_, pr_auc = NA_real_,
                     status = "degenerate",
                     dropped = list(c(zv_dropped, g$dropped)),
-                    pred = list(tibble())))
+                    pred = list(tibble(anr  = frame$anr[folds[[b]]$test],
+                                       row  = folds[[b]]$test,
+                                       yhat = NA_real_, p = NA_real_))))
     }
     te   <- te[, names(g$data), drop = FALSE]
-    yhat <- predict(g$fit, newdata = te) # na.action = na.pass keeps length == nrow(te)
-    
-    eval_preds(te$yes_share, yhat, set_name, b) %>%
+    yhat <- predict(g$fit, newdata = te) # predict.lm default na.action keeps length == nrow(te)
+    # Turning the point prediction into a proper acceptance probability via the fold's residual sigma
+    p    <- lm_accept_prob(yhat, summary(g$fit)$sigma)
+
+    eval_preds(te$yes_share, yhat, set_name, b, p = p) %>%
       mutate(status  = g$status,
-             dropped = list(c(zv_dropped, g$dropped)), # Keeping the per-fold drop log 
+             dropped = list(c(zv_dropped, g$dropped)), # Keeping the per-fold drop log
              pred    = list(tibble(anr  = frame$anr[folds[[b]]$test],
                                    row  = folds[[b]]$test,
-                                   yhat = yhat)))
+                                   yhat = yhat,
+                                   p    = p)))
   })
 }
 
 run_these <- c(
   "m1_0", "m1_1", "m1_1a", "m1_1b", "m1_1c", "m1_1d", "m1_1e",
   "m1_1f", "m1_1g", "m1_1h", "m1_1i", "m1_1k", "m1_1l",
-  "m1_2", "m1_2a", "m1_2b", "m1_2c", "m1_2d", "m1_2e", "m1_2f",
-  "m1_3", "m1_3a", "m1_3b", "m1_3c"
+  "m1_2", "m1_2a", "m1_2b", "m1_2c", "m1_2d", "m1_2e", "m1_2f", "m1_2_lm",
+  "m1_3", "m1_3a", "m1_3b", "m1_3c", "m1_3d"
 )
 
 run_these <- run_these[vapply(run_these,
@@ -79,7 +84,7 @@ run_these <- run_these[vapply(run_these,
 results <- map_dfr(run_these, function(s) run_lm_set(s, feature_sets[[s]]))
 
 # Printing dropped rows from results, where the value is not NA
-results[lengths(results$dropped) > 0, ] # Complex Models with extensive feature sets (m1_2, m1_3) 
+results[lengths(results$dropped) > 0, ] # Complex Models with extensive feature sets (m1_2, m1_3)
 # are dropped due to multi-collinearity. Leaner models do not seem to have that problem
 
 # 4. Pooled comparison against M0 on identical test rows --------------
@@ -92,27 +97,24 @@ pooled <- results %>%
   summarise(preds = list(bind_rows(pred)), .groups = "drop") %>%
   mutate(metrics = map2(preds, model, function(p, m) {
     p <- p[match(test_idx, p$row), ]
-    eval_preds(test_all$yes_share, p$yhat, m, NA_integer_)
+    eval_preds(test_all$yes_share, p$yhat, m, NA_integer_, p = p$p)
   })) %>%
   pull(metrics) %>%
   bind_rows() %>%
+  # M0 anchor has no model sigma, so its Brier stays on the legacy proxy (marked by name)
   bind_rows(eval_preds(test_all$yes_share, test_all$roll_yes_rechtsform,
-                       "M0_rechtsform", NA_integer_))
+                       "M0_rechtsform_proxyBrier", NA_integer_))
 
 print(results %>% select(-pred))
 #print(results %>% select(-pred), n = Inf)
 
 #print(pooled %>% arrange(mae))
-print(bind_rows(mgrand_pooled, m0_pooled, pooled %>% arrange(mae)), n=12)
+print(bind_rows(mgrand_pooled, m0_pooled, pooled %>% arrange(mae)), n= Inf)
 
 #print(pooled %>% arrange(desc(volksmehr_acc)))
-print(bind_rows(mgrand_pooled, pooled %>% arrange(desc(volksmehr_acc))), n=12)
+print(bind_rows(mgrand_pooled, pooled %>% arrange(desc(volksmehr_acc))), n= Inf)
 
 # 5. Paired comparisons ----------------------------------------------
-
-library(dplyr) 
-library(tidyr)
-library(purrr)
 
 mae_wide <- results %>%
   select(model, fold, mae) %>%
@@ -133,16 +135,15 @@ paired_vs <- function(ref, wide = mae_wide) {
 }
 
 print(paired_vs("m1_1e"), n = Inf)
-print(paired_vs("m1_1f"), n = Inf)
-print(paired_vs("m1_2a"),  n = Inf)
-print(paired_vs("m1_2e"),  n = Inf)
+print(paired_vs("m1_2a"), n = Inf)
 
 # Checking whether PR-AUC/accuracy gap are a threshold problem rather than a ranking one
-calib_gap <- results %>%
-  group_by(model) %>%
-  summarise(prauc = mean(pr_auc), acc = mean(volksmehr_acc)) %>%
-  mutate(rank_prauc = rank(-prauc), rank_acc = rank(-acc),
+# Ranking on pooled PR-AUC because fold-averaged PR-AUC is unstable at ~40 rows per block
+calib_gap <- pooled %>%
+  filter(model %in% unique(results$model)) %>%
+  mutate(rank_prauc = rank(-pr_auc), rank_acc = rank(-volksmehr_acc),
          gap = rank_acc - rank_prauc) %>%
+  select(model, pr_auc, volksmehr_acc, rank_prauc, rank_acc, gap) %>%
   arrange(desc(gap))
 print(calib_gap, n = Inf)
 
@@ -167,15 +168,6 @@ var_decomp_full <- results %>%
   mutate(across(everything(), ~ .x / sum(c_across(everything())), .names = "share_{.col}"))
 
 print(var_decomp_full)
-
-### Brier Score is degenerated and therefore meaningless. Needs to be fixed or just be used for tree engines!!!
-
-# Flagging degenerate models: Brier pinned at 0.25 means predictions collapsed to ~0.5
-degenerate <- results %>%
-  group_by(model) %>%
-  summarise(brier_sd = sd(brier), brier_mean = mean(brier), prauc = mean(pr_auc)) %>%
-  filter(brier_mean > 0.24 | prauc < 0.60)
-print(degenerate)
 
 ## Expanding vs. Rolling Folds ----------------------------------------
 
@@ -213,7 +205,6 @@ write_csv(results %>% select(-pred), file.path(output_path, "metrics_M1_folds.cs
 write_csv(pooled, file.path(output_path, "metrics_M1_pooled.csv"))
 
 # Saving row-level predictions so paired tests can be run at row level, not fold level
-rm(preds_long)
 preds_long <- results %>%
   select(model, fold, pred) %>%
   unnest(pred) %>%
