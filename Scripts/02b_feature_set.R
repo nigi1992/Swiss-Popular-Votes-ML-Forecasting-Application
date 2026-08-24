@@ -184,6 +184,8 @@ feature_sets <- list(
             "spare_days_frac", "pole_ref_loss", "surplus_sig_ratio"), # Historical Base Rates (rechtsform, policy area), Elite cues/Coalition theory (nr_support),
   # Sponsor/Urheber (author_prior_fail_rate, pole_r4_left, pole_ref_loss), Signature/Mobilization signals (spare_days_frac", surplus_sig_ratio)
 
+  #m1_1m = c(champ_m1_1e, "rechtsform"),
+  
   ## M1_2 variations ----------------------------------------------------
   
   m1_2 = c(
@@ -263,6 +265,12 @@ feature_sets <- list(
     "pole_r4_left", "pole_ref_loss"
   ),
   
+  m1_2g = c(
+    "parl_support_signed",
+    "roll_yes_rechtsform", 
+    "roll_yes_domain"
+  ),
+  
   m1_3 = character(0),   # placeholder: m1_2 + external features for later
   
   ## M2 variations ----------------------------------------------------
@@ -333,7 +341,7 @@ feature_sets <- list(
 
   # Computed but reserved for tree-based engines: 
   # Redundant or rank-deficient under lm dummy coding, informative for splits
-  tree_extras = c(
+  tree_extras_long = c(
                       "gov_parl_recommend_n", "br-pos", "bv-pos", "nr-pos", "sr-pos", "nrja", "nrnein", "srja", "srnein",
                       "changes_constitution", "double_majority_required", "parl_consensus", "parl_seats",
                       "unter-quorum", "i-dauer_samm", "i-dauer_br", "fr-dauer_samm", "fr-dauer_tot", "unter_g", "unter_u",
@@ -343,6 +351,21 @@ feature_sets <- list(
                       "legislatur", "nr-wahl", "months_to_election", #paste0("w_", Wpar),
                       #"urheber", "berecht", paste0("", sprintf("%02d", 1:21))
                      
+                      "has_urheber", "n_sponsors_f", "established_f",
+                      "pole_refined_r4", "actor_label_r4", "actor_code_r4"
+                      #"pole_refined_origin", paste0("pole_", setdiff(pole_levels, "none"))
+                      ),
+  
+  tree_extras_short = c(
+                      "gov_parl_recommend_n", "br-pos", "bv-pos", "nr-pos", "sr-pos", "nrja", "nrnein", "srja", "srnein",
+                      "changes_constitution", "double_majority_required", "parl_consensus", "parl_seats",
+                      "unter-quorum", "i-dauer_samm", "i-dauer_br", "fr-dauer_samm", "fr-dauer_tot", "unter_g", "unter_u",
+                      "entwurf_nr", "init_formul", "dauer_bv", "dauer_abst", "i-dauer_tot", "sammelfrist",
+                      "sammeltempo", "sparedays", "has_signature_phase", "sig_no_deadline", "sig_data_missing",
+                      "d1e2", "d1e3", "d2e1", "d2e2", "d2e3", "d3e1", "d3e2", "d3e3",
+                      "legislatur", "nr-wahl", "months_to_election", #paste0("w_", Wpar),
+                      #"urheber", "berecht", paste0("", sprintf("%02d", 1:21))
+                      
                       "has_urheber", "n_sponsors_f", "established_f",
                       "pole_refined_r4", "actor_label_r4", "actor_code_r4",
                       #"pole_refined_origin", paste0("pole_", setdiff(pole_levels, "none"))
@@ -455,13 +478,19 @@ feature_sets$m3_verb_gap <- c(feature_sets$m1_1e, "econ_labor_gap")
 feature_sets$m3_full     <- c(feature_sets$m1_1e, feature_sets$ext_parole_all,
                               "verband_econ_cue", "verband_labor_cue", "cue_sbv")
 
-# Singles for tree engines: every raw cue plus the unease share
-feature_sets$tree_extras <- c(feature_sets$tree_extras,
-                              paste0("cue_", c("fdp", "sps", "svp", "center", "evp",
-                                               "gps", "glp", "bdp", "eco", "sgv",
-                                               "sbv", "sgb", "travs", "sav")),
-                              "parole_abstain_share")
 
+# Singles for tree engines: every raw cue plus the unease share
+feature_sets$tree_extras_long <- c(feature_sets$tree_extras,
+                                    paste0("cue_", c("fdp", "sps", "svp", "center", "evp",
+                                                     "gps", "glp", "bdp", "eco", "sgv",
+                                                     "sbv", "sgb", "travs", "sav")),
+                                    "parole_abstain_share")
+
+feature_sets$tree_extras_short <- c(feature_sets$tree_extras,
+                                    paste0("cue_", c("fdp", "sps", "svp", "center", "evp",
+                                                     "gps", "glp", "bdp", "eco", "sgv",
+                                                     "sbv", "sgb", "travs", "sav")),
+                                    "parole_abstain_share")
 
 
 ## Guarding the registry instead of repairing it silently

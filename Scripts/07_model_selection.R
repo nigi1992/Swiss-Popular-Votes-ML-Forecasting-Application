@@ -1,11 +1,10 @@
 ### 07_model_selection.R ###
 
-# Selecting the deployment champion across engines and feature sets on
-# identical pooled test rows, with paired-bootstrap uncertainty on the
-# MAE differences instead of raw leaderboard ranks
+# Selecting the final champion across engines and feature sets on identical pooled test rows,
+# with paired-bootstrap uncertainty on the MAE differences instead of raw leader board ranks
 # Inputs: preds_trees.rds from 06 (per-row predictions of every engine x set)
-#         plus a cheap in-script re-run of the lm finalists from 04/05
-# Output: champion_spec.rds consumed by 08 (national anchor) and 09 (inference)
+#         + a simple re-run of the lm finalists from Scripts 04 and 05
+# Output: champion_spec.rds used by 08 (national anchor) and 09 (inference)
 
 # 1. Data import -----------------------------------------------------
 
@@ -21,10 +20,13 @@ df           <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 feature_sets <- readRDS(file.path(input_path, "feature_sets.rds"))
 preds_trees  <- readRDS(file.path(output_path, "preds_trees.rds"))
 
-if (is.null(feature_sets$m1_4)) {
-  feature_sets$m1_4 <- c("parl_support_signed", "roll_yes_rechtsform",
-                         "roll_yes_domain", "author_prior_fail_rate")
-}
+if (is.null(feature_sets$m1_4a)) { 
+  feature_sets$m1_4a <- c(feature_sets$m1_2, feature_sets$tree_extras_long)
+  message("m1_4a not in registry, using in-script definition") }
+
+if (is.null(feature_sets$m1_4b)) { 
+  feature_sets$m1_4b <- c(feature_sets$m1_2, feature_sets$tree_extras_short)
+  message("m1_4b not in registry, using in-script definition") }
 
 # 2. Frames + folds (identical to 04/05/06) ---------------------------
 
@@ -41,7 +43,7 @@ folds_short <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4)
 
 # 3. Assembling the finalist prediction matrix -------------------------
 
-# Collecting per-row predictions: engine models from 06, lm finalists re-run here
+# Collecting per-row predictions: engine models from 06 + lm finalists are run again,
 # so all candidates are compared on byte-identical test rows
 
 collect_preds <- function(results, frame_use, folds_use) {
@@ -67,17 +69,18 @@ rerun_lm <- function(set_name, feats, frame_use, folds_use) {
   })
 }
 
-lm_finalists <- c("m1_1e", "m1_4", "m1_2")
+# Hook for feature-sets that 06 did not fit
+lm_finalists <- character(0)
 
-build_matrix <- function(frame_use, folds_use, tree_results, frame_tag) {
+build_matrix <- function(frame_use, folds_use, tree_results, frame_tag) { 
   test_idx <- unlist(map(folds_use, "test"))
-  P <- c(
+  P_lm <- if (length(lm_finalists)) {
     collect_preds(map_dfr(lm_finalists, function(s)
       rerun_lm(paste0("lm_", s), feature_sets[[s]], frame_use, folds_use)),
-      frame_use, folds_use),
-    collect_preds(tree_results, frame_use, folds_use)
-  )
-  P <- P[!duplicated(names(P))]   # 06 already contains lm_*: keeping one copy
+      frame_use, folds_use)
+  } else list()
+  P <- c(collect_preds(tree_results, frame_use, folds_use), P_lm)
+  P <- P[!duplicated(names(P))]          
   list(y = frame_use$yes_share[test_idx], P = P, tag = frame_tag)
 }
 
@@ -86,9 +89,9 @@ mx_short <- build_matrix(frame_frak, folds_short, preds_trees$results_short, "sh
 
 # 4. Paired bootstrap against the incumbent ----------------------------
 
-# Resampling test rows with replacement, recomputing the MAE difference
-# candidate minus incumbent on every draw; P(worse) = share of draws > 0
-incumbent <- "lm_m1_1e"
+# Resampling test rows with replacement by recomputing the MAE difference of
+# candidate minus incumbent on every draw -> P(worse) = share of draws > 0
+incumbent <- "lm_m1_1e"   # 06 champion on both frames, also the most parsimonious finalist
 B <- 4000
 
 boot_table <- function(mx) {
@@ -114,25 +117,50 @@ sel <- bind_rows(boot_table(mx_long), boot_table(mx_short)) %>%
 
 print(sel, n = Inf)
 
-# 5. Decision rule ------------------------------------------------------
+# 5. Decision rule -----------------------------------------------------
 
-# Champion = the most parsimonious model whose MAE is not significantly worse
-# than the best model on either frame (p_worse threshold .05 on the paired
-# bootstrap); complexity order encodes my parsimony preference
-complexity <- c(lm_m1_4 = 1, lm_m1_1e = 1, lasso_m1_4 = 2, ridge_m1_4 = 2,
-                lasso_m1_1e = 2, ridge_m1_1e = 2)   # everything absent = 3
+# Decision rule is derived from engine tier, which dominates, and predictor count that breaks ties inside a tier
+# Silent synchronization in case of modified feature_sets the next time a spec is renamed
+engine_tier <- c(lm = 1, ridge = 2, lasso = 2, tree = 3, knn = 3,
+                 rf = 4, gbm = 4, xgb = 4)
 
-pick_frame <- "short"   # deployment conditions = recent era; long frame kept as robustness
-cand <- sel %>%
-  filter(frame == pick_frame) %>%
-  mutate(cx = coalesce(complexity[model], 3))
-best_mae <- min(cand$mae)
-champion_name <- cand %>%
-  filter(mae <= best_mae + 0.15) %>%      # inside noise of the top model
+score_complexity <- function(model) {
+  eng <- sub("_.*$", "", model)
+  set <- sub("^[a-z]+_", "", model)
+  k   <- length(feature_sets[[set]]) %||% 99L
+  coalesce(engine_tier[eng], 4L) * 100L + k
+}
+
+
+# Champion = the most parsimonious model that is: 
+# 1) not significantly worse than the best model on the long (short) frame, and 
+# 2) not significantly worse on the short (long) frame (where the set exists) 
+# A single-frame selection would throw away the only out-of-regime robustness check there is
+alpha <- 0.05
+
+elig <- sel %>%
+  group_by(frame) %>%
+  mutate(is_best = mae == min(mae),
+         ok      = is_best | p_worse >= alpha) %>%
+  ungroup()
+
+sets_both <- intersect(
+  sub("^[a-z]+_", "", sel$model[sel$frame == "long"]),
+  sub("^[a-z]+_", "", sel$model[sel$frame == "short"])
+)
+
+#### Pick time frame! Short or long frame? (short = recent deployment era, long = robustness check, larger n) ####
+champion_name <- elig %>%
+  filter(frame == "long", ok) %>% # "short"
+  mutate(set = sub("^[a-z]+_", "", model)) %>%
+  filter(set %in% sets_both) %>%   # Dropping time frame-only specs that cannot be corroborated on the other frame
+  semi_join(filter(elig, frame == "short", ok), by = "model") %>% # "long"
+  mutate(cx = map_dbl(model, score_complexity)) %>%
   arrange(cx, mae) %>%
   slice(1) %>%
   pull(model)
 
+stopifnot(length(champion_name) == 1)
 message("champion: ", champion_name)
 
 # 6. Champion spec for 08/09 -------------------------------------------
@@ -140,9 +168,22 @@ message("champion: ", champion_name)
 champ_set   <- sub("^[a-z]+_", "", champion_name)
 champ_engine <- sub("_.*$", "", champion_name)
 
-# Storing pooled CV residuals from both frames: 09 builds empirical
-# prediction intervals from them (short = deployment-era spread)
+# Storing pooled CV residuals from both frames: 
+# 09 builds empirical prediction intervals from them (short = deployment-era spread)
 resid_of <- function(mx) mx$y - mx$P[[champion_name]]
+
+#### Pick time frame! Short or long frame? (short = recent deployment era, long = robustness check, larger n) ####
+#pick_frame <- "long" #"short"
+
+# Champ is not selected on 1 frame, so a single string would misdescribe the procedure, recording the rule instead
+selection <- list(
+  rule        = "not sig. worse than frame-best on BOTH frames; sets present in both; tie-break complexity then MAE",
+  frames      = c("long", "short"),
+  alpha       = 0.05,
+  test        = "row-level paired bootstrap on MAE, B = 4000",
+  n_candidates = nrow(sel),
+  interval_frame = "short"   # which residual vector 09 uses
+)
 
 champion_spec <- list(
   name        = champion_name,
@@ -151,9 +192,25 @@ champion_spec <- list(
   feats       = feature_sets[[champ_set]],
   cv_resid_short = resid_of(mx_short),
   cv_resid_long  = resid_of(mx_long),
-  selected_on    = pick_frame,
-  selected_date  = Sys.Date()
+  selected_on    = selection, # pick_frame,
+  #selected_date  = Sys.Date(),
+  selected_date  = as.Date("2026-08-24"),
+  # provenance, explicitly not the decision date
+  run_timestamp  = format(Sys.time(), tz = "UTC", usetz = TRUE),
+  data_vintage   = max(frame$datum),
+  n_frame_long   = nrow(frame),
+  n_frame_short  = nrow(frame_frak),
+  r_version      = R.version.string,
+  seed           = 42
 )
+
+stopifnot(champion_name %in% names(mx_long$P),
+          champion_name %in% names(mx_short$P))
+resid_of <- function(mx) {
+  r <- mx$y - mx$P[[champion_name]]
+  stopifnot(length(r) == length(mx$y), !all(is.na(r)))
+  r
+}
 
 saveRDS(champion_spec, file.path(output_path, "champion_spec.rds"))
 write_csv(sel, file.path(output_path, "model_selection_table.csv"))

@@ -63,7 +63,11 @@ yhat <- predict(g$fit, newdata = up)
 # Interval = point prediction + quantiles of the pooled expanding-window CV
 # residuals; these residuals come from genuine out-of-sample forecasts, so the
 # intervals inherit forecast (not fit) uncertainty
-r <- champion_spec$cv_resid_short
+
+##### cv_resid_short or cv_resid_long? -> change in 07 too!!! #####
+r <- champion_spec$cv_resid_short 
+#r <- champion_spec$cv_resid_long
+
 q <- quantile(r, c(.025, .10, .50, .90, .975), na.rm = TRUE)
 
 pred <- upcoming %>%

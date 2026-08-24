@@ -1,7 +1,7 @@
 ### 06_model_trees.R ###
 
 # Non-lm engines on the identical temporal folds from 84 (long, k=6) and 05 (short, k=4):
-# ridge / lasso   glmnet on the dummy-coded matrix (regularized-linear check for wide sets) 
+# ridge / lasso   glmnet on the dummy-coded matrix (regularized-linear check for wide sets)
 # tree            rpart, single CART (transparency anchor, expected to lose)
 # rf              ranger random forest (main tree engine)
 # gbm / xgb       gradient boosting (gbm always, xgboost if installed)
@@ -17,13 +17,18 @@ library(tidyverse)
 library(glmnet)
 library(rpart)
 library(ranger)
-library(gbm)
+library(gbm) # legacy gbm package
 library(gbm3)
 library(xgboost)
 library(FNN)
 has_xgb <- requireNamespace("xgboost", quietly = TRUE)
 
 packageVersion("xgboost")
+packageVersion("gbm")
+packageVersion("gbm3")
+packageVersion("ranger")
+packageVersion("glmnet")
+packageVersion("FNN")
 
 
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
@@ -34,17 +39,6 @@ source(file.path(base_path, "Scripts", "00_helpers.R"))
 
 df <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 feature_sets <- readRDS(file.path(input_path, "feature_sets.rds"))
-
-### m1_2a or m1_2????
-# m1_4a = m1_2a + tree extras long
-if (is.null(feature_sets$m1_4)) {
-  feature_sets$m1_4a <- c(feature_sets$m1_2a, feature_sets$tree_extras_long)
-  message("m1_4 not in registry, using in-script definition") }
-
-# m1_4b = m1_2a + tree extras short
-if (is.null(feature_sets$m1_4)) {
-  feature_sets$m1_4b <- c(feature_sets$m1_2a, feature_sets$tree_extras_short)
-  message("m1_4 not in registry, using in-script definition") }
 
 # 2. Modeling frames (identical to 04/05) ---------------------------------
 
@@ -77,31 +71,34 @@ make_mm <- function(d, feats) {
 # Nested tuning inside each fold only for lambda (glmnet cv) and n.trees (gbm/xgb cv)
 fit_engine <- function(engine, Xtr, ytr, Xte, seed = 1) {
   set.seed(seed)
+  n <- nrow(Xtr) # temporal-block fold assignment for lasso/ridge glmnet() inner CV
+  # foldid <- sample(rep(1:5, length.out = n))
+  foldid <- as.integer(cut(seq_len(n), breaks = 5, labels = FALSE))
   switch(engine,
          lm    = {d <- data.frame(yes_share = ytr, Xtr)
                   predict(lm(yes_share ~ ., d), newdata = data.frame(Xte)) },
-         ridge = {cv <- cv.glmnet(Xtr, ytr, alpha = 0, nfolds = 5) # alpha=0 the ridge penalty 
+         ridge = {cv <- cv.glmnet(Xtr, ytr, alpha = 0, foldid = foldid) #nfolds = 5) # alpha=0 the ridge penalty
                   as.numeric(predict(cv, Xte, s = "lambda.min")) },
-         lasso = {cv <- cv.glmnet(Xtr, ytr, alpha = 1, nfolds = 5) # alpha=1 is the lasso penalty 
+         lasso = {cv <- cv.glmnet(Xtr, ytr, alpha = 1, foldid = foldid) #nfolds = 5) # alpha=1 is the lasso penalty, alpha = 0.5 if correlated features instable 
                   as.numeric(predict(cv, Xte, s = "lambda.min")) },
          tree  = {f <- rpart(ytr ~ ., data.frame(Xtr), method = "anova",
                               control = rpart.control(cp = 0.01, minbucket = 10))
-                  predict(f, data.frame(Xte)) },
+                  predict(f, data.frame(Xte)) }, # Diagnostic/Interpretive tool, tree structure may shift between expanding-window CV folds -> Not interpretable
          rf    = {f <- ranger(y = ytr, x = data.frame(Xtr), num.trees = 1000,
-                               mtry = max(1, floor(ncol(Xtr) / 3)),
-                               min.node.size = 5, respect.unordered.factors = TRUE)
-                  predict(f, data.frame(Xte))$predictions },
+                               mtry = max(1, floor(ncol(Xtr) / 3)), # min.node.size = 20, respect.unordered.factors = FALSE
+                               min.node.size = 5, respect.unordered.factors = TRUE) # Best non-linear benchmark
+                  predict(f, data.frame(Xte))$predictions }, # Black box -> Predictions + variable importance, but no "why" in the coefficient sense.
          gbm   = {d <- data.frame(y = ytr, Xtr)
                   f <- gbm(y ~ ., data = d, distribution = "gaussian",
-                            n.trees = 2000, interaction.depth = 2, shrinkage = 0.01,
-                            bag.fraction = 0.7, n.minobsinnode = 10,
-                            cv.folds = 5, verbose = FALSE)
+                            n.trees = 2000, interaction.depth = 2, shrinkage = 0.01, # interaction.depth = 1
+                            bag.fraction = 0.7, n.minobsinnode = 10, # Feature importance built in
+                            cv.folds = 5, verbose = FALSE) # Partial dependence plots (via plot.gbm/pdp package) give interpretable marginal effects
                   predict(f, data.frame(Xte), n.trees = gbm.perf(f, method = "cv", plot.it = FALSE)) },
          xgb   = {dtrain <- xgboost::xgb.DMatrix(Xtr, label = ytr)
                   dtest  <- xgboost::xgb.DMatrix(Xte)
                   cv <- xgboost::xgb.cv(
                       params = list(objective = "reg:squarederror", eta = 0.02,
-                                    max_depth = 3, subsample = 0.8,
+                                    max_depth = 3, subsample = 0.8, # max_depth = 2
                                     colsample_bytree = 0.8, min_child_weight = 5),
                       data = dtrain, nrounds = 2000, nfold = 5,
                       early_stopping_rounds = 50, verbose = FALSE)
@@ -115,9 +112,12 @@ fit_engine <- function(engine, Xtr, ytr, Xte, seed = 1) {
                                     colsample_bytree = 0.8, min_child_weight = 5),
                       data = dtrain,
                       nrounds = best_iter, verbose = FALSE)
-                  predict(f, dtest) },
+                  predict(f, dtest) }, # SHAP values via xgboost::xgb.importance() + SHAPforxgboost
          knn   = {mu <- colMeans(Xtr); sdv <- apply(Xtr, 2, sd); sdv[sdv == 0] <- 1
                   FNN::knn.reg(scale(Xtr, mu, sdv), scale(Xte, mu, sdv), ytr, k = 10)$pred }
+         # No feature importance, no coefficients, no interpretability beyond "these were neighbors"
+         # Structurally unsuited to data. High dimensionality, mixed types, small n + the need for interpretability all work against KNN. 
+         # Non-parametric distance-based methods fail, confirming that signal is low-dimensional + linear
   )
 }
 
@@ -140,12 +140,20 @@ run_engine_set <- function(engine, set_name, feats, frame_use, folds_use) {
   )
 }
 
-# 6. Running the grid ---------------------------------------------------
+# 6. Model + engine selection ----------------------------------------------
+
+# Adding tree extras for decision-tree models
+if (is.null(feature_sets$m1_4a)) { 
+  feature_sets$m1_4a <- c(feature_sets$m1_2, feature_sets$tree_extras_long)
+  message("m1_4a not in registry, using in-script definition") }
+
+if (is.null(feature_sets$m1_4b)) { 
+  feature_sets$m1_4b <- c(feature_sets$m1_2, feature_sets$tree_extras_short)
+  message("m1_4b not in registry, using in-script definition") }
 
 engines    <- c("lm", "ridge", "lasso", "tree", "rf", "gbm", if (has_xgb) "xgb", "knn")
-sets_long  <- c("m1_1e", "m1_2a", "m1_2") #, "m1_4a")
-sets_short <- c("m1_1e", "m1_2a", "m1_2", "m2_frak") #, "m1_4b")
-
+sets_long  <- c("m1_1e", "m1_2a", "m1_2e", "m1_2_lm", "m1_2", "m1_4a")
+sets_short <- c("m1_1e", "m1_2a", "m1_2e", "m1_2_lm", "m1_2", "m1_4b", "m2_frak")#, "m2_frak_lean3_urh", "m2_base2", "m2_base3")
 
 ## More Model Variation ----------------------------------------------------
 
@@ -194,22 +202,28 @@ sets_short <- c(
                  )
 
 
-## Results --------------------------------------------------------------
+# 7. Grid search + results ----------------------------------------------
 
 grid_long  <- expand_grid(engine = engines, set = sets_long)
 grid_short <- expand_grid(engine = engines, set = sets_short)
 
-
+# Long Frame
 results_long <- pmap_dfr(grid_long, function(engine, set)
   run_engine_set(engine, set, feature_sets[[set]], frame, folds_long) %>%
     mutate(frame = "long"))
 
 
+#### Watch out before continuing! Long Compute Time! #####
+message("Watch out before continuing! Long Compute Time! Let Background Job finish.")
+
+
+# Short Frame
 results_short <- pmap_dfr(grid_short, function(engine, set)
   run_engine_set(engine, set, feature_sets[[set]], frame_frak, folds_short) %>%
     mutate(frame = "short"))
+message("Watch out before continuing! Long Compute Time! Let Background Job finish.")
 
-# 7. Pooled comparison on identical test rows ---------------------------
+# 8. Pooled comparison on identical test rows ---------------------------
 
 pool_frame <- function(results, frame_use, folds_use) {
   test_idx <- unlist(map(folds_use, "test"))
@@ -232,7 +246,10 @@ pooled       <- bind_rows(pooled_long, pooled_short)
 print(pooled %>% filter(frame == "long")  %>% arrange(mae), n = Inf)
 print(pooled %>% filter(frame == "short") %>% arrange(mae), n = Inf)
 
-# 8. Saving predictions + metrics for 07_model_selection.R --------------
+print(pooled %>% filter(frame == "long")  %>% arrange(mae), n = 15)
+print(pooled %>% filter(frame == "short") %>% arrange(mae), n = 15)
+
+# 9. Saving predictions + metrics for 07_model_selection.R --------------
 
 # Keeping the raw per-row predictions so 07 can run paired bootstraps without re-fitting anything
 saveRDS(list(results_long = results_long, results_short = results_short),
