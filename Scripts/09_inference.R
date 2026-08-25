@@ -1,12 +1,11 @@
 ### 09_inference.R ###
 
 # Producing the actual forecasts for the not-yet-voted ballots:
-#   1. fitting the 07 champion on every voted row
-#   2. point prediction + empirical intervals from the pooled CV residuals
+#   1. Fitting the 07 champion on every voted row
+#   2. Point prediction + empirical intervals from the pooled CV residuals
 #      (short-frame residuals: deployment-era error spread, no normality assumption)
-#   3. Route B Ständemehr for the double-majority proposals via the
-#      as-of canton deviations from 08
-#   4. combined verdict per proposal
+#   3. Route B Ständemehr for double-majority proposals via as-of canton deviations from 08
+#   4. Combined verdict per proposal
 
 # 1. Data import -----------------------------------------------------
 
@@ -28,16 +27,16 @@ frame <- df %>%
   filter(vote_done == "voted", rechtsform %in% c("1", "2", "3", "4")) %>%
   mutate(rechtsform = droplevels(rechtsform),
          yes_share  = `volkja-proz`) %>%
-  arrange(datum)
+  arrange(datum, anr)
 
 upcoming <- df %>%
   filter(vote_done != "voted") %>%
   mutate(rechtsform = factor(as.character(rechtsform),
                              levels = levels(frame$rechtsform))) %>%
-  arrange(datum)
+  arrange(datum, anr)
 
 stopifnot(nrow(upcoming) > 0)
-# every champion feature must be observable at T for the upcoming rows
+# Every champion feature must be observable at T for the upcoming rows
 miss <- upcoming %>%
   select(anr, all_of(champion_spec$feats)) %>%
   filter(if_any(-anr, is.na))
@@ -46,8 +45,8 @@ if (nrow(miss) > 0) stop("upcoming rows with missing champion features: ",
 
 # 3. Final champion fit on all voted rows ------------------------------
 
-# The champion is linear (07 decision); if a non-lm engine ever wins,
-# this block is the single place that needs the engine swap
+# The champion is linear (decision from Script 07) 
+# In case a non-lm engine wins, engine must be swapped here  
 stopifnot(champion_spec$engine %in% c("lm", "lasso", "ridge"))
 
 tr <- frame[, c("yes_share", champion_spec$feats)] %>%
@@ -60,13 +59,20 @@ yhat <- predict(g$fit, newdata = up)
 
 # 4. Empirical prediction intervals -------------------------------------
 
-# Interval = point prediction + quantiles of the pooled expanding-window CV
-# residuals; these residuals come from genuine out-of-sample forecasts, so the
-# intervals inherit forecast (not fit) uncertainty
+# Interval = Point prediction + Quantiles of the pooled expanding-window CV residuals
+# The residuals come from out-of-sample forecasts, so that the intervals inherit forecast instead of model fitting uncertainty
 
-##### cv_resid_short or cv_resid_long? -> change in 07 too!!! #####
-r <- champion_spec$cv_resid_short 
-#r <- champion_spec$cv_resid_long
+
+# Out-of-sample CV residuals for building valid prediction intervals:
+# Choice of CV residual frame matters for the interval width and p_volksmehr calibration
+# Short and long frames differ in composition (different vote counts, different time spans and feature availability)
+# That means different spread -> Affects p_volksmehr and the width of the prediction intervals
+
+##### Pick cv_resid_short or cv_resid_long? -> change in 07 too!!! #####
+#r <- champion_spec$cv_resid_short # Using the short-frame residuals assumes the short frame's error distribution is the more representative one for upcoming votes
+median(r)
+r <- champion_spec$cv_resid_long 
+median(r)
 
 q <- quantile(r, c(.025, .10, .50, .90, .975), na.rm = TRUE)
 
@@ -74,13 +80,15 @@ pred <- upcoming %>%
   transmute(anr, datum, rechtsform,
             titel = titel_kurz_d,
             yes_hat   = yhat,
-            lo80 = yhat + q[[2]],
+            # Prediction intervals, built by adding empirical residual quantiles to the point forecast
+            # q is a vector of residual quantiles
+            lo80 = yhat + q[[2]], # 80% -> 0.10 + 0.90 quantiles
             hi80 = yhat + q[[4]],
-            lo95 = yhat + q[[1]],
+            lo95 = yhat + q[[1]], # 95% -> 0.025 + 0.975 quantiles
             hi95 = yhat + q[[5]],
             volksmehr_hat = yes_hat >= 50,
             # P(Volksmehr) from the empirical residual distribution:
-            # share of CV residuals that would push the true share past 50
+            # Share of CV residuals that would push the true share past 50%
             p_volksmehr = vapply(yhat, function(m) mean(m + r >= 50, na.rm = TRUE),
                                  numeric(1)))
 
@@ -91,8 +99,8 @@ kt_codes <- c("zh","be","lu","ur","sz","ow","nw","gl","zg","fr","so","bs","bl",
 kt_half  <- c("ow","nw","bs","bl","ai","ar")
 std_w    <- setNames(ifelse(kt_codes %in% kt_half, 0.5, 1), kt_codes)
 
-# Latest as-of deviation per canton x domain and per canton, evaluated at the
-# end of the observed history (identical estimator as in 08, applied at T = now)
+# Latest as-of deviation per (canton x domain) and per canton
+# Evaluated at the end of observed history (identical estimator from 08, applied at T = now)
 dev_now <- kt_long %>%
   group_by(kt) %>%
   summarise(dev_kt = mean(dev, na.rm = TRUE), .groups = "drop")

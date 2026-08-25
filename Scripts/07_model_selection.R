@@ -34,7 +34,7 @@ frame <- df %>%
   filter(vote_done == "voted", rechtsform %in% c("1", "2", "3", "4")) %>%
   mutate(rechtsform = droplevels(rechtsform),
          yes_share  = `volkja-proz`) %>%
-  arrange(datum)
+  arrange(datum, anr)
 
 frame_frak <- frame %>% filter(!is.na(frak_left_sup))
 
@@ -133,8 +133,8 @@ score_complexity <- function(model) {
 
 
 # Champion = the most parsimonious model that is: 
-# 1) not significantly worse than the best model on the long (short) frame, and 
-# 2) not significantly worse on the short (long) frame (where the set exists) 
+# 1) Not significantly worse than the best model on the long (short) frame 
+# 2) Not significantly worse on the short (long) frame (where the set exists) 
 # A single-frame selection would throw away the only out-of-regime robustness check there is
 alpha <- 0.05
 
@@ -175,6 +175,7 @@ resid_of <- function(mx) mx$y - mx$P[[champion_name]]
 #### Pick time frame! Short or long frame? (short = recent deployment era, long = robustness check, larger n) ####
 #pick_frame <- "long" #"short"
 
+#### Pick time frame! Short or long frame? (short = recent deployment era, long = robustness check, larger n) ####
 # Champ is not selected on 1 frame, so a single string would misdescribe the procedure, recording the rule instead
 selection <- list(
   rule        = "not sig. worse than frame-best on BOTH frames; sets present in both; tie-break complexity then MAE",
@@ -182,7 +183,7 @@ selection <- list(
   alpha       = 0.05,
   test        = "row-level paired bootstrap on MAE, B = 4000",
   n_candidates = nrow(sel),
-  interval_frame = "short"   # which residual vector 09 uses
+  interval_frame = "long" #  "short"   # which residual vector 09 uses
 )
 
 champion_spec <- list(
