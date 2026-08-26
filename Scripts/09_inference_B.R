@@ -489,7 +489,7 @@ cv_metrics <- cv_scored %>%
   arrange(frame_tag, mae)
 
 # Cross-check against the 06 leaderboard: A large gap means the hyperparameters in
-# section 3 are not the same as in 06 and the two scripts are not describing the same model
+# section 3 are not the same as in 06 and the two scripts do not describe the same model
 mae_06 <- bind_rows(preds_trees$results_long, preds_trees$results_short) %>%
   mutate(frame_tag = if_else(frame == "long", "long", "short")) %>%
   group_by(model, frame_tag) %>%
@@ -504,7 +504,7 @@ print(cv_metrics, n = Inf)
 # 9. Feasibility of the upcoming rows ------------------------------------
 
 # A model can only forecast if every one of its features is observable at time of prediction
-# Wide sets like m1_4a are allowed to fail here
+# Wide, extensive feature-sets like m1_4a are allowed to fail here
 feasible <- model_registry %>%
   mutate(missing_feats = map_chr(set, function(s) {
     fs  <- feature_sets[[s]]
@@ -514,11 +514,13 @@ feasible <- model_registry %>%
   })) %>%
   mutate(ok = missing_feats == "")
 
-if (any(!feasible$ok))
+if (any(!feasible$ok)) { 
   message("dropped for missing upcoming features:\n",
           paste0("  ", feasible$model[!feasible$ok], " [",
                  feasible$frame_tag[!feasible$ok], "]: ",
                  feasible$missing_feats[!feasible$ok], collapse = "\n"))
+  }
+if (all(!feasible$ok)) stop("All bad with Dad")
 
 run_list <- feasible %>% filter(ok)
 

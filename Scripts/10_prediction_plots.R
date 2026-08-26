@@ -65,9 +65,9 @@ feats_num  <- feats_used[map_lgl(feats_used, ~ is.numeric(frame[[.x]]))]
 p_target <- ggplot(frame, aes(yes_share)) +
   geom_histogram(binwidth = 2.5, fill = "grey70", colour = "white") +
   geom_vline(xintercept = 50, linetype = "dashed") +
-  labs(title = "Distribution of the national yes-share",
-       subtitle = paste0("voted federal ballots, n = ", nrow(frame),
-                         "; dashed line = Volksmehr threshold"),
+  labs(title = "Distribution of the national yes-share in Federal Referendums",
+       subtitle = paste0("Voted federal ballots, n = ", nrow(frame),
+                         "; Dashed line = Volksmehr threshold"),
        x = "yes-share (%)", y = "count")
 
 # Splitting by legal form shows how much of the spread is a composition effect
@@ -83,13 +83,14 @@ save_plot(p_target / p_target_form, "10_target_distribution_col.png", 9, 8)
 p_target <- ggplot(frame, aes(yes_share)) +
   geom_histogram(binwidth = 2.5, fill = "green4", colour = "white") +
   geom_vline(xintercept = 50, linetype = "dashed") +
-  labs(title = "Distribution of the national yes-share",
-       subtitle = paste0("voted federal ballots, n = ", nrow(frame),
-                         "; dashed line = Volksmehr threshold"),
+  labs(title = "Distribution of the national yes-share in Federal Referendums",
+       subtitle = paste0("Voted federal ballots, n = ", nrow(frame),
+                         "; Dashed line = Volksmehr threshold"),
        x = "yes-share (%)", y = "count")
 
+### No Legend ------------------------------------------------------------
+
 # Mapping fill to the legal form instead of fixing it, so each box gets its own colour.
-# The legend is redundant here because the y-axis already names the categories
 p_target_form <- ggplot(frame, aes(yes_share, fct_rev(rechtsform), fill = rechtsform)) +
   geom_boxplot(outlier.alpha = 0.4) +
   geom_vline(xintercept = 50, linetype = "dashed") +
@@ -97,7 +98,37 @@ p_target_form <- ggplot(frame, aes(yes_share, fct_rev(rechtsform), fill = rechts
   labs(title = "Yes-share by legal form", x = "yes-share (%)", y = "rechtsform") +
   theme(legend.position = "none")
 
+### With Legend ----------------------------------------------------------
+
+p_target_form <- ggplot(frame, aes(yes_share, fct_rev(rechtsform), fill = rechtsform)) +
+  geom_boxplot(outlier.alpha = 0.4) +
+  geom_vline(xintercept = 50, linetype = "dashed") +
+  scale_fill_brewer(palette = "Set2", labels = c("1" = "Mandatory referendum", "2" = "Optional referendum",
+                                                 "3" = "Popular initiative",   "4" = "Counter-proposal")) +
+  labs(title = "Yes-share by legal form", x = "yes-share (%)", y = "rechtsform",
+       fill = "Rechtsform") +
+  theme(legend.position = "bottom")  
+
+## Save -----------------------------------------------------------------
+  
 save_plot(p_target / p_target_form, "10_target_distribution_col.png", 9, 8)
+
+## Rechtsform = 4 ------------------------------------------------------
+
+table(frame$rechtsform, frame$volksmehr)
+table(frame$rechtsform, frame$annahme) # Differences because of Ständemehr
+
+p_target_form4 <- frame %>%
+  filter(rechtsform == "4") %>%
+  ggplot(aes(yes_share)) +
+  geom_histogram(binwidth = 2.5, fill = "plum1", colour = "white") +
+  geom_vline(xintercept = 50, linetype = "dashed") +
+  labs(title = "Distribution of yes-share for Counter-proposals (r = 4)",
+       subtitle = paste0("n = ", sum(frame$rechtsform == "4")),
+       x = "yes-share (%)", y = "count")
+
+p_target_form4
+save_plot(p_target_form4, "10_target_distribution_form4.png", 8, 5)
 
 # 3. Feature distributions by outcome -------------------------------------
 
@@ -204,12 +235,12 @@ plot_bucket_density <- function(bucket, ncol = 4) {
 bucket_dens <- map(names(feature_buckets), function(b) {
   p <- plot_bucket_density(b)
   rows <- ceiling(length(feature_buckets[[b]]) / 4)
-  save_plot(p, paste0("10_density_", b, ".png"), 12, max(4, 2.4 * rows))
+  save_plot(p, paste0("Feature Density Plots/10_density_", b, ".png"), 12, max(4, 2.4 * rows))
   p
 })
 names(bucket_dens) <- names(feature_buckets)
 
-# 4. Feature boxplots ------------------------------------------------------
+# 4. Feature boxplots -----------------------------------------------------
 
 bucket_box <- map(names(feature_buckets), function(b) {
   d <- long_all %>% filter(feature %in% feature_buckets[[b]])
@@ -221,12 +252,12 @@ bucket_box <- map(names(feature_buckets), function(b) {
          x = NULL, y = NULL) +
     theme(legend.position = "none")
   rows <- ceiling(length(feature_buckets[[b]]) / 4)
-  save_plot(p, paste0("10_boxplots_", b, ".png"), 12, max(4, 2.4 * rows))
+  save_plot(p, paste0("Feature Boxplots/10_boxplots_", b, ".png"), 12, max(4, 2.4 * rows))
   p
 })
 names(bucket_box) <- names(feature_buckets)
 
-# 5. Feature versus target -------------------------------------------------
+# 5. Feature versus target Scatterplots ------------------------------------
 
 bucket_scatter <- map(names(feature_buckets), function(b) {
   d <- long_all %>% filter(feature %in% feature_buckets[[b]])
@@ -239,7 +270,7 @@ bucket_scatter <- map(names(feature_buckets), function(b) {
          subtitle = "loess overlay: curvature is what the tree engines can use",
          x = NULL, y = "yes-share (%)")
   rows <- ceiling(length(feature_buckets[[b]]) / 4)
-  save_plot(p, paste0("10_scatter_", b, ".png"), 12, max(4, 2.4 * rows))
+  save_plot(p, paste0("Feature Scatter Plots/10_scatter_", b, ".png"), 12, max(4, 2.4 * rows))
   p
 })
 names(bucket_scatter) <- names(feature_buckets)
@@ -334,6 +365,38 @@ p_cor <- as_tibble(C, rownames = "v1") %>%
   scale_fill_gradient2(low = "#d95f02", mid = "white", high = "#2c7fb8",
                        midpoint = 0, limits = c(-1, 1), na.value = "grey92") +
   labs(title = "Correlation matrix of predictors and target",
+       subtitle = paste0("Blocked by feature bucket in registry order, clustered ",
+                         "within bucket - Target in the first row and column"),
+       x = NULL, y = NULL) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
+        axis.text.y = element_text(size = 6),
+        panel.grid = element_blank())
+
+save_plot(p_cor, "10_correlation_matrix_ordered.png", 12, 11)
+
+## Numbered --------------------------------------------------------------
+
+p_cor_num <- as_tibble(C, rownames = "v1") %>%
+  pivot_longer(-v1, names_to = "v2", values_to = "r") %>%
+  mutate(v1 = factor(v1, levels = var_order),
+         v2 = factor(v2, levels = rev(var_order)),
+         # Dropping leading zero and diagonal, so grid is inescapable 
+         #lab = if_else(v1 == v2, "", sub("^(-?)0\\.", "\\1.", sprintf("%.2f", r))),
+         # Labelling only the cells above a threshold, so the eye lands on the redundant blocks
+         lab = if_else(v1 == v2 | abs(r) < 0.3, "",
+                       sub("^(-?)0\\.", "\\1.", sprintf("%.2f", r))),
+         # White text on saturated tiles, dark text on pale ones
+         txt = if_else(abs(r) > 0.6, "white", "grey15")) %>%
+  ggplot(aes(v1, v2, fill = r)) +
+  geom_tile(colour = "white", linewidth = 0.2) +
+  geom_text(aes(label = lab, colour = txt), size = 1.8) +
+  scale_colour_identity() +
+  geom_vline(xintercept = sep_at, colour = "grey20", linewidth = 0.4) +
+  geom_hline(yintercept = length(var_order) - sep_at + 1, colour = "grey20",
+             linewidth = 0.4) +
+  scale_fill_gradient2(low = "#d95f02", mid = "white", high = "#2c7fb8",
+                       midpoint = 0, limits = c(-1, 1), na.value = "grey92") +
+  labs(title = "Correlation matrix of predictors and target",
        subtitle = paste0("blocked by feature bucket in registry order, clustered ",
                          "within bucket; target in the first row and column"),
        x = NULL, y = NULL) +
@@ -341,7 +404,60 @@ p_cor <- as_tibble(C, rownames = "v1") %>%
         axis.text.y = element_text(size = 6),
         panel.grid = element_blank())
 
-save_plot(p_cor, "10_correlation_matrix.png", 12, 11)
+# The canvas has to grow with the number of cells, otherwise the labels overplot
+side <- max(12, 0.34 * length(var_order))
+save_plot(p_cor_num, "10_correlation_matrix_numbered.png", side, side * 0.95)
+
+## Spreadsheets ----------------------------------------------------------
+
+# Correlation Matrix Spreadsheet
+C %>%
+  round(3) %>%
+  as_tibble(rownames = "variable") %>%
+  write_csv(file.path(output_path, "10_correlation_matrix_ordered.csv"))
+
+# Correlation Pairs -> Top rows are the redundancy candidates
+# Long form with bucket labels on both sides, upper triangle only, sorted by absolute correlation 
+cor_pairs <- as_tibble(C, rownames = "v1") %>%
+  pivot_longer(-v1, names_to = "v2", values_to = "r") %>%
+  left_join(var_bucket %>% rename(v1 = var, bucket_1 = bucket), by = "v1") %>%
+  left_join(var_bucket %>% rename(v2 = var, bucket_2 = bucket), by = "v2") %>%
+  mutate(i1 = match(v1, var_order), i2 = match(v2, var_order)) %>%
+  filter(i1 < i2) %>%
+  mutate(cross_bucket = bucket_1 != bucket_2,
+         abs_r = abs(r)) %>%
+  select(v1, bucket_1, v2, bucket_2, r, abs_r, cross_bucket) %>%
+  arrange(desc(abs_r))
+
+write_csv(cor_pairs, file.path(output_path, "10_correlation_pairs.csv"))
+
+## Correlation Test of important Features ----------------------------------
+
+continuous_vars <- c("roll_yes_rechtsform", "parl_support_signed", "yes_share")
+
+# pairwise correlations among the continuous predictors and the outcome
+cor_pearson  <- cor(frame[continuous_vars], use = "pairwise.complete.obs", method = "pearson")
+cor_spearman <- cor(frame[continuous_vars], use = "pairwise.complete.obs", method = "spearman")
+
+# eta^2 for rechtsform: share of each continuous variable's variance
+# explained by rechtsform group membership, via one-way ANOVA
+eta_sq <- function(y, group) {
+  fit <- aov(y ~ as.factor(group))
+  ss  <- summary(fit)[[1]][["Sum Sq"]]
+  ss[1] / sum(ss)
+}
+
+eta_rechtsform <- sapply(continuous_vars, function(v) eta_sq(frame[[v]], frame$rechtsform))
+names(eta_rechtsform) <- continuous_vars
+
+cor_pearson
+cor_spearman
+eta_rechtsform
+
+# collinearity check if rechtsform and roll_yes_rechtsform end up in the same model
+library(car)
+vif(lm(yes_share ~ as.factor(rechtsform) + roll_yes_rechtsform + parl_support_signed, data = frame))
+
 # B. Out-of-sample performance comparison --------------------------------
 
 # 7. Error metrics -------------------------------------------------------
@@ -521,7 +637,7 @@ tree_fit <- rpart(yes_share ~ .,
 png(file.path(plot_path, "10_display_tree.png"), width = 2400, height = 1500, res = 220)
 rpart.plot(tree_fit, type = 2, extra = 101, box.palette = "BuGn",
            main = paste0("Single regression tree on ", tree_set,
-                         " (illustrative, not ranger() engine)"))
+                         " (Illustrative, not ranger() ML engine)"))
 dev.off()
 
 # 15. xgboost gain importance ----------------------------------------------
@@ -549,8 +665,8 @@ p_xgb <- imp_xgb %>%
   ggplot(aes(Gain, Feature)) +
   geom_col(fill = "#2c7fb8", width = 0.7) +
   scale_x_continuous(labels = percent) +
-  labs(title = "xgboost gain importance (xgb_m1_2e, short frame)",
-       subtitle = "share of loss reduction attributable to each split variable",
+  labs(title = "Xgboost Gain Importance (xgb_m1_2e, short frame)",
+       subtitle = "Share of loss reduction attributable to each split variable",
        x = "gain", y = NULL)
 
 save_plot(p_xgb, "10_xgb_importance.png", 9, 5)
@@ -622,8 +738,13 @@ save_plot(p_perm, "10_permutation_importance.png", 11, 7)
 # NEW!
 # 16. Permutation importance ------------------------------------------------
 
-if (!exists("fit_engine"))
+registry %>% select(model, frame_tag, engine)
+perm_models
+perm_imp %>% count(model, frame_tag)
+
+if (!exists("fit_engine")) {
   stop("run 09_inferenceB.R in this session first: the engine fitters live there")
+}
 
 # kNN has no internal importance measure, so the only defensible answer is a
 # model-agnostic one. I fit the model once per fold and then only re-predict on a test
