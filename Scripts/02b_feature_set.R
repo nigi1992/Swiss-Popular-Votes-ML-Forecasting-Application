@@ -480,13 +480,13 @@ feature_sets$m3_full     <- c(feature_sets$m1_1e, feature_sets$ext_parole_all,
 
 
 # Singles for tree engines: every raw cue plus the unease share
-feature_sets$tree_extras_long <- c(feature_sets$tree_extras,
+feature_sets$tree_extras_long <- c(feature_sets$tree_extras_long,
                                     paste0("cue_", c("fdp", "sps", "svp", "center", "evp",
                                                      "gps", "glp", "bdp", "eco", "sgv",
                                                      "sbv", "sgb", "travs", "sav")),
                                     "parole_abstain_share")
 
-feature_sets$tree_extras_short <- c(feature_sets$tree_extras,
+feature_sets$tree_extras_short <- c(feature_sets$tree_extras_short,
                                     paste0("cue_", c("fdp", "sps", "svp", "center", "evp",
                                                      "gps", "glp", "bdp", "eco", "sgv",
                                                      "sbv", "sgb", "travs", "sav")),

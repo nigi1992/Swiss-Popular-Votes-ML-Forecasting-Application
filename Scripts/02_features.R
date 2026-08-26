@@ -885,6 +885,7 @@ df <- df %>%
     pole_ref_loss  = asof_stat(datum, lost_ref, group = as.character(pole_refined_r4)),
     pole_ref_loss  = if_else(as.character(rechtsform) == "2",
                              coalesce(pole_ref_loss, grand_ref), 0)
+    # Higher value = that pole has historically lost more of its referendum challenges up to that point in time
   )
 
 # Identity history shrunk toward the pole rate by prior count (empirical-Bayes backoff, m = 3 pseudo-observations): 
@@ -895,6 +896,7 @@ rate_actor <- asof_stat(df$datum, lost_init, group = as.character(df$urheber_r4)
 df <- df %>%
   mutate(actor_init_loss = if_else(as.character(rechtsform) == "3",
                                    (n_actor * coalesce(rate_actor, 0) + 3 * pole_init_loss) / (n_actor + 3), 0))
+  # Higher value = that actor (or its pole, when actor has thin history) has historically had more of its initiatives rejected
 
 attr(df, "pole_levels") <- pole_levels
 

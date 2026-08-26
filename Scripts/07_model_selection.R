@@ -131,11 +131,6 @@ score_complexity <- function(model) {
   coalesce(engine_tier[eng], 4L) * 100L + k
 }
 
-
-# Champion = the most parsimonious model that is: 
-# 1) Not significantly worse than the best model on the long (short) frame 
-# 2) Not significantly worse on the short (long) frame (where the set exists) 
-# A single-frame selection would throw away the only out-of-regime robustness check there is
 alpha <- 0.05
 
 elig <- sel %>%
@@ -144,16 +139,19 @@ elig <- sel %>%
          ok      = is_best | p_worse >= alpha) %>%
   ungroup()
 
+# A single-frame selection would throw away the only out-of-regime robustness check there is
 sets_both <- intersect(
   sub("^[a-z]+_", "", sel$model[sel$frame == "long"]),
   sub("^[a-z]+_", "", sel$model[sel$frame == "short"])
 )
 
-#### Pick time frame! Short or long frame? (short = recent deployment era, long = robustness check, larger n) ####
+# Champion = the most parsimonious model that is not significantly worse than the best model on both frames
+# "long" frame is primary, but only because its MAE s estimated on 238 pooled test rows versus 131
+# -> Tie-break is less noisy after complexity
 champion_name <- elig %>%
-  filter(frame == "long", ok) %>% # "short"
+  filter(frame == "long", ok) %>% # "short" -> Keeping long
   mutate(set = sub("^[a-z]+_", "", model)) %>%
-  filter(set %in% sets_both) %>%   # Dropping time frame-only specs that cannot be corroborated on the other frame
+  filter(set %in% sets_both) %>%   # Dropping time frame-only specs that cannot be corroborated on other frame
   semi_join(filter(elig, frame == "short", ok), by = "model") %>% # "long"
   mutate(cx = map_dbl(model, score_complexity)) %>%
   arrange(cx, mae) %>%
@@ -168,22 +166,29 @@ message("champion: ", champion_name)
 champ_set   <- sub("^[a-z]+_", "", champion_name)
 champ_engine <- sub("_.*$", "", champion_name)
 
-# Storing pooled CV residuals from both frames: 
-# 09 builds empirical prediction intervals from them (short = deployment-era spread)
-resid_of <- function(mx) mx$y - mx$P[[champion_name]]
+stopifnot(champion_name %in% names(mx_long$P),
+          champion_name %in% names(mx_short$P))
 
-#### Pick time frame! Short or long frame? (short = recent deployment era, long = robustness check, larger n) ####
-#pick_frame <- "long" #"short"
+# Storing pooled CV residuals from both frames: 09 builds empirical prediction intervals from them
+resid_of <- function(mx) {
+  r <- mx$y - mx$P[[champion_name]]
+  stopifnot(length(r) == length(mx$y), !all(is.na(r)))
+  r
+}
+#resid_of <- function(mx) mx$y - mx$P[[champion_name]]
 
-#### Pick time frame! Short or long frame? (short = recent deployment era, long = robustness check, larger n) ####
-# Champ is not selected on 1 frame, so a single string would misdescribe the procedure, recording the rule instead
-selection <- list(
-  rule        = "not sig. worse than frame-best on BOTH frames; sets present in both; tie-break complexity then MAE",
+
+# Recording rules for frame selection 
+selection <- list(              
+  rule        = "not sig. worse than frame-best on BOTH frames; 
+                  sets present in both; tie-break complexity then MAE",
   frames      = c("long", "short"),
   alpha       = 0.05,
   test        = "row-level paired bootstrap on MAE, B = 4000",
   n_candidates = nrow(sel),
-  interval_frame = "long" #  "short"   # which residual vector 09 uses
+  interval_frame = "long" # "short" -> Which residual vector 09 uses
+  # Must match the frame of the model that is fitted in 09 
+  # If 09 ever trains on frame_frak, this flips to "short"
 )
 
 champion_spec <- list(
@@ -205,13 +210,7 @@ champion_spec <- list(
   seed           = 42
 )
 
-stopifnot(champion_name %in% names(mx_long$P),
-          champion_name %in% names(mx_short$P))
-resid_of <- function(mx) {
-  r <- mx$y - mx$P[[champion_name]]
-  stopifnot(length(r) == length(mx$y), !all(is.na(r)))
-  r
-}
+# 7. Saving Champion Specs ------------------------------------------------
 
 saveRDS(champion_spec, file.path(output_path, "champion_spec.rds"))
 write_csv(sel, file.path(output_path, "model_selection_table.csv"))
