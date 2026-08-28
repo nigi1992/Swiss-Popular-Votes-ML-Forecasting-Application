@@ -45,7 +45,6 @@ m0_pooled <- eval_preds(test_all$yes_share, test_all$roll_yes_rechtsform,
 mgrand_pooled <- eval_preds(test_all$yes_share, test_all$roll_yes_grand,
                             "M0_grandmean", NA_integer_)
 
-
 print(m0_fold)
 
 # Accuracy Metrics need to be compared against the baselines, computed on the test folds (see Section 4 + 5):

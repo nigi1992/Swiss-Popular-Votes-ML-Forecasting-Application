@@ -295,8 +295,7 @@ df <- df %>%
     
     # Status-quo base rate; Acceptance rate (%) of same rechtsform in all votes strictly before this date
     roll_yes_rechtsform = asof_stat(datum, y_hist, group = as.character(rechtsform)),
-    roll_yes_rechtsform = if_else(is.na(roll_yes_rechtsform),
-                                  roll_yes_grand, roll_yes_rechtsform),
+    roll_yes_rechtsform = if_else(is.na(roll_yes_rechtsform), roll_yes_grand, roll_yes_rechtsform),
     
     # Status-quo base rate; Acceptance rate (Yes/No) of same rechtsform in all votes strictly before this date
     roll_acc_rechtsform = asof_stat(datum, acc_hist, group = as.character(rechtsform)),
