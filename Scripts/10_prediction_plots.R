@@ -1,12 +1,12 @@
 ### 10_prediction_plots.R ###
 
-# Plots and comparative performance metrics for the models run in 09_inferenceB.R
+# Plots and comparative performance metrics for the models run in 09b_inference_2.R
 #   A. Target and feature description (distribution, boxplots, correlations)
 #   B. Out-of-sample performance comparison (MAE/RMSE, ROC/AUC, calibration)
 #   C. Forecast display for the upcoming votes (points + intervals, model agreement)
 #   D. Engine-specific interpretation (single tree, xgb gain, permutation importance)
 #
-# Everything here reads the CV predictions produced in 09B, so every performance
+# Everything here reads the CV predictions produced in 09b, so every performance
 # number on this page is out-of-sample, never in-sample fit
 
 # 1. Setup ---------------------------------------------------------------
@@ -458,8 +458,8 @@ eta_rechtsform
 library(car)
 vif(lm(yes_share ~ as.factor(rechtsform) + roll_yes_rechtsform + parl_support_signed, data = frame))
 
-# B. Out-of-sample performance comparison --------------------------------
 
+# B. Out-of-sample performance comparison --------------------------------
 # 7. Error metrics -------------------------------------------------------
 
 p_mae <- cv_metrics %>%
@@ -578,8 +578,8 @@ p_resid <- cv_scored %>%
 save_plot(p_pvo, "10_pred_vs_obs.png", 12, 8)
 save_plot(p_resid, "10_residual_boxplots.png", 9, 6)
 
-# C. Forecast display ------------------------------------------------------
 
+# C. Forecast display ------------------------------------------------------
 # 12. Upcoming votes with intervals ----------------------------------------
 
 p_fc <- forecast %>%
@@ -619,8 +619,8 @@ p_agree <- forecast %>%
 
 save_plot(p_agree, "10_model_agreement.png", 11, 6)
 
-# D. Engine-specific interpretation ---------------------------------------
 
+# D. Engine-specific interpretation ---------------------------------------
 # 14. Single display tree --------------------------------------------------
 
 # ranger grows 500 randomised trees and no single one of them represents the forest,
@@ -679,7 +679,7 @@ perm_models
 perm_imp %>% count(model, frame_tag)
 
 if (!exists("fit_engine")) {
-  stop("run 09_inferenceB.R in this session first: the engine fitters live there")
+  stop("run 09b_inference2.R in this session first: the engine fitters live there")
 }
 
 # kNN has no internal importance measure, so the only defensible answer is a

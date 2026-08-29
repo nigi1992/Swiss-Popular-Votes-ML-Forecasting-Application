@@ -68,3 +68,83 @@ champion_spec <- list(
   r_version      = R.version.string,
   seed           = 42
 )
+
+
+# ---- 07_model_selection.R: replaces boot_table + the selection block -------
+
+alpha <- 0.05
+B     <- 4000
+incumbent <- "lm_m1_1e"   # kept so the write-up can still report deltas vs 06
+
+boot_table <- function(mx, alpha. = alpha, B. = B) {
+  y <- mx$y
+  n <- length(y)
+  stopifnot(n > 0, incumbent %in% names(mx$P),
+            all(vapply(mx$P, length, integer(1)) == n))
+  
+  # n x M matrix of absolute errors, columns aligned to names(mx$P)
+  A <- vapply(mx$P, function(yhat) abs(y - yhat), numeric(n))
+  colnames(A) <- names(mx$P)
+  mae_full <- colMeans(A)
+  
+  # Reference is the lowest-MAE model within this frame - The incumbent is no longer the anchor
+  ref <- colnames(A)[which.min(mae_full)]
+  
+  # One resample index matrix shared by every model -> the comparison stays paired
+  set.seed(42)
+  idx <- replicate(B., sample.int(n, replace = TRUE))
+  boot_mae <- apply(idx, 2, function(i) colMeans(A[i, , drop = FALSE]))  # M x B
+  
+  d_ref <- sweep(boot_mae, 2, boot_mae[ref, ],       "-")
+  d_inc <- sweep(boot_mae, 2, boot_mae[incumbent, ], "-")
+  q_ref <- apply(d_ref, 1, quantile, probs = c(.025, .975))
+  
+  tibble(
+    frame              = mx$tag,
+    model              = colnames(A),
+    n_test             = n,
+    mae                = mae_full,
+    volksmehr_acc      = vapply(mx$P, function(yhat) volksmehr_acc(y, yhat), numeric(1)),
+    ref_model          = ref,
+    dmae_vs_best       = mae_full - mae_full[[ref]],
+    dmae_vs_incumbent  = rowMeans(d_inc),
+    ci_lo              = q_ref[1, ],
+    ci_hi              = q_ref[2, ],
+    # Probability the candidate is worse than the frame-best, not a p-value
+    pr_worse           = rowMeans(d_ref > 0)
+  )
+}
+
+sel <- bind_rows(boot_table(mx_long), boot_table(mx_short)) %>%
+  arrange(frame, mae)
+print(sel, n = Inf)
+
+# The frame-best gets d_ref identically 0 -> pr_worse = 0 -> passes on its own
+elig <- sel %>%
+  mutate(is_best = model == ref_model,
+         ok      = pr_worse < 1 - alpha)
+
+stopifnot(all(elig$ok[elig$is_best]))
+
+# Champion = most parsimonious model not significantly worse than the best on
+# *both* frames. Long frame is primary (238 pooled test rows vs 131), so the
+# MAE tie-break after complexity is the less noisy one.
+# The rule sorts on complexity first, MAE second
+champion_name <- elig %>%
+  filter(frame == "long", ok) %>%
+  semi_join(filter(elig, frame == "short", ok), by = "model") %>%
+  mutate(cx = map_dbl(model, score_complexity)) %>%
+  arrange(cx, mae) %>%
+  slice(1) %>%
+  pull(model)
+
+stopifnot(length(champion_name) == 1)   # Empty intersection used to fail silently
+
+selection_audit <- elig %>%
+  select(frame, model, n_test, mae, volksmehr_acc, ref_model,
+         dmae_vs_best, dmae_vs_incumbent, ci_lo, ci_hi, pr_worse, is_best, ok) %>%
+  arrange(frame, mae)
+
+selection_audit %>% filter(model == champion_name)
+
+

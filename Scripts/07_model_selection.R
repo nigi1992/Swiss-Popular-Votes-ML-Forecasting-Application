@@ -145,8 +145,10 @@ sets_both <- intersect(
   sub("^[a-z]+_", "", sel$model[sel$frame == "short"])
 )
 
-# Champion = the most parsimonious model that is not significantly worse than the best model on both frames
-# "long" frame is primary, but only because its MAE s estimated on 238 pooled test rows versus 131
+# Champion = Model chosen according to the following preference:
+# 1) Model with the smallest MAE on both frames
+# 2) Model that is the most parsimonious (low complexity score)
+# "long" frame is primary, but only because its MAE is estimated on 238 pooled test rows versus 131
 # -> Tie-break is less noisy after complexity
 champion_name <- elig %>%
   filter(frame == "long", ok) %>% # "short" -> Keeping long
@@ -180,7 +182,7 @@ resid_of <- function(mx) {
 
 # Recording rules for frame selection 
 selection <- list(              
-  rule        = "not sig. worse than frame-best on BOTH frames; 
+  rule        = "Not sig. worse than frame-best on BOTH frames; 
                   sets present in both; tie-break complexity then MAE",
   frames      = c("long", "short"),
   alpha       = 0.05,
@@ -209,6 +211,13 @@ champion_spec <- list(
   r_version      = R.version.string,
   seed           = 42
 )
+
+# Checking whether the champion's feature set fits on long frame
+champ_set   <- sub("^[a-z]+_", "", champion_name)
+champ_feats <- feature_sets[[champ_set]]
+needs_frak  <- any(champ_feats %in% names(frame)[colSums(is.na(frame)) > 0])
+setdiff(champ_feats, names(frame))          # features absent from the long frame
+sum(is.na(frame[, intersect(champ_feats, names(frame))]))  # NA burden on long
 
 # 7. Saving Champion Specs ------------------------------------------------
 

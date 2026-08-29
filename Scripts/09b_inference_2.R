@@ -1,4 +1,4 @@
-### 09_inference_B.R ###
+### 09b_inference_2.R ###
 
 # Comparison run of 09_inference.R: 
 # The same inference pipeline, but for a list of challenger models instead of the single 07 champion
@@ -315,6 +315,21 @@ cv_scored <- cv_raw %>%
   ungroup() %>%
   mutate(y_bin = y >= 50)
 
+
+## Confusion matrix --------------------------------------------------------
+
+# Confusion matrix for the predicted Volksmehr (>= 50%) vs. actual Volksmehr (>= 50%)
+cv_conf <- cv_scored %>%
+  mutate(Annahme = as.numeric(as.character(y_bin))) %>%   # y_bin already True/False
+  count(model, frame_tag, predicted = yhat >= 50, actual = y_bin)
+
+conf_mat <- cv_conf %>%
+  filter(model == "lm_m1_2e", frame_tag == "long") %>%
+  select(predicted, actual, n) %>%
+  pivot_wider(names_from = actual, values_from = n, values_fill = 0)
+
+conf_mat
+
 # 8. CV metric table + cross-check --------------------------------------
 
 # Rank-based AUC, so that no extra package is needed
@@ -354,6 +369,25 @@ cv_metrics <- cv_metrics %>%
   mutate(mae_gap_vs_06 = mae - mae_06)
 
 print(cv_metrics, n = Inf)
+
+## Systematic bias -------------------------------------------------------
+
+cv_metrics %>%
+  filter(model == "lm_m1_2e", frame_tag == "long") %>%
+  select(model, frame_tag, bias, med_resid)
+
+cv_metrics %>%
+  filter(model == "lm_m1_2e", frame_tag == "short") %>%
+  select(model, frame_tag, bias, med_resid)
+# bias minus med_resid = 0.86 on long (1.80 − 0.94) vs. 0.20 on short (1.11 − 0.91) 
+# Mean and median diverge when the residual distribution has a skewed tail. 
+# On long frame a few votes are being underestimated by a much larger margin, pulling the mean up while the median is virtually the same
+# On short frame mean and median sit close together —> underestimation is more uniform across votes, not concentrated in a few outliers
+
+# Observation is consistent with overall short/long frame structure:
+# long-frame CI at 10 and 2.5% are wider than short frame (29.75 vs 24.38, 43.58 vs 39.98)
+# Long frame also has larger SD (11.30 vs 9.92)
+# -> Long frame carries more spread and has a heavier tail on top of the same systematic underprediction (about 1%)
 
 # 9. Feasibility of the upcoming rows ------------------------------------
 
