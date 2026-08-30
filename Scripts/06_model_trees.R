@@ -55,12 +55,16 @@ folds_short <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4)
 
 # 3. Shared dummy-coded model matrix --------------------------------------
 
-# Building one matrix over train + test set jointly so factor dummies align across the split
+# Building one matrix over train + test set jointly, so factor dummies align across the split
 # Then cutting it back apart: Outcome never enters the matrix, so no leakage
 make_mm <- function(d, feats) {
   X <- d[, feats, drop = FALSE]
   X <- as.data.frame (lapply(X, function (x) if (is.character(x)) factor(x) else x))
+  #X <- as.data.frame(lapply(X, function(x) {     # NA becomes its own explicit level instead of vanishing rows
+     #if (is.numeric(x)) {x[is.na(x)] <- median(x, na.rm = TRUE)} else { factor(x, exclude = NULL) } 
+  #}))
   mm <- model.matrix(~ ., data = X)
+  #stopifnot(nrow(mm) == nrow(d))
   mm[, -1, drop = FALSE]
 }
 
@@ -152,8 +156,20 @@ if (is.null(feature_sets$m1_4b)) {
   message("m1_4b not in registry, using in-script definition") }
 
 engines    <- c("lm", "ridge", "lasso", "tree", "rf", "gbm", if (has_xgb) "xgb", "knn")
-sets_long  <- c("m1_1e", "m1_2a", "m1_2e", "m1_2_lm", "m1_2", "m1_4a")
-sets_short <- c("m1_1e", "m1_2a", "m1_2e", "m1_2_lm", "m1_2", "m1_4b", "m2_frak")#, "m2_frak_lean3_urh", "m2_base2", "m2_base3")
+sets_long  <- c("m1_1e", "m1_2a", "m1_2e", "m1_2f", "m1_2_lm", "m1_2", "m1_4a") 
+sets_short <- c("m1_1e", "m1_2a", "m1_2e", "m1_2f", "m1_2_lm", "m1_2", "m1_4b", "m2_base2", "m2_base3") #, "m2_frak_lean3_urh", "m2_frak",
+
+# checking which columns in the failing feature set carry NAs
+na_counts <- sapply(frame[, feature_sets$m1_4a], function(x) sum(is.na(x)))
+na_counts[na_counts > 0]
+
+# same check against frame_frak, in case the NA-bearing column only shows up there
+na_counts <- sapply(frame[, feature_sets$tree_extras_long], function(x) sum(is.na(x)))
+na_counts[na_counts > 0]
+
+# same check against frame_frak, in case the NA-bearing column only shows up there
+na_counts_frak <- sapply(frame_frak[, feature_sets$tree_extras_short], function(x) sum(is.na(x)))
+na_counts_frak[na_counts_frak > 0]
 
 ## More Model Variation ----------------------------------------------------
 
@@ -207,21 +223,40 @@ sets_short <- c(
 grid_long  <- expand_grid(engine = engines, set = sets_long)
 grid_short <- expand_grid(engine = engines, set = sets_short)
 
+
+# checking every feature set used in either grid for NA-bearing columns
+na_report <- map_dfr(sets_long, function(s) {
+  cols <- feature_sets[[s]]
+  cols <- cols[cols %in% names(frame)]
+  tibble(set = s, col = cols,
+         n_na = sapply(frame[cols], function(x) sum(is.na(x))))
+}) %>% filter(n_na > 0)
+print(na_report, n = Inf)
+
+na_report2 <- map_dfr(sets_short, function(s) {
+  cols <- feature_sets[[s]]
+  cols <- cols[cols %in% names(frame_frak)]
+  tibble(set = s, col = cols,
+         n_na = sapply(frame_frak[cols], function(x) sum(is.na(x))))
+}) %>% filter(n_na > 0)
+print(na_report2, n = Inf)
+
 # Long Frame
 results_long <- pmap_dfr(grid_long, function(engine, set)
   run_engine_set(engine, set, feature_sets[[set]], frame, folds_long) %>%
     mutate(frame = "long"))
 
 
-#### Watch out before continuing! Long Compute Time! #####
-message("Watch out before continuing! Long Compute Time! Let Background Job finish.")
+#### Warning! Long Compute Time! Wait out before continuing! #####
+message("Warning! Long Compute Time! Wait out before continuing!")
 
 
 # Short Frame
 results_short <- pmap_dfr(grid_short, function(engine, set)
   run_engine_set(engine, set, feature_sets[[set]], frame_frak, folds_short) %>%
     mutate(frame = "short"))
-message("Watch out before continuing! Long Compute Time! Let Background Job finish.")
+#### Warning! Long Compute Time! Wait out before continuing! #####
+message("Warning! Long Compute Time! Wait out before continuing!")
 
 # 8. Pooled comparison on identical test rows ---------------------------
 
@@ -248,6 +283,9 @@ print(pooled %>% filter(frame == "short") %>% arrange(mae), n = Inf)
 
 print(pooled %>% filter(frame == "long")  %>% arrange(mae), n = 15)
 print(pooled %>% filter(frame == "short") %>% arrange(mae), n = 15)
+
+print(pooled %>% filter(frame == "long")  %>% arrange(desc(volksmehr_acc)), n = 15)
+print(pooled %>% filter(frame == "short") %>% arrange(desc(volksmehr_acc)), n = 15)
 
 # 9. Saving predictions + metrics for 07_model_selection.R --------------
 

@@ -727,7 +727,7 @@ df <- df %>%
 # LR anchors assigned strictly via faction membership (Parlamentswörterbuch Faktenblatt Fraktionen", p.5)
 # Reusing the bloc anchor scale from Hug & Schulz 2007 / NZZ Parlamentarier Rating 2025:
 # sps -> S, gps -> G, glp -> GL, center -> ME, evp -> ME, bdp -> ME, fdp -> RL, svp -> V
-# No new anchor is invented, edu is excluded because it belongs to no faction
+# EDU is excluded because it belongs to no faction
 paro_anchor <- c(fdp = 2.0, sps = -6.5, svp = 7.5, center = 0.0,
                  evp = 0.0, gps = -8.0, glp = -2.5, bdp = 0.0)
 

@@ -89,7 +89,7 @@ run_these_m2 <- c(
 
   # Champ features m1_1e & m1_2a
   "champ_m1_1eA", "champ_m1_1eB", "champ_m1_1eC",
-  "m2_base", "m2_base1", "m2_base2", "m2_base3", "m2_base4", "m2_base5", "m2_base6",
+  "m2_base", "m2_base1", "m2_base2", "m2_base3","m2_base4", "m2_base5", "m2_base6",
   "m2_base7", "m2_base8", "m2_base9", "m2_base10"
 )
 
@@ -119,8 +119,8 @@ pooled <- results %>%
   bind_rows(eval_preds(test_all$yes_share, test_all$roll_yes_rechtsform,
                        "M0_rechtsform_proxyBrier", NA_integer_))
 
-#print(results %>% select(-pred))
-print(results %>% select(-pred), n = Inf)
+print(results %>% select(-pred))
+#print(results %>% select(-pred), n = Inf)
 
 print(pooled %>% arrange(mae), n = 44)
 

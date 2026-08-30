@@ -72,7 +72,7 @@ run_these_long <- c(
   "m1_0", "m1_1", "m1_1e", "m1_1f", "m1_2a", "m1_2e", "m1_2f",
   # M3: T1 parole tier on the long frame (paroles cover 1971+, unlike frak)
   "m3_par_big4", "m3_par_agg", "m3_par_cue", "m3_par_wsup",
-  "m3_par_gov", "m3_verband", "m3_verb_gap", "m3_full",
+  "m3_par_gov", "m3_verband", "m3_verb_gap", "m3_full", "m3_center",
   # Urheber features on the long frame (1971+)
   "m1_3", "m1_3a", "m1_3b", "m1_3c"
 )
@@ -179,7 +179,7 @@ run_these_short <- c(
   "m2_base7", "m2_base8", "m2_base9", "m2_base10",
   # M3 parole sets — head-to-head against M2 on the same test rows
   "m3_par_cue", "m3_par_wsup", "m3_par_agg", "m3_verband",
-  "m3_par_big4", "m3_par_gov", "m3_verb_gap", "m3_full"
+  "m3_par_big4", "m3_par_gov", "m3_verb_gap", "m3_full", "m3_center"
 )
 
 run_these_short <- run_these_short[vapply(run_these_short,

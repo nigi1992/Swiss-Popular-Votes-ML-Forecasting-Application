@@ -141,11 +141,6 @@ print(m0_vs_base) # Overview for m0_fold baseline comparison
 # -> positive value means systematic overprediction of support
 # volksmehr_acc here is the accuracy within the group, which is bounded by the group's own acceptance rate
 
-rechtsform_labels <- c("1" = "1 obligat. Ref.",
-                       "2" = "2 fak. Ref.",
-                       "3" = "3 Volksinitiative",
-                       "4" = "4 Gegenentwurf")
-
 m0_calibration <- test_all %>%
   group_by(rechtsform) %>%
   summarise(n = n(),
@@ -156,7 +151,11 @@ m0_calibration <- test_all %>%
             acceptance_rate = round(mean(yes_share >= 50, na.rm = TRUE), 2),
             volksmehr_acc   = round(volksmehr_acc(yes_share, roll_yes_rechtsform), 3),
             .groups = "drop") %>%
-  mutate(rechtsform = recode(as.character(rechtsform), !!!rechtsform_labels))
+  mutate(rechtsform = case_match(as.character(rechtsform),
+                                 "1" ~ "1 obligat. Ref.",
+                                 "2" ~ "2 fak. Ref.",
+                                 "3" ~ "3 Volksinitiative",
+                                 "4" ~ "4 Gegenentwurf"))
 
 print(m0_calibration)
 
