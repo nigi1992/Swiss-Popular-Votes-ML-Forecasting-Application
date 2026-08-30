@@ -342,15 +342,14 @@ feature_sets <- list(
   # Computed but reserved for tree-based engines: 
   # Redundant or rank-deficient under lm dummy coding, informative for splits
   tree_extras_long = c(
-                      "gov_parl_recommend_n", "bv-pos", 
+                      "gov_parl_recommend_n", #"`bv-pos`", 
                       #"br-pos", "nr-pos", "sr-pos", "nrja", "nrnein", "srja", "srnein",
                       "changes_constitution", "double_majority_required", "parl_consensus", "parl_seats",
-                      "unter-quorum", "init_formul", "dauer_abst",
                       #"i-dauer_samm", "i-dauer_br", "fr-dauer_samm", "fr-dauer_tot", "unter_g", "unter_u",
-                      #"dauer_bv", "i-dauer_tot", "sammelfrist", "sammeltempo", "sparedays", 
+                      #"dauer_abst", "dauer_bv", "i-dauer_tot", "sammelfrist", "sammeltempo", "sparedays", 
                       "has_signature_phase", "sig_no_deadline", "sig_data_missing",
                       #"d1e2", "d1e3", "d2e1", "d2e2", "d2e3", "d3e1", "d3e2", "d3e3",
-                      "legislatur", "nr-wahl", "months_to_election", #paste0("w_", Wpar),
+                      "legislatur", "months_to_election", "init_formul", #paste0("w_", Wpar),
                       #"urheber", "berecht", paste0("", sprintf("%02d", 1:21))
                      
                       "has_urheber", "n_sponsors_f", "established_f",
@@ -359,15 +358,15 @@ feature_sets <- list(
                       ),
   
   tree_extras_short = c(
-                      "gov_parl_recommend_n", "bv-pos",
-                      "br-pos", "nr-pos", "sr-pos", "nrja", "nrnein", "srja", "srnein",
+                      "gov_parl_recommend_n", #"`bv-pos`",
+                      #"`br-pos`", "`nr-pos`", "`sr-pos`", "`nrja`", "`nrnein`", "`srja`", "`srnein`",
                       "changes_constitution", "double_majority_required", "parl_consensus", "parl_seats",
-                      "unter-quorum", "init_formul",  "dauer_abst", 
+                      "init_formul",  "dauer_abst", 
                       #"i-dauer_samm", "i-dauer_br", "fr-dauer_samm", "fr-dauer_tot", "unter_g", "unter_u",
                       #"dauer_bv", "i-dauer_tot", "sammelfrist", "sammeltempo", "sparedays", 
                       "has_signature_phase", "sig_no_deadline", "sig_data_missing",
                       #"d1e2", "d1e3", "d2e1", "d2e2", "d2e3", "d3e1", "d3e2", "d3e3",
-                      "legislatur", "nr-wahl", "months_to_election", #paste0("w_", Wpar),
+                      "legislatur", "months_to_election", #paste0("w_", Wpar),
                       #"urheber", "berecht", paste0("", sprintf("%02d", 1:21))
                       
                       "has_urheber", "n_sponsors_f", "established_f",
@@ -485,7 +484,7 @@ feature_sets$m3_full     <- c(feature_sets$m1_1e, feature_sets$ext_parole_all,
 
 
 # Singles for tree engines: every raw cue plus the unease share
-feature_sets$tree_extras_m3 <- c(feature_sets$tree_extras_long,
+feature_sets$tree_extras_m3 <- c(feature_sets$tree_extras,
                                     paste0("cue_", c("fdp", "sps", "svp", "center", "evp",
                                                      "gps", "glp", "bdp", "eco", "sgv",
                                                      "sbv", "sgb", "travs", "sav")),
@@ -497,6 +496,16 @@ feature_sets$tree_extras_m3 <- c(feature_sets$tree_extras_long,
 ## Guarding the registry instead of repairing it silently
 stopifnot(!any(duplicated(names(feature_sets))))
 stopifnot(all(unlist(feature_sets) %in% names(df)))
+
+# which features in feature_sets have no matching column in df
+missing <- setdiff(unique(unlist(feature_sets, use.names = FALSE)), names(df))
+missing
+
+tibble::tibble(feature = missing) %>%
+  dplyr::mutate(sets = purrr::map_chr(feature, function(f)
+      paste(names(feature_sets)[purrr::map_lgl(feature_sets, ~ f %in% .x)],
+            collapse = ", ")) ) %>%
+  print(n = Inf)
 
 # 5. Saving dataset for the ML pipeline --------------------------------
 

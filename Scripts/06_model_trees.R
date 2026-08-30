@@ -173,7 +173,7 @@ na_counts_frak[na_counts_frak > 0]
 
 ## More Model Variation ----------------------------------------------------
 
-sets_long  <- c("m1_0", "m1_1", "m1_1a", 
+#sets_long  <- c("m1_0", "m1_1", "m1_1a", 
                 #"m1_1b", "m1_1c", "m1_1d", 
                 "m1_1e", "m1_1f", 
                 #"m1_1g", "m1_1h", "m1_1i", "m1_1k", "m1_1l",
@@ -191,7 +191,7 @@ sets_long  <- c("m1_0", "m1_1", "m1_1a",
                 #"m1_4a",
                 )
 
-sets_short <- c(  
+#sets_short <- c(  
                 # Bigger models with more extensive feature sets
                 "m2_frak", "m2_coal", "m2_urh", "m2_all", #"m2_frak5",
   

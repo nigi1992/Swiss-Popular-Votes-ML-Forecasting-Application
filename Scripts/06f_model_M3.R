@@ -176,53 +176,6 @@ na_counts[na_counts > 0]
 na_counts_frak <- sapply(frame_frak[, feature_sets$tree_extras_short], function(x) sum(is.na(x)))
 na_counts_frak[na_counts_frak > 0]
 
-## More Model Variation ----------------------------------------------------
-
-sets_long  <- c("m1_0", "m1_1", "m1_1a", 
-                #"m1_1b", "m1_1c", "m1_1d", 
-                "m1_1e", "m1_1f", 
-                #"m1_1g", "m1_1h", "m1_1i", "m1_1k", "m1_1l",
-                "m1_2", "m1_2a", 
-                #"m1_2b", "m1_2c", "m1_2d", 
-                "m1_2e", "m1_2f",
-                "m1_3", #"m1_3a", "m1_3b", 
-                "m1_3c",
-                #"m3_par_big4", "m3_par_cue", 
-                "m3_par_agg", 
-                #"m3_par_wsup", "m3_par_gov", 
-                #"m3_verband", "m3_verb_gap", 
-                "m3_full",
-                # add tree_extras
-                #"m1_4a",
-)
-
-sets_short <- c(  
-  # Bigger models with more extensive feature sets
-  "m2_frak", "m2_coal", "m2_urh", "m2_all", #"m2_frak5",
-  
-  ## Leaner models for testing
-  #"m2_frak_lean", "m2_frak_lean2", "m2_frak_lean3", "m2_frak_lean4",
-  "m2_frak_lean_urh", "m2_frak_lean2_urh", "m2_frak_lean3_urh", #"m2_frak_lean4_urh",
-  #"m2_coal_lean", "m2_coal_lean2", "m2_coal_lean3", "m2_coal_lean4",
-  "m2_coal_lean_urh", #"m2_coal_lean2_urh", "m2_coal_lean3_urh", "m2_coal_lean4_urh",
-  #"m2_frak5_lean", "m2_frak5_lean_urh",
-  
-  # Champ features m1_1e & m1_2a
-  "champ_m1_1eA", "champ_m1_1eB", "champ_m1_1eC",
-  "m2_base", "m2_base1", "m2_base2", "m2_base3", 
-  #"m2_base4", "m2_base5", "m2_base6",
-  #"m2_base7", "m2_base8", "m2_base9", "m2_base10",
-  
-  # M3 parole sets — head-to-head against M2 on the same test rows
-  #"m3_par_cue", "m3_par_wsup", "m3_par_agg", 
-  "m3_verband",
-  #"m3_par_big4", "m3_par_gov", 
-  "m3_verb_gap", "m3_full",
-  # add tree_extras
-  "m1_4b",
-)
-
-
 # 7. Grid search + results ----------------------------------------------
 
 grid_long  <- expand_grid(engine = engines, set = sets_long)

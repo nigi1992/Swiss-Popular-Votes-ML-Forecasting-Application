@@ -19,6 +19,7 @@ library(tidyverse)
 library(glmnet)    # lasso, ridge
 library(ranger)    # rf
 library(xgboost)   # xgb
+library(gbm3)      # gbm
 library(FNN)       # knn regression
 
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
@@ -39,14 +40,20 @@ set.seed(42)
 
 # Model selection, tagged with the frame each one is fitted and evaluated on 
 # Engine and feature set are parsed out of the name, same convention as 07
-models_long <- c("lasso_m1_2e", "ridge_m1_2a", "rf_m1_4a", "lm_m1_1e")
-models_short <- c("lm_m1_2e", "lasso_m1_2e", "ridge_m1_2a",
-                  "rf_m1_2e", "xgb_m1_2e", "knn_m1_2a")
+models_long  <- c("lasso_m1_2e", "ridge_m1_2a", "rf_m1_4a", "lm_m1_1e", "xgb_m1_2", "knn_m1_2a") #"gbm_m1_4a")
+models_short <- c("lm_m1_2e", "lasso_m1_2e", "lasso_m2_base3", "lm_m2_base3", "lm_m2_base2",
+                  "ridge_m1_2a", "rf_m1_2e", "xgb_m1_2e", "knn_m1_2a")
+
+### M3 Models can only be called for comparison purposes, when party paroles are publicly available! ###
+#models_long_m3  <- c("xgb_m1_4d", "rf_m3_full", "rf_m1_4d", "lm_m3_par_wsup", "ridge_m3_par_wsup", "ridge_m3_par_gov")#, "gbm_m1_4d")
+#models_short_m3 <- c("lm_m3_verband", "ridge_m3_par_wsup", "lm_m3_verb_gap")
 
 model_registry <- bind_rows(
   tibble(model = models_long,  frame_tag = "long"),
-  tibble(model = models_short, frame_tag = "short")
-) %>%
+  tibble(model = models_short, frame_tag = "short")#,
+  #tibble(model = models_long_m3, frame_tag = "long"),
+  #tibble(model = models_short_m3, frame_tag = "short")
+  ) %>%
   mutate(engine = sub("_.*$", "", model),
          set    = sub("^[a-z]+_", "", model))
 
@@ -62,24 +69,46 @@ model_registry <- model_registry %>%
 
 # All engine settings in one place
 hp <- list(
+  #cv_fold_type       = "temporal", # rows are time-ordered
+  #cv_nfolds          = 5,
   glmnet_alpha_lasso = 1,      # lasso
   glmnet_alpha_ridge = 0,      # ridge
   glmnet_nfolds      = 5,      # inner CV for lambda, fitted on training rows only
   glmnet_lambda_rule = "lambda.min",
-  rf_num_trees       = 500,
+  rf_num_trees       = 1000, #500,
   rf_min_node_size   = 5,
-  rf_mtry            = NULL,   # NULL lets ranger use floor(sqrt(p))
-  xgb_nrounds        = 300,
-  xgb_eta            = 0.05,
-  xgb_max_depth      = 4,
+  #rf_mtry            = NULL,   # NULL lets ranger use floor(sqrt(p))
+  rf_mtry_divisor    = 3,
+  rf_respect_unordered = TRUE,
+## gbm ---------------------------------------------------------------------
+  #gbm_distribution   = "gaussian",
+  #gbm_num_trees      = 2000,
+  #gbm_interac_depth  = 2,           
+  #gbm_shrinkage      = 0.01,
+  #gbm_bag_frac       = 0.7,
+  #gbm_n_minobs       = 10, # small training blocks in the early expanding-window folds
+  #gbm_cv_folds       = 0, #5,
+  #gbm_perf_method    = "cv",   # How the best iteration is picked, on training rows only
+  #gbm_keep_data      = FALSE,
+  #gbm_n_cores        = 1,      # Inner cv fold draw is reproducible
+  #gbm_verbose        = FALSE,
+## xgb ---------------------------------------------------------------------
+  xgb_nrounds        = 2000, #300,
+  xgb_nfold          = 5,
+  xgb_eta            = 0.02, #0.05,
+  xgb_max_depth      = 3, #4,
   xgb_subsample      = 0.8,
   xgb_colsample      = 0.8,
-  xgb_min_child      = 3,
+  xgb_min_child      = 5, #3,
+  xgb_early_stop     = 50,
+  xgb_verbose        = FALSE,
   knn_k              = 10,     # neighbours, on standardized predictors
-  perm_reps          = 5,       # repetitions for permutation importance
+  perm_reps          = 50, #5!      # repetitions for permutation importance
   n_threads          = 4,   # fixed, so that ranger is reproducible across machines
-  seed               = 42
+  seed               = 42,
+  engine_seed        = 1 
 )
+
 
 # 4. Frames + folds (identical to 04-07) --------------------------------
 
@@ -105,11 +134,24 @@ upcoming <- df %>%
 
 stopifnot(nrow(upcoming) > 0)
 
+## M1_4 Models ----------------------------------------------------------
+
 # Reproducing hook from 07 to let m1_4a / m1_4b resolve cleanly
 if (is.null(feature_sets$m1_4a))
   feature_sets$m1_4a <- c(feature_sets$m1_2, feature_sets$tree_extras_long)
+
 if (is.null(feature_sets$m1_4b))
   feature_sets$m1_4b <- c(feature_sets$m1_2, feature_sets$tree_extras_short)
+
+# Same for M3 models
+if (is.null(feature_sets$m1_4c)) { 
+  feature_sets$m1_4c <- c(feature_sets$m1_2, feature_sets$tree_extras_m3) }
+
+if (is.null(feature_sets$m1_4d)) { 
+  feature_sets$m1_4d <- c(feature_sets$m1_2, feature_sets$tree_extras_long, feature_sets$tree_extras_m3) }
+
+if (is.null(feature_sets$m1_4e)) { 
+  feature_sets$m1_4e <- c(feature_sets$m1_2, feature_sets$tree_extras_short, feature_sets$tree_extras_m3) }
 
 stopifnot(all(model_registry$set %in% names(feature_sets)))
 
@@ -188,7 +230,7 @@ scale_to_train <- function(X_tr) {
 
 # fit_engine returns a fitted object plus a predict closure. Fitting happens once,
 # prediction can then be called any number of times on new frames
-fit_engine <- function(engine, tr_df, feats, seed = 42) {
+fit_engine <- function(engine, tr_df, feats, seed = hp$engine_seed) { #seed = 42) {
   
   if (engine == "lm") {
     tr <- tr_df[, c("yes_share", feats), drop = FALSE] %>%
@@ -209,8 +251,11 @@ fit_engine <- function(engine, tr_df, feats, seed = 42) {
     # cv.glmnet assigns its inner folds from R's RNG, so lambda.min drifts between runs.
     # Pinning foldid explicitly makes lambda selection reproducible, and it also puts
     # lasso and ridge on the same inner split instead of two different ones
+    #set.seed(seed)
+    #foldid <- sample(rep_len(seq_len(hp$glmnet_nfolds), nrow(prep$X_tr)))
+    foldid <- as.integer(cut(seq_len(nrow(prep$X_tr)),
+                             breaks = hp$glmnet_nfolds, labels = FALSE))
     set.seed(seed)
-    foldid <- sample(rep_len(seq_len(hp$glmnet_nfolds), nrow(prep$X_tr)))
     cv <- cv.glmnet(prep$X_tr, prep$y_tr, alpha = a, foldid = foldid)
     return(list(engine = engine, fit = cv, prep = prep,
                 predict = function(nd)
@@ -219,40 +264,50 @@ fit_engine <- function(engine, tr_df, feats, seed = 42) {
   }
   
   if (engine == "rf") {
-    tr <- prep$tr_x; tr$yes_share <- prep$y_tr
+    #tr <- prep$tr_x; tr$yes_share <- prep$y_tr
     # num.threads is fixed rather than derived from detectCores(): ranger results depend
     # on the thread count, so a machine-dependent value breaks reproducibility across
     # machines even with the seed pinned
-    fit <- ranger(yes_share ~ ., data = tr,
+    #fit <- ranger(yes_share ~ ., data = tr,
+    Xtr <- data.frame(prep$X_tr)
+    set.seed(seed)
+    fit <- ranger(y = prep$y_tr, x = Xtr,
                   num.trees     = hp$rf_num_trees,
                   min.node.size = hp$rf_min_node_size,
-                  mtry          = hp$rf_mtry,
+                  mtry          = max(1, floor(ncol(Xtr) / hp$rf_mtry_divisor)), #hp$rf_mtry,
                   importance    = "none",
+                  respect.unordered.factors = hp$rf_respect_unordered,
                   num.threads   = hp$n_threads,
                   seed          = seed)
     return(list(engine = engine, fit = fit, prep = prep,
                 predict = function(nd)
-                  as.numeric(predict(fit, data = apply_design(prep, nd)$df,
+                  as.numeric(predict(fit, data =data.frame(apply_design(prep, nd)$X),  #apply_design(prep, nd)$df,
                                      num.threads = hp$n_threads)$predictions)))
   }
   
   if (engine == "xgb") {
-    # xgboost runs its own RNG and does not see set.seed(). Without seed in params the
-    # row and column subsampling is unseeded, which is the entire run-to-run movement
-    # in this engine. nthread = 1 removes the remaining scheduling nondeterminism
-    fit <- xgb.train(params = list(objective = "reg:squarederror",
-                                   eta = hp$xgb_eta,
-                                   max_depth = hp$xgb_max_depth,
-                                   subsample = hp$xgb_subsample,
-                                   colsample_bytree = hp$xgb_colsample,
-                                   min_child_weight = hp$xgb_min_child,
-                                   seed = seed,
-                                   nthread = 1),
-                     data = xgb.DMatrix(prep$X_tr, label = prep$y_tr),
-                     nrounds = hp$xgb_nrounds, verbose = 0)
+    dtrain <- xgb.DMatrix(prep$X_tr, label = prep$y_tr)
+    xgb_params <- list(objective = "reg:squarederror",
+                       eta = hp$xgb_eta,
+                       max_depth = hp$xgb_max_depth,
+                       subsample = hp$xgb_subsample,
+                       colsample_bytree = hp$xgb_colsample,
+                       min_child_weight = hp$xgb_min_child,
+                       seed = seed, nthread = 1)
+    # 06 picks the round count by inner CV, it does not spend the full nrounds budget.
+    # Fixed 2000 rounds is a different model, not the same model with a longer run
+    set.seed(seed)
+    cv <- xgb.cv(params = xgb_params, data = dtrain,
+                 nrounds = hp$xgb_nrounds, nfold = hp$xgb_nfold,
+                 early_stopping_rounds = hp$xgb_early_stop, verbose = 0)
+    best_iter <- cv$best_iteration
+    if (is.null(best_iter) || length(best_iter) == 0)
+      best_iter <- which.min(cv$evaluation_log$test_rmse_mean)
+    fit <- xgb.train(params = xgb_params, data = dtrain,
+                     nrounds = best_iter, verbose = 0)
     return(list(engine = engine, fit = fit, prep = prep,
                 predict = function(nd)
-                  as.numeric(predict(fit, xgb.DMatrix(apply_design(prep, nd)$X)))))
+                  as.numeric(predict(fit, xgb.DMatrix(apply_design(prep, nd)$X))))) 
   }
   
   if (engine == "knn") {
@@ -270,6 +325,7 @@ fit_engine <- function(engine, tr_df, feats, seed = 42) {
   
   stop("unknown engine: ", engine)
 }
+
 
 # Wrapper so that sections 7 and 10 keep their one-line call
 fit_predict_engine <- function(engine, tr_df, te_df, feats)
@@ -411,6 +467,9 @@ if (any(!feasible$ok)) {
 if (all(!feasible$ok)) stop("All bad with Dad")
 
 run_list <- feasible %>% filter(ok)
+
+## In case there are m1_4 with tree-extras with NAs to run:
+#run_list <- model_registry
 
 # 10. Final fit + forecast per model --------------------------------------
 

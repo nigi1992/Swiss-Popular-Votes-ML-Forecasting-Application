@@ -150,7 +150,10 @@ feature_buckets <- list(
                  "actor_init_loss"),
   policy_area = paste0("policy_", sprintf("%02d", 1:12)),
   dumb_features = c("months_since_election", "months_to_election", "pa_iv",
-                    "log_dauer_bv", "anzahl", "d1e1")
+                    "log_dauer_bv", "anzahl", "d1e1"),
+  tree_extras = c("gov_parl_recommend_n", "changes_constitution", "double_majority_required", "parl_consensus", "parl_seats", 
+                  "has_signature_phase", "sig_no_deadline", "sig_data_missing", "legislatur", "has_urheber", "n_sponsors_f", "established_f", 
+                  "actor_code_r4", "pole_r4_left", "pole_r4_right", "pole_r4_center", "pole_r4_mixed", "pole_r4_environmental", "pole_r4_nonpartisan")
 )
 
 bucket_titles <- c(elite_cues    = "Elite cues and coalition theory",
@@ -159,7 +162,8 @@ bucket_titles <- c(elite_cues    = "Elite cues and coalition theory",
                    interest_cues = "Interest group recommendations and heuristics",
                    signatures    = "Signature and sponsor features",
                    policy_area   = "Policy area",
-                   dumb_features = "Timing and administrative features")
+                   dumb_features = "Timing and administrative features",
+                   tree_extras   = "Additional features for tree engines")
 
 # Only the variables that actually exist in the data survive, so a renamed or dropped
 # feature shrinks its bucket instead of killing the plot
@@ -435,12 +439,12 @@ write_csv(cor_pairs, file.path(output_path, "10_correlation_pairs.csv"))
 
 continuous_vars <- c("roll_yes_rechtsform", "parl_support_signed", "yes_share")
 
-# pairwise correlations among the continuous predictors and the outcome
+# Pairwise correlations among the continuous predictors and the outcome
 cor_pearson  <- cor(frame[continuous_vars], use = "pairwise.complete.obs", method = "pearson")
 cor_spearman <- cor(frame[continuous_vars], use = "pairwise.complete.obs", method = "spearman")
 
-# eta^2 for rechtsform: share of each continuous variable's variance
-# explained by rechtsform group membership, via one-way ANOVA
+# eta^2 for rechtsform: 
+# Share of each continuous variable's variance explained by rechtsform group membership, via one-way ANOVA
 eta_sq <- function(y, group) {
   fit <- aov(y ~ as.factor(group))
   ss  <- summary(fit)[[1]][["Sum Sq"]]
@@ -454,10 +458,28 @@ cor_pearson
 cor_spearman
 eta_rechtsform
 
-# collinearity check if rechtsform and roll_yes_rechtsform end up in the same model
+# Collinearity check if rechtsform and roll_yes_rechtsform end up in the same model
 library(car)
 vif(lm(yes_share ~ as.factor(rechtsform) + roll_yes_rechtsform + parl_support_signed, data = frame))
 
+# Stripping out rechtsform level effects
+r_roll <- residuals(lm(roll_yes_rechtsform ~ as.factor(rechtsform), data = frame))
+r_parl <- residuals(lm(parl_support_signed  ~ as.factor(rechtsform), data = frame))
+cor(r_roll, r_parl)
+
+# How much does each variable add net of rechtsform on the outcome side
+r_yes <- residuals(lm(yes_share ~ as.factor(rechtsform), data = frame))
+cor(r_yes, r_roll); cor(r_yes, r_parl)
+
+# Checking whether domain encoding adds anything beyond the raw domain factor
+r_rolld <- residuals(lm(roll_yes_domain ~ as.factor(main_domain), data = frame))
+r_yesd  <- residuals(lm(yes_share       ~ as.factor(main_domain), data = frame))
+cor(r_yesd, r_rolld)
+
+# and whether it adds anything net of what parl. already predicts well
+summary(lm(yes_share ~ parl_support_signed + roll_yes_domain, data = frame))
+summary(lm(yes_share ~ parl_support_signed + roll_yes_rechtsform, data = frame))
+summary(lm(yes_share ~ parl_support_signed + rechtsform, data = frame))
 
 # B. Out-of-sample performance comparison --------------------------------
 # 7. Error metrics -------------------------------------------------------
@@ -470,18 +492,19 @@ p_mae <- cv_metrics %>%
   geom_text(aes(label = number(mae, 0.01)), hjust = -0.15, size = 3) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(title = "Expanding-window CV mean absolute error",
-       subtitle = "lower is better; frames are not comparable to each other",
-       x = "MAE (percentage points)", y = NULL, fill = "frame")
+       subtitle = "Lower is better - long/short frames not comparable",
+       x = "MAE (percentage points)", y = NULL, fill = "Frame")
 
 p_acc <- cv_metrics %>%
   mutate(label = paste0(model, " [", frame_tag, "]"),
          label = fct_reorder(label, volksmehr_acc)) %>%
   ggplot(aes(volksmehr_acc, label, fill = frame_tag)) +
   geom_col(width = 0.7) +
+  geom_text(aes(label = number(round(100*volksmehr_acc,2), 0.01)), hjust = -0.15, size = 3) +
   geom_vline(xintercept = 0.5, linetype = "dashed") +
   scale_x_continuous(labels = percent) +
   labs(title = "Volksmehr direction accuracy",
-       x = "share of test rows on the correct side of 50%", y = NULL, fill = "frame")
+       x = "Share of test rows above 50% line", y = NULL, fill = "Frame")
 
 save_plot(p_mae / p_acc, "10_cv_error_metrics.png", 9, 9)
 
@@ -494,8 +517,8 @@ p_width <- cv_metrics %>%
   geom_point(size = 3) +
   geom_text(vjust = -0.9, size = 3, show.legend = FALSE) +
   labs(title = "80% interval width against CV error",
-       subtitle = "bottom-left is better; a narrow interval at high MAE is overconfident",
-       x = "MAE (pp)", y = "width of the 10-90 residual band (pp)", colour = "frame")
+       subtitle = "Bottom-left is better - A narrow interval at high MAE is overconfident",
+       x = "MAE (%)", y = "Width of the 10-90 residual band (%)", colour = "Frame")
 
 save_plot(p_width, "10_interval_width_vs_error.png", 9, 6)
 
@@ -529,8 +552,8 @@ p_roc <- ggplot(roc_dat, aes(fpr, tpr, colour = label)) +
   facet_wrap(~ frame_tag) +
   coord_equal() +
   labs(title = "ROC for the popular-majority event",
-       subtitle = "score = out-of-sample p_volksmehr; first fold has no residual pool and is excluded",
-       x = "false positive rate", y = "true positive rate", colour = NULL) +
+       subtitle = "Score = Out-of-sample p_volksmehr, The first fold has no residual pool and is excluded",
+       x = "False positive rate", y = "True positive rate", colour = NULL) +
   theme(legend.position = "bottom", legend.text = element_text(size = 7)) +
   guides(colour = guide_legend(ncol = 2))
 # The Area Under the ROC curve (known as AUC) is a measure of how well the model can distinguish between the two classes. 
@@ -552,7 +575,7 @@ p_calib <- cv_scored %>%
   facet_wrap(~ frame_tag) +
   scale_size_area(max_size = 6) +
   labs(title = "Calibration of the empirical p_volksmehr",
-       x = "predicted probability", y = "observed frequency", colour = NULL, size = "n")
+       x = "Predicted probability", y = "Observed frequency", colour = NULL, size = "n")
 
 save_plot(p_calib, "10_calibration.png", 11, 6)
 
@@ -563,7 +586,7 @@ p_pvo <- ggplot(cv_scored, aes(yhat, y)) +
   geom_point(alpha = 0.3, size = 0.8) +
   facet_wrap(~ model + frame_tag, ncol = 4) +
   labs(title = "Out-of-sample predicted against observed yes-share",
-       x = "predicted (%)", y = "observed (%)")
+       x = "Predicted (%)", y = "Observed (%)")
 
 p_resid <- cv_scored %>%
   mutate(label = paste0(model, " [", frame_tag, "]"),
@@ -572,8 +595,8 @@ p_resid <- cv_scored %>%
   geom_vline(xintercept = 0, linetype = "dashed") +
   geom_boxplot(outlier.alpha = 0.3, fill = "grey90", width = 0.6) +
   labs(title = "CV residual distributions",
-       subtitle = "residual = observed - predicted; a median above 0 means the model underestimates",
-       x = "residual (pp)", y = NULL)
+       subtitle = "Residual = Observed - Predicted - A median above 0 means the model underestimates",
+       x = "Residual (%)", y = NULL)
 
 save_plot(p_pvo, "10_pred_vs_obs.png", 12, 8)
 save_plot(p_resid, "10_residual_boxplots.png", 9, 6)
@@ -594,27 +617,28 @@ p_fc <- forecast %>%
   scale_colour_manual(values = c(`TRUE` = "#2c7fb8", `FALSE` = "#d95f02"),
                       na.value = "grey60") +
   labs(title = "Forecast per upcoming ballot and model",
-       subtitle = "thick band = 80%, thin band = 95%, both from each model's own CV residuals",
-       x = "predicted yes-share (%)", y = NULL, colour = "accepted")
+       subtitle = "Thick band = 80%, Thin band = 95%, both from each model's own CV residuals",
+       x = "Predicted yes-share (%)", y = NULL, colour = "Accepted")
 
 save_plot(p_fc, "10_forecast_intervals.png", 10,
           max(6, 1.6 * n_distinct(forecast$anr)))
 
 # 13. Model agreement ------------------------------------------------------
 
+rm(p_agree)
 p_agree <- forecast %>%
   mutate(label = paste0(model, " [", frame_tag, "]"),
-         vote  = paste0(anr, " ", str_trunc(titel, 30)),
-         verdict = case_when(accepted_hat ~ "accepted",
-                             !accepted_hat ~ "rejected",
+         vote  = paste0("(", anr, ")", " ", str_trunc(titel, 30)),
+         verdict = case_when(accepted_hat ~ "Accepted",
+                             !accepted_hat ~ "Rejected",
                              TRUE ~ "n/a")) %>%
   ggplot(aes(vote, label, fill = verdict)) +
   geom_tile(colour = "white") +
   geom_text(aes(label = number(yes_hat, 0.1)), size = 2.8) +
-  scale_fill_manual(values = c(accepted = "#a6cee3", rejected = "#fdbf6f",
+  scale_fill_manual(values = c(Accepted = "#a6cee3", Rejected = "#fdbf6f",
                                `n/a` = "grey90")) +
   labs(title = "Verdict agreement across models",
-       subtitle = "cell value = predicted yes-share", x = NULL, y = NULL, fill = NULL) +
+       subtitle = "Cell value = Predicted yes-share", x = NULL, y = NULL, fill = NULL) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1), panel.grid = element_blank())
 
 save_plot(p_agree, "10_model_agreement.png", 11, 6)
@@ -725,6 +749,10 @@ perm_imp <- pmap_dfr(list(perm_models$model, perm_models$frame_tag),
                        perm_importance(m, f)
                      })
 
+#### Warning! Long Compute Time! Wait out before continuing! #####
+message("Warning! Long Compute Time! Wait out before continuing!")
+# If it takes too long, change the number of permutations in 06_model_trees.R from 50 to 10 or so
+
 # One plot per model instead of a shared facet: the feature sets differ, so a common
 # y axis would print a long column of empty bars for every model
 perm_summary <- perm_imp %>%
@@ -751,6 +779,7 @@ perm_plots <- perm_summary %>%
               9, max(4, 0.28 * nrow(d)))
     p
   })
+
 # 17. Saving the metric table ----------------------------------------------
 
 write_csv(perm_imp %>%

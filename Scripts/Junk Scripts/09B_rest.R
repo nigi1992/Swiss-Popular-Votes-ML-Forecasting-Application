@@ -208,3 +208,59 @@ if (engine == "xgb") {
               predict = function(nd)
                 as.numeric(predict(fit, xgb.DMatrix(apply_design(prep, nd)$X)))))
 }
+
+
+if (engine == "gbm") {
+  tr <- prep$tr_x; tr$yes_share <- prep$y_tr
+  # gbm touches the RNG twice: bag.fraction < 1 makes each tree stochastic, and cv.folds
+  # draws its own fold split. I seed once and pin fold.id explicitly, same logic as the
+  # foldid I pin for glmnet, so the tree count that gbm.perf returns is reproducible
+  set.seed(seed)
+  fold_id <- sample(rep_len(seq_len(hp$gbm_cv_folds), nrow(tr)))
+  fit <- gbm(yes_share ~ ., data = tr,
+             distribution      = hp$gbm_distribution,
+             n.trees           = hp$gbm_num_trees,
+             interaction.depth = hp$gbm_interac_depth,
+             shrinkage         = hp$gbm_shrinkage,
+             bag.fraction      = hp$gbm_bag_frac,
+             n.minobsinnode    = hp$gbm_n_minobs,
+             cv.folds          = hp$gbm_cv_folds,
+             fold.id           = fold_id,
+             n.cores           = hp$gbm_n_cores,
+             verbose           = hp$gbm_verbose)
+  # resolving the stopping iteration once at fit time rather than inside predict(), so
+  # every call to this model uses the identical ensemble size. Falling back to the full
+  # ensemble if the CV curve is unusable (cv.folds < 2 or a degenerate error path)
+  best_iter <- suppressWarnings(
+    gbm.perf(fit,
+             method   = if (hp$gbm_cv_folds > 1) hp$gbm_perf_method else "OOB",
+             plot.it  = FALSE))
+  if (is.null(best_iter) || !is.finite(best_iter) || best_iter < 1)
+    best_iter <- hp$gbm_num_trees
+  return(list(engine = engine, fit = fit, prep = prep, best_iter = best_iter,
+              predict = function(nd)
+                as.numeric(predict(fit, newdata = apply_design(prep, nd)$df,
+                                   n.trees = best_iter))))
+}
+
+
+###
+if (engine == "xgb") {
+  # xgboost runs its own RNG and does not see set.seed(). Without seed in params the
+  # row and column subsampling is unseeded, which is the entire run-to-run movement
+  # in this engine. nthread = 1 removes the remaining scheduling nondeterminism
+  fit <- xgb.train(params = list(objective = "reg:squarederror",
+                                 eta = hp$xgb_eta,
+                                 max_depth = hp$xgb_max_depth,
+                                 subsample = hp$xgb_subsample,
+                                 colsample_bytree = hp$xgb_colsample,
+                                 min_child_weight = hp$xgb_min_child,
+                                 seed = seed,
+                                 nthread = 1),
+                   data = xgb.DMatrix(prep$X_tr, label = prep$y_tr),
+                   nrounds = hp$xgb_nrounds, verbose = 0) # verbose = FALSE, early_stopping_rounds = 50,  xgb_nrounds   = 2000, #300,
+  return(list(engine = engine, fit = fit, prep = prep, 
+              predict = function(nd)
+                as.numeric(predict(fit, xgb.DMatrix(apply_design(prep, nd)$X)))))
+}
+####
