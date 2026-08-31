@@ -199,7 +199,7 @@ plot_bucket_density <- function(bucket, ncol = 4) {
   disc <- d %>% filter(k <= 5)
   cont <- d %>% filter(k > 5)
   
-  ttl <- paste0(bucket_titles[[bucket]], ": distribution by realised popular majority")
+  ttl <- paste0(bucket_titles[[bucket]], ": Distribution by realised popular majority")
   
   if (nrow(cont) && !nrow(disc)) {
     p <- ggplot(cont, aes(value, fill = volksmehr)) +
@@ -270,8 +270,8 @@ bucket_scatter <- map(names(feature_buckets), function(b) {
     geom_smooth(method = "loess", se = FALSE, linewidth = 0.6, colour = "#2c7fb8") +
     geom_hline(yintercept = 50, linetype = "dashed", linewidth = 0.3) +
     facet_wrap(~ feature, scales = "free_x", ncol = 4) +
-    labs(title = paste0(bucket_titles[[b]], ": predictors against the yes-share"),
-         subtitle = "loess overlay: curvature is what the tree engines can use",
+    labs(title = paste0(bucket_titles[[b]], ": Predictors against the yes-share"),
+         subtitle = "Loess overlay: Curvature is what the tree engines can use",
          x = NULL, y = "yes-share (%)")
   rows <- ceiling(length(feature_buckets[[b]]) / 4)
   save_plot(p, paste0("Feature Scatter Plots/10_scatter_", b, ".png"), 12, max(4, 2.4 * rows))
@@ -298,7 +298,7 @@ p_cor <- as_tibble(C, rownames = "v1") %>%
   scale_fill_gradient2(low = "#d95f02", mid = "white", high = "#2c7fb8",
                        midpoint = 0, limits = c(-1, 1)) +
   labs(title = "Correlation matrix of predictors and target",
-       subtitle = "clustered by absolute correlation", x = NULL, y = NULL) +
+       subtitle = "Clustered by absolute correlation", x = NULL, y = NULL) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         panel.grid = element_blank())
 
@@ -772,9 +772,9 @@ perm_plots <- perm_summary %>%
       geom_col(fill = "#2c7fb8", width = 0.7) +
       geom_errorbarh(aes(xmin = delta - se, xmax = delta + se), height = 0.2) +
       labs(title = paste0("Permutation importance: ", lab),
-           subtitle = paste0("increase in out-of-sample MAE when the column is ",
+           subtitle = paste0("Increase in out-of-sample MAE when the column is ",
                              "shuffled in the test fold, averaged over folds"),
-           x = "delta MAE (pp)", y = NULL)
+           x = "Delta MAE (%)", y = NULL)
     save_plot(p, paste0("10_perm_importance_", d$model[1], "_", d$frame_tag[1], ".png"),
               9, max(4, 0.28 * nrow(d)))
     p
