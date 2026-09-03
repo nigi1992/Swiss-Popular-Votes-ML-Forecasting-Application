@@ -5,6 +5,7 @@ input_path  <- file.path(base_path, "Input Data")
 
 df <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 
+rm(df_test, sig_block)
 df_test <- df
 
 # Signature features per rechtsform: the mobilisation sign flips between
