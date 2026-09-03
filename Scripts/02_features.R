@@ -293,11 +293,11 @@ df <- df %>%
     # Rolling historical average yes percentage across all previous referendums
     roll_yes_grand      = grand_asof,
     
-    # Status-quo base rate; Acceptance rate (%) of same rechtsform in all votes strictly before this date
+    # Status-quo base rate; Running mean of volksja-proz of same rechtsform in all votes strictly before this date
     roll_yes_rechtsform = asof_stat(datum, y_hist, group = as.character(rechtsform)),
     roll_yes_rechtsform = if_else(is.na(roll_yes_rechtsform), roll_yes_grand, roll_yes_rechtsform),
     
-    # Status-quo base rate; Acceptance rate (Yes/No) of same rechtsform in all votes strictly before this date
+    # Status-quo base rate; Running mean of binary outcome (Yes/No) of same rechtsform in all votes strictly before this date
     roll_acc_rechtsform = asof_stat(datum, acc_hist, group = as.character(rechtsform)),
     roll_acc_rechtsform = if_else(is.na(roll_acc_rechtsform), 0.5, roll_acc_rechtsform),
     
@@ -320,7 +320,7 @@ df <- df %>%
                                   3650, na.rm = FALSE), # capped at 10 years
     time_since_domain_vote = if_else(is.na(time_since_domain_vote),
                                      3650, time_since_domain_vote)#,
-    # author_prior_failures = Sponsor track record: Count of failed initiatives by same urheber bloc before date -> see Section 8
+    # author_prior_fail_rate = Sponsor track record: Count of failed initiatives by same urheber bloc before date -> see Section 8
     # party_weighted_support =	Σ w-party x historical party tendency in domain (past data only) -> not same as Section 6c!	
     # -> Expected support from party-strength x past positions (not proposal specific - domain average) 
   )
