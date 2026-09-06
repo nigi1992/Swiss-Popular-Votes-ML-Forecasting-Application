@@ -113,6 +113,106 @@ p_target_form <- ggplot(frame, aes(yes_share, fct_rev(rechtsform), fill = rechts
   
 save_plot(p_target / p_target_form, "10_target_distribution_col.png", 9, 8)
 
+## Accetance rate by legal form -----------------------------------------
+
+table(rechtsform = df$rechtsform, annahme = df$annahme)
+
+# Dropping the non-substantive outcome codes before tabulating
+d <- subset(df, !annahme %in% c(8, 9))
+tab <- table(rechtsform = d$rechtsform, annahme = droplevels(factor(d$annahme)))
+
+addmargins(tab)                                    # counts with row/column totals
+round(prop.table(tab, margin = 1) * 100, 1)        # row %: outcome split within each Rechtsform
+round(prop.table(tab, margin = 2) * 100, 1)        # column %: Rechtsform split within each outcome
+round(prop.table(tab) * 100, 1)                    # cell % of all votes
+
+library(ggplot2)
+library(patchwork)
+
+rm(plot_dat, fills, theme_abb, p_abs, p_pct)
+
+# Collapsing df to counts and within-Rechtsform shares
+plot_dat <- df %>%
+  filter(rechtsform %in% 1:4, !is.na(annahme)) %>%          # Dropping Stichfragen (r=5) and missing outcomes
+  mutate(
+    rechtsform = factor(
+      rechtsform,
+      levels = 1:4,
+      labels = c("Mandatory\nReferendums",
+                 "Optional\nReferendums",
+                 "Popular Initiatives\n(with direct\nCounter-\nProposals)",
+                 "Counter-\nProposals")
+    ),
+    outcome = factor(annahme, levels = c(1, 0), labels = c("Accepted", "Rejected"))
+  ) %>%
+  count(rechtsform, outcome, name = "n") %>%
+  group_by(rechtsform) %>%
+  mutate(share = 100 * n / sum(n)) %>%
+  ungroup()
+
+# Black and White
+#fills <- c(Accepted = "#4D4D4D", Rejected = "#B3B3B3")
+
+# Muted teal / sand pair: colourblind-safe, prints legibly in greyscale
+fills     <- c(Accepted = "#20586B", Rejected = "#D7BE8B")
+label_col <- c(Accepted = "#FFFFFF", Rejected = "#3D3226")
+# Alternative for less contrast: c(Accepted = "#3B6E5F", Rejected = "#C9CBB6")
+
+# Muted green / clay red: desaturated so the bars read as data, not traffic lights
+fills     <- c(Accepted = "#4A7C59", Rejected = "#B4553F")
+label_col <- c(Accepted = "#FFFFFF", Rejected = "#FFFFFF")
+
+# Softer alternative if the above is too saturated for print:
+fills <- c(Accepted = "#7FA88B", Rejected = "#C98376")
+label_col <- c(Accepted = "#FFFFFF", Rejected = "#FFFFFF")
+#label_col <- c(Accepted = "#1F3326", Rejected = "#3D1F18")
+
+# Shared theme so both panels line up
+theme_abb <- theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(colour = "grey88", linewidth = 0.3),
+    panel.grid.minor   = element_blank(),
+    axis.title         = element_blank(),
+    axis.ticks         = element_blank(),
+    axis.text          = element_text(colour = "grey25"),
+    legend.position    = "top",
+    legend.title       = element_blank(),
+    legend.key.size    = unit(0.9, "lines"),
+    plot.title         = element_text(face = "bold", size = 13)
+  )
+
+# Upper panel: Absolute counts
+p_abs <- ggplot(plot_dat, aes(rechtsform, n, fill = outcome)) +
+  geom_col(position = position_stack(reverse = TRUE), width = 0.55) +
+  geom_text(aes(label = n, colour = outcome),
+            position = position_stack(vjust = 0.5, reverse = TRUE),
+            size = 4, show.legend = FALSE) +
+  scale_fill_manual(values = fills) +
+  scale_colour_manual(values = label_col) +
+  #scale_colour_manual(values = c(Accepted = "white", Rejected = "black")) +
+  scale_y_continuous(limits = c(0, 200), breaks = seq(0, 200, 50), expand = c(0, 0)) +
+  theme_abb
+
+# Lower panel: Shares within Rechtsform
+p_pct <- ggplot(plot_dat, aes(rechtsform, share, fill = outcome)) +
+  geom_col(position = position_stack(reverse = TRUE), width = 0.55) +
+  geom_text(aes(label = sprintf("%.1f", share), colour = outcome),
+            position = position_stack(vjust = 0.5, reverse = TRUE),
+            size = 4, show.legend = FALSE) +
+  scale_fill_manual(values = fills, labels = c("Accepted in %", "Rejected in %")) +
+  scale_colour_manual(values = label_col) +
+  #scale_colour_manual(values = c(Accepted = "white", Rejected = "black")) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20), expand = c(0, 0)) +
+  theme_abb
+
+p_abs / p_pct +
+  plot_annotation(
+    title = "Success Rate of Federal Referendums\nby legal form (1971-2026, absolutely, in %)")
+
+save_plot(p_abs / p_pct + plot_annotation(title = "Success Rate of Federal Referendums\nby legal form (1971-2026, absolutely, in %)"),
+          "10_target_outcome_by_rechtsform.png", 9, 8)
+
 ## Rechtsform = 4 ------------------------------------------------------
 
 table(frame$rechtsform, frame$volksmehr)
@@ -129,6 +229,27 @@ p_target_form4 <- frame %>%
 
 p_target_form4
 save_plot(p_target_form4, "10_target_distribution_form4.png", 8, 5)
+
+
+## Eligble voters over time ------------------------------------------------
+
+library(ggplot2)
+
+# One value per year — the base only grows within a year, so max is the year-end figure
+elig <- df %>%
+  filter(!is.na(berecht), berecht > 0) %>%
+  group_by(year_num) %>%
+  summarise(berecht = max(berecht), .groups = "drop") %>%
+  arrange(year_num)
+
+ggplot(elig, aes(year_num, berecht / 1e6)) +
+  geom_line(colour = "#4D4D4D", linewidth = 0.7) +
+  scale_x_continuous(breaks = seq(1970, 2030, 10)) +
+  scale_y_continuous(breaks = scales::pretty_breaks(6)) +
+  labs(x = NULL, y = "Eligible voters (in millions)") +
+  theme_minimal(base_size = 12) +
+  theme(panel.grid.minor = element_blank())
+save_plot(last_plot(), "10_eligible_voters_over_time.png", 8, 5)
 
 # 3. Feature distributions by outcome -------------------------------------
 
