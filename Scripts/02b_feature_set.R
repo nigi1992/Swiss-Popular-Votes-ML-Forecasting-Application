@@ -451,6 +451,7 @@ feature_sets$m2_base  <- c("roll_yes_rechtsform", "roll_yes_domain")
 feature_sets$m2_base1 <- c(feature_sets$m2_base, "parl_support_signed")
 feature_sets$m2_base2 <- c(feature_sets$m2_base, "parl_support_signed",   feature_sets$ext_urheber_lm)
 feature_sets$m2_base3 <- c(feature_sets$m2_base,  "parl_support_signed",  "author_prior_fail_rate", feature_sets$ext_urheber_lm)
+#feature_sets$m2_base3b <- c(feature_sets$m2_base,  "parl_support_signed",  "author_prior_fail_rate") ???
 
 feature_sets$m2_base4 <- c(feature_sets$m2_base, "nr_yes_share")
 feature_sets$m2_base5 <- c(feature_sets$m2_base, "nr_yes_share",          feature_sets$ext_urheber_lm)

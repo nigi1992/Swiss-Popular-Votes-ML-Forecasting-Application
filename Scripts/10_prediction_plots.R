@@ -242,7 +242,20 @@ elig <- df %>%
   summarise(berecht = max(berecht), .groups = "drop") %>%
   arrange(year_num)
 
+
+# The two franchise extensions that break the series
+breaks_franchise <- tibble::tibble(
+  year_num = c(1971, 1991),
+  label    = c("Women's suffrage", "Voting age lowered to 18 years")
+)
+
 ggplot(elig, aes(year_num, berecht / 1e6)) +
+  geom_vline(data = breaks_franchise, aes(xintercept = year_num),
+             linetype = "dashed", colour = "grey45", linewidth = 0.4) +
+  geom_text(data = breaks_franchise,
+            aes(x = year_num, y = max(elig$berecht) / 1e6, label = label),
+            hjust = -0.05, vjust = -0.5,#1, angle = 90,
+            size = 3.2, colour = "grey35", inherit.aes = FALSE) +
   geom_line(colour = "#4D4D4D", linewidth = 0.7) +
   scale_x_continuous(breaks = seq(1970, 2030, 10)) +
   scale_y_continuous(breaks = scales::pretty_breaks(6)) +
