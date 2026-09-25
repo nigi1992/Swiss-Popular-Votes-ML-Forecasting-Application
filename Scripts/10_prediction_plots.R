@@ -231,12 +231,12 @@ p_target_form4
 save_plot(p_target_form4, "10_target_distribution_form4.png", 8, 5)
 
 
-## Eligble voters over time ------------------------------------------------
+## Eligable voters over time ------------------------------------------------
 
 library(ggplot2)
 
 # One value per year — the base only grows within a year, so max is the year-end figure
-elig <- df %>%
+elig_voters <- df %>%
   filter(!is.na(berecht), berecht > 0) %>%
   group_by(year_num) %>%
   summarise(berecht = max(berecht), .groups = "drop") %>%
@@ -249,7 +249,7 @@ breaks_franchise <- tibble::tibble(
   label    = c("Women's suffrage", "Voting age lowered to 18 years")
 )
 
-ggplot(elig, aes(year_num, berecht / 1e6)) +
+ggplot(elig_voters, aes(year_num, berecht / 1e6)) +
   geom_vline(data = breaks_franchise, aes(xintercept = year_num),
              linetype = "dashed", colour = "grey45", linewidth = 0.4) +
   geom_text(data = breaks_franchise,

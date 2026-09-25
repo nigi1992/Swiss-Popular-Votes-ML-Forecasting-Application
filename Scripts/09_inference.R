@@ -7,7 +7,7 @@
 #   3. Route B Ständemehr for double-majority proposals via as-of canton deviations from 08
 #   4. Combined verdict per proposal
 
-# 1. Data import -----------------------------------------------------
+# 1. Data import ------------------------------------------------------
 
 library(tidyverse)
 
@@ -76,10 +76,6 @@ stopifnot(resid_frame %in% c("short", "long"))
 r <- champion_spec[[paste0("cv_resid_", resid_frame)]]
 stopifnot(length(r) > 0, !all(is.na(r)))
 
-median(r) # Median is about 0.9 on both frames: yes-share - yhat > 0 
-# -> Systematic Bias: Model consistently underestimates yes-share by about 0.9 on both frames,
-# despite the peculiarities of a specific vote
-
 #r <- champion_spec$cv_resid_long 
 #r <- champion_spec$cv_resid_short # as robustness-check
 
@@ -106,7 +102,63 @@ pred <- upcoming %>%
               # by treating every historical residual as a plausible error for this new prediction)
               # Then it computes the fraction of that shifted distribution that clears 50%
 
-# 5. Route B: Ständemehr for the double-majority proposals -------------
+# 5. Forecast accuracy: MAE + Bias diagnostics --------------------------
+
+# Computing MAE and bias tests on one residual vector
+# Bias CI from a nonparametric bootstrap of the mean, t / Wilcoxon / sign test as cross-checks
+resid_metrics <- function(r, B = 4000, seed = 42) {
+  r <- r[!is.na(r)]
+  set.seed(seed)
+  boot_mean <- replicate(B, mean(sample(r, replace = TRUE)))
+  tibble(
+    n         = length(r),
+    mae       = mean(abs(r)),                 # average absolute miss in pp
+    rmse      = sqrt(mean(r^2)),              # penalizing large misses harder
+    medae     = median(abs(r)),               # robust to the fat tails
+    bias_mean = mean(r),                      # > 0: under-estimation, < 0: over-estimation
+    bias_med  = median(r),
+    bias_lo95 = unname(quantile(boot_mean, .025)),
+    bias_hi95 = unname(quantile(boot_mean, .975)),
+    share_pos = mean(r > 0),                  # share of votes where the model under-predicted
+    p_t       = t.test(r, mu = 0)$p.value,
+    p_wilcox  = wilcox.test(r, mu = 0, exact = FALSE)$p.value,
+    p_sign    = binom.test(sum(r > 0), sum(r != 0))$p.value
+  )
+}
+
+# Evaluating both CV frames, the interval frame is flagged
+acc <- bind_rows(
+  short = resid_metrics(champion_spec$cv_resid_short, seed = champion_spec$seed),
+  long  = resid_metrics(champion_spec$cv_resid_long,  seed = champion_spec$seed),
+  .id = "frame"
+) %>%
+  mutate(
+    interval_frame = frame == resid_frame,
+    direction = case_when(
+      bias_lo95 > 0 ~ "systematic under-estimation",
+      bias_hi95 < 0 ~ "systematic over-estimation",
+      TRUE          ~ "no systematic bias"
+    )
+  )
+print(acc, width = Inf)
+
+# In-sample MAE of the final fit as a contrast: gap to CV MAE = optimism of the in-sample fit
+mae_insample <- mean(abs(residuals(g$fit)))
+mae_sel      <- acc$mae[acc$frame == resid_frame]
+c(mae_cv = mae_sel, mae_insample = mae_insample, optimism = mae_sel - mae_insample)
+
+# Checking whether the bias drifts over time (residual vector assumed in chronological fold order)
+bias_drift <- tibble(r = r[!is.na(r)]) %>%
+  mutate(half = if_else(row_number() <= n() / 2, "early", "late")) %>%
+  group_by(half) %>%
+  summarise(n = n(), mae = mean(abs(r)), bias = mean(r), .groups = "drop")
+bias_drift
+
+# Tail asymmetry: > 0 means large under-estimations are more extreme than large over-estimations
+tail_asym <- unname(q[["90%"]] + q[["10%"]])
+tail_asym
+
+# 6. Route B: Ständemehr for the double-majority proposals -------------
 
 kt_codes <- c("zh","be","lu","ur","sz","ow","nw","gl","zg","fr","so","bs","bl",
               "sh","ar","ai","sg","gr","ag","tg","ti","vd","vs","ne","ge","ju")
@@ -145,7 +197,31 @@ staende <- pred %>%
             staende_hat = std_yes_hat > std_total / 2, # True if weighted yes-cantons exceed half of total Stände weight
             .groups = "drop")
 
-# 6. Combined verdict ----------------------------------------------------
+## Canton-level accuracy -----------------------------------------------
+
+# Error of the as-of canton deviation from 08, conditional on the true national yes-share:
+# e = dev - devhat = kt_yes - (yes_share + devhat)
+kt_err <- kt_long %>%
+  filter(!is.na(dev), !is.na(devhat)) %>%
+  mutate(e = dev - devhat)
+
+acc_kt <- kt_err %>%
+  summarise(n = n(), mae = mean(abs(e)), bias = mean(e), bias_med = median(e))
+acc_kt
+
+# Per-canton bias with a Bonferroni-adjusted threshold across the 26 cantons
+bias_by_kt <- kt_err %>%
+  group_by(kt) %>%
+  summarise(n = n(), mae = mean(abs(e)), bias = mean(e),
+            t = bias / (sd(e) / sqrt(n)), .groups = "drop") %>%
+  mutate(p_bonf = pmin(1, 2 * pt(-abs(t), df = n - 1) * n_distinct(kt)),
+         direction = case_when(p_bonf < .05 & bias > 0 ~ "under-estimated",
+                               p_bonf < .05 & bias < 0 ~ "over-estimated",
+                               TRUE                    ~ "no systematic bias")) %>%
+  arrange(bias)
+print(bias_by_kt, n = Inf)
+
+# 7. Combined verdict ----------------------------------------------------
 
 forecast <- pred %>%
   left_join(staende, by = "anr") %>%
@@ -161,10 +237,11 @@ print(forecast %>%
                std_yes_hat, staende_hat, accepted_hat), 
       n = Inf) # p_volksmehr and std_yes_hat gives NA for rechtsform = 2
 
-# 7. Saving --------------------------------------------------------------
+# 8. Saving --------------------------------------------------------------
 
 write_csv(forecast, file.path(output_path, "forecast_upcoming.csv"))
-
+write_csv(acc,        file.path(output_path, "forecast_accuracy_cv.csv"))
+write_csv(bias_by_kt, file.path(output_path, "forecast_accuracy_canton.csv"))
 
 # 8. Final Forecast (Public Version) -------------------------------------
 
@@ -203,12 +280,13 @@ forecast_public <- forecast %>%
     Proposal_accepted = case_when(
       accepted_hat == TRUE  ~ "Yes",
       accepted_hat == FALSE ~ "No",
-      TRUE                  ~ NA_character_
+      TRUE                  ~ NA_character_),
+    MAE = paste0("\u00b1", round(mae_sel, 2)#, " pp"
     ) 
   ) %>%
   select(Id, Date, Title, Rechtsform, Share_Yes_Votes, Pop_Majority,
          Prob_Pop_Majority, Total_Stände, Stände_Yes_Votes, Ständemehr,
-         Needs_Ständemehr, Proposal_accepted)
+         Needs_Ständemehr, Proposal_accepted, MAE)
 
 write_csv(forecast_public, file.path(output_path, "forecast_upcoming_public.csv"))
 
@@ -220,7 +298,7 @@ forecast_public_ext <- forecast_public %>%
   mutate(anr = Id) %>%
   left_join(upcoming %>% select(anr, urheber, gov_parl_recommend_n, nrja, nrnein, srja, srnein), by = "anr") %>%
   select(anr, Date, Title, Rechtsform, urheber, gov_parl_recommend_n, nrja, nrnein, srja, srnein, Share_Yes_Votes, Pop_Majority,
-         Prob_Pop_Majority, Total_Stände, Stände_Yes_Votes, Ständemehr, Needs_Ständemehr, Proposal_accepted) %>%
+         Prob_Pop_Majority, Total_Stände, Stände_Yes_Votes, Ständemehr, Needs_Ständemehr, Proposal_accepted, MAE) %>%
   mutate(
     Id = anr,
     Authors = urheber,

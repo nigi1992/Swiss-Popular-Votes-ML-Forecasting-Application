@@ -156,8 +156,8 @@ if (is.null(feature_sets$m1_4b)) {
   message("m1_4b not in registry, using in-script definition") }
 
 engines    <- c("lm", "ridge", "lasso", "tree", "rf", "gbm", if (has_xgb) "xgb", "knn")
-sets_long  <- c("m1_1e", "m1_2a", "m1_2e", "m1_2f", "m1_2_lm", "m1_2", "m1_4a") 
-sets_short <- c("m1_1e", "m1_2a", "m1_2e", "m1_2f", "m1_2_lm", "m1_2", "m1_4b", "m2_base2", "m2_base3") #, "m2_frak_lean3_urh", "m2_frak",
+sets_long  <- c("m1_1e", "m1_2a", "m1_2e", "m1_2f", "m1_2g", "m1_2_lm", "m1_2", "m1_4a") 
+sets_short <- c("m1_1e", "m1_2a", "m1_2e", "m1_2f", "m1_2g", "m1_2_lm", "m1_2", "m1_4b", "m2_base2", "m2_base3") #, "m2_frak_lean3_urh", "m2_frak",
 
 # checking which columns in the failing feature set carry NAs
 na_counts <- sapply(frame[, feature_sets$m1_4a], function(x) sum(is.na(x)))
