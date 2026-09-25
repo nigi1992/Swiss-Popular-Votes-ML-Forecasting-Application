@@ -126,6 +126,7 @@ route_b <- map_dfr(seq_along(folds_long), function(b) {
     )
 })
 
+# pred_true distribution count
 table(route_b$pred_true)
 
 # pred_true distribution in %

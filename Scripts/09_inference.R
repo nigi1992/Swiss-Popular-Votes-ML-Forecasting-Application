@@ -102,6 +102,43 @@ pred <- upcoming %>%
               # by treating every historical residual as a plausible error for this new prediction)
               # Then it computes the fraction of that shifted distribution that clears 50%
 
+## Rechtsform-conditional residual pool (Mondrian-style) -----------------
+
+# Re-deriving the long-frame test rows in the exact order 07 stored cv_resid_long
+folds_long <- make_time_folds(frame$datum, initial_frac = 0.5, k = 6)
+rf_test    <- as.character(frame$rechtsform[unlist(map(folds_long, "test"))])
+stopifnot(length(rf_test) == length(champion_spec$cv_resid_long))
+
+# One residual pool per rechtsform, falling back to the pooled vector when a stratum is thin
+n_min    <- 40
+r_pooled <- champion_spec$cv_resid_long
+r_pools  <- split(r_pooled, rf_test)
+pool_for <- function(rf) {
+  p <- r_pools[[rf]]
+  if (is.null(p) || sum(!is.na(p)) < n_min) r_pooled else p
+}
+
+pred <- pred %>%
+  mutate(r_pool         = map(as.character(rechtsform), pool_for),
+         n_pool         = map_int(r_pool, ~ sum(!is.na(.x))),
+         lo80_rf        = yes_hat + map_dbl(r_pool, ~ quantile(.x, .10, na.rm = TRUE)),
+         hi80_rf        = yes_hat + map_dbl(r_pool, ~ quantile(.x, .90, na.rm = TRUE)),
+         p_volksmehr_rf = map2_dbl(yes_hat, r_pool, ~ mean(.x + .y >= 50, na.rm = TRUE))) %>%
+  select(-r_pool)
+
+
+# Guard against 0-filled signature placeholders
+# spare_days_frac etc. are 0-filled in 02_features.R; for pending initiatives the raw
+# Swissvotes timing fields are still empty, so the 0 is a placeholder, not an observation
+#sig_feats <- c("surplus_sig_ratio", "sig_speed_pc", "invalid_sig_share", "spare_days_frac")
+#if (any(champion_spec$feats %in% sig_feats) && any(upcoming$sig_data_missing == 1))
+  #stop("champion uses signature features that are placeholders for: ",
+       #paste(upcoming$anr[upcoming$sig_data_missing == 1], collapse = " "))
+
+
+print(pred %>% select(anr, yes_hat, p_volksmehr,
+                      n_pool, lo80_rf, hi80_rf, p_volksmehr_rf), n = Inf, width = Inf)
+
 # 5. Forecast accuracy: MAE + Bias diagnostics --------------------------
 
 # Computing MAE and bias tests on one residual vector
@@ -234,16 +271,17 @@ forecast <- pred %>%
 
 print(forecast %>%
         select(anr, datum, rechtsform, yes_hat, lo80, hi80, p_volksmehr,
-               std_yes_hat, staende_hat, accepted_hat), 
-      n = Inf) # p_volksmehr and std_yes_hat gives NA for rechtsform = 2
+               std_yes_hat, staende_hat, accepted_hat,
+               n_pool, lo80_rf, hi80_rf, p_volksmehr_rf), 
+      n = Inf, width = Inf) # p_volksmehr and std_yes_hat gives NA for rechtsform = 2
 
 # 8. Saving --------------------------------------------------------------
 
-write_csv(forecast, file.path(output_path, "forecast_upcoming.csv"))
+write_csv(forecast,   file.path(output_path, "forecast_upcoming.csv"))
 write_csv(acc,        file.path(output_path, "forecast_accuracy_cv.csv"))
 write_csv(bias_by_kt, file.path(output_path, "forecast_accuracy_canton.csv"))
 
-# 8. Final Forecast (Public Version) -------------------------------------
+# 9. Final Forecast (Public Version) -------------------------------------
 
 rm(forecast_public)
 forecast_public <- forecast %>%
@@ -291,7 +329,7 @@ forecast_public <- forecast %>%
 write_csv(forecast_public, file.path(output_path, "forecast_upcoming_public.csv"))
 
 
-## Final Forecast Public Extended Version ------------------------------
+## Extended Version Final Forecast Public ------------------------------
 
 rm(forecast_public_ext)
 forecast_public_ext <- forecast_public %>%

@@ -269,7 +269,7 @@ feature_sets <- list(
     "parl_support_signed",
     "roll_yes_rechtsform", 
     "roll_yes_domain"
-  ),
+  ), # Duplicate of m2_base1
   
   m1_3 = character(0),   # placeholder: m1_2 + external features for later
   
@@ -448,7 +448,7 @@ feature_sets$champ_m1_1eC <- c(feature_sets$m1_1e, "bourgeois_contra", "elite_cu
 
 # M2_base swaps
 feature_sets$m2_base  <- c("roll_yes_rechtsform", "roll_yes_domain")
-feature_sets$m2_base1 <- c(feature_sets$m2_base, "parl_support_signed")
+feature_sets$m2_base1 <- c(feature_sets$m2_base, "parl_support_signed") # Duplicate of m1_2g
 feature_sets$m2_base2 <- c(feature_sets$m2_base, "parl_support_signed",   feature_sets$ext_urheber_lm)
 feature_sets$m2_base3 <- c(feature_sets$m2_base,  "parl_support_signed",  "author_prior_fail_rate", feature_sets$ext_urheber_lm)
 feature_sets$m2_base3b <- c(feature_sets$m1_2e, feature_sets$ext_urheber_lm)

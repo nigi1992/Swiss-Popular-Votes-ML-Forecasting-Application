@@ -43,7 +43,7 @@ folds_short <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4)
 
 # 3. Assembling the finalist prediction matrix -------------------------
 
-# Collecting per-row predictions: engine models from 06 + lm finalists are run again,
+# Collecting per-row predictions: Engine models from 06 + lm finalists are run again,
 # so all candidates are compared on byte-identical test rows
 
 collect_preds <- function(results, frame_use, folds_use) {
@@ -84,15 +84,17 @@ build_matrix <- function(frame_use, folds_use, tree_results, frame_tag) {
   list(y = frame_use$yes_share[test_idx], P = P, tag = frame_tag)
 }
 
+# Matrixes of pooled test rows for each frame, with per-model predictions
 mx_long  <- build_matrix(frame,      folds_long,  preds_trees$results_long,  "long")
 mx_short <- build_matrix(frame_frak, folds_short, preds_trees$results_short, "short")
 
 # 4. Paired bootstrap against the incumbent ----------------------------
 
 # Resampling test rows with replacement by recomputing the MAE difference of
-# candidate minus incumbent on every draw -> P(worse) = share of draws > 0
-incumbent <- "lm_m1_1e"   # 06 champion on both frames, also the most parsimonious finalist
-B <- 4000
+# model candidate minus incumbent on every draw -> P(worse) = share of draws > 0
+
+incumbent <- "lm_m1_1e"   # Initial mae champion on both frames, also the most parsimonious finalist
+B <- 4000 # No. of bootstrap draws for paired bootstrap, 4000 is enough to get stable p-value
 
 boot_table <- function(mx) {
   y  <- mx$y
@@ -114,7 +116,6 @@ boot_table <- function(mx) {
 
 sel <- bind_rows(boot_table(mx_long), boot_table(mx_short)) %>%
   arrange(frame, mae)
-
 print(sel, n = Inf)
 
 # 5. Decision rule -----------------------------------------------------
@@ -127,16 +128,18 @@ engine_tier <- c(lm = 1, ridge = 2, lasso = 2, tree = 3, knn = 3,
 score_complexity <- function(model) {
   eng <- sub("_.*$", "", model)
   set <- sub("^[a-z]+_", "", model)
-  k   <- length(feature_sets[[set]]) %||% 99L
-  coalesce(engine_tier[eng], 4L) * 100L + k
-}
+  k   <- length(feature_sets[[set]]) %||% 99L # k = Number of Features, 99 = fallback for missing feature set
+  # Note: Never falls back to 99, because length(NULL) returns 0, not NULL -> An unregistered set therefore scores as the simplest model!
+  coalesce(engine_tier[eng], 4L) * 100L + k # Complexity score: Engine tier dominates, then number of features
+} # By default, m1_4a and m1_4b have different model names across frames, so the semi_join by model always drops them
 
-alpha <- 0.05
+alpha <- 0.05 # Chosen significance level for paired bootstrap test of MAE difference against incumbent
 
-elig <- sel %>%
+elig <- sel %>% # Eligibility per frame
   group_by(frame) %>%
   mutate(is_best = mae == min(mae),
          ok      = is_best | p_worse >= alpha) %>%
+  # p_worse is the share of 4000 bootstrap draws in which the models MAE exceeds incumbent MAE
   ungroup()
 
 # A single-frame selection would throw away the only out-of-regime robustness check there is
@@ -145,23 +148,44 @@ sets_both <- intersect(
   sub("^[a-z]+_", "", sel$model[sel$frame == "short"])
 )
 
-# Champion = Model chosen according to the following preference:
-# 1) Model with the smallest MAE on both frames
-# 2) Model that is the most parsimonious (low complexity score)
-# "long" frame is primary, but only because its MAE is estimated on 238 pooled test rows versus 131
-# -> Tie-break is less noisy after complexity
-champion_name <- elig %>%
-  filter(frame == "long", ok) %>% # "short" -> Keeping long
+
+# Champion model chosen according to the following preferences:
+# 1. Eligibility per frame: (ok = is_best | p_worse >= 0.05), where p_worse = share of 4000 bootstrap draws in which models mae exceeds incumbent's mae
+# 2. Cross-frame corroboration: model must be 'ok' on long frame, its feature set must exist in both frames, and the exact model name must also be 'ok' on short frame
+# 3. Ranking: complexity score engine_tier * 100 + No. of predictors, ascending.
+# 4. Long-frame MAE breaks ties
+
+champion_name <- elig %>% # 1) Eligibility per frame: Model must be 'ok' on both frames
+  # 2) Cross-Frame corroboration: Model must be 'ok' on long frame 
+  filter(frame == "long", ok) %>% # "short" (keeping long) 
   mutate(set = sub("^[a-z]+_", "", model)) %>%
   filter(set %in% sets_both) %>%   # Dropping time frame-only specs that cannot be corroborated on other frame
-  semi_join(filter(elig, frame == "short", ok), by = "model") %>% # "long"
+  semi_join(filter(elig, frame == "short", ok), by = "model") %>% # "long" -> Model must also be 'ok' on short frame  
+  # 3) Ranking: Complexity score (engine-tier * 100 + No. of predictors), ascending 
   mutate(cx = map_dbl(model, score_complexity)) %>%
-  arrange(cx, mae) %>%
+  arrange(cx, mae) %>% # 4) MAE breaks ties
   slice(1) %>%
   pull(model)
 
 stopifnot(length(champion_name) == 1)
 message("champion: ", champion_name)
+
+## Note: Why m1_2g wins ------------------------------------------------
+
+# m1_2g wins on complexity score alone. It has 3 predictors, just like m1_e1. MAE played no role.
+# But m1_e1 is excluded automatically: Bootstrap difference against itself is 0 on every draw, so p_worse = 0 < 0.05, and it is never frame-best. 
+# m1_2g accuracy is slightly worse on long frame and it's not significantly better on MAE than incumbent. 
+
+# The faulty eligibility filter does not implement the stated rule!!!
+# The rule string says "not sig. worse than frame-best". The code instead tests against the incumbent, and in the inverted direction:
+
+# -> p_worse >= alpha keeps every model with at least a 5% chance of being worse than the incumbent. lm_m1_2 (p_worse = 1.000, MAE 11.10) passes.
+# -> The filter excludes only models that are sig. better than incumbent. On short frame that removes lm_m1_2a, lasso_m1_2e, lasso_m1_2a and lasso_m2_base3. It also removes incumbent itself.
+
+# Net effect: Filter never removes a bad model, so the complexity score is the deFacto selector
+
+# Lesson: Bad models, should be excluded beforehand and not even make it into 'preds_trees.rds' in 06. 
+# The eligibility filter is not a substitute for a proper pre-screening of the candidate pool. -> 07b has the better approach (switch tags)
 
 # 6. Champion spec for 08/09 -------------------------------------------
 
@@ -182,8 +206,10 @@ resid_of <- function(mx) {
 
 # Recording rules for frame selection 
 selection <- list(              
-  rule        = "Not sig. worse than frame-best on BOTH frames; 
-                  sets present in both; tie-break complexity then MAE",
+  rule        = "1. Eligibility per frame: (ok = min(mae) OR p_worse >= 0.05)
+                 2. Cross-frame corroboration
+                 3. Ranking: complexity score (ascending)
+                 4. Long-frame MAE breaks ties",
   frames      = c("long", "short"),
   alpha       = 0.05,
   test        = "row-level paired bootstrap on MAE, B = 4000",
@@ -203,7 +229,7 @@ champion_spec <- list(
   selected_on    = selection, # pick_frame,
   #selected_date  = Sys.Date(),
   selected_date  = as.Date("2026-08-24"),
-  # provenance, explicitly not the decision date
+  # Provenance, explicitly not the decision date
   run_timestamp  = format(Sys.time(), tz = "UTC", usetz = TRUE),
   data_vintage   = max(frame$datum),
   n_frame_long   = nrow(frame),
