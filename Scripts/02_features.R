@@ -800,7 +800,8 @@ rm(urh)
 urh <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles_refined_r4.csv"),
                 show_col_types = FALSE) %>%
   mutate(anr = as.character(anr)) %>%   # file reads anr as numeric
-  select(anr, urheber_r4, pole_refined_r4, pole_refined_origin, urheber_is_coalition = is_coalition, n_sponsors, established_actor, actor_label_r4, actor_code_r4)
+  select(anr, urheber_r4, pole_refined_r4, pole_refined_origin, urheber_is_coalition = is_coalition, 
+         n_sponsors, established_actor, actor_label_r4, actor_code_r4)
 
 ## Join audit, both directions ---------------------------------------
 
