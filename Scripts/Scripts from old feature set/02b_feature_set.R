@@ -13,14 +13,13 @@ df <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 
 # table 0: gov recommendations, policy area
 inst_features  <- c("changes_constitution", "double_majority_required",
-                    "gov_recommend", "gov_missing", "parl_recommend",
+                    "gov_recommend", "parl_recommend", "sr_recommend",
                     "nr_recommend", "main_domain")
 
 # table A: elite cues, coalition theory, chamber shares, inter-chamber disagreement, consensus, participation
 elite_features <- c("nr_yes_share", "sr_yes_share", "nr_support", "sr_support",
                     "parl_support_signed", "parl_consensus", "interchamber_disagree",
-                    "elite_consensus", "brpos_signed", "gov_parl_align",
-                    "parl_vote_missing", "parl_participation")
+                    "elite_consensus", "brpos_signed", "gov_parl_align", "parl_participation")
 
 # table B: Signature/mobilization signals: surplus signatures, signature speed, invalid signature share, spare days
 sig_features   <- c("surplus_sig_ratio", "sig_speed_pc", "invalid_sig_share", "spare_days_frac")
@@ -34,11 +33,11 @@ cal_features   <- c("era", "season", "months_to_election", "months_since_electio
 
 # table E: faction bloc shares, coalition theory, elite cues, weighted support (short time frame only!)
 frak_features  <- c("frak_left_sup", "frak_center_sup", "frak_fdp_sup", "frak_svp_sup",
-                    "frak_breadth", "frak_lr_signed", "frak_enth_share", "elite_cue_lr", #"elite_cue_lr0", 
+                    "frak_breadth", "frak_lr_signed", "frak_enth_share", "elite_cue_lr", "elite_cue_lr0", 
                     "support_coalition", "weighted_parl_support")
 
 frak_features5 <- c("frak_sp_sup", "frak_gruene_sup", "frak_center_sup", "frak_fdp_sup", "frak_svp_sup",
-                    "frak_breadth5", "frak_lr_signed", "frak_enth_share", "elite_cue_lr", #"elite_cue_lr0", 
+                    "frak_breadth5", "frak_lr_signed", "frak_enth_share", "elite_cue_lr", "elite_cue_lr0", 
                     "weighted_parl_support", "support_coalition")
 
 coal_features  <- c("coalition_kriesi", "n_gov_defectors", "svp_defects", "sp_defects",
@@ -126,7 +125,6 @@ feature_sets <- list(
   
   m1_1 = c("rechtsform",  # Original proposition for base model
            "parl_recommend", 
-           "gov_missing",
            "main_domain", 
            "dep"
   ),  
@@ -190,12 +188,12 @@ feature_sets <- list(
   
   m1_2 = c(
     # table 0 (changes_constitution + double_majority_required irrelevant)
-    "rechtsform", "gov_recommend", "nr_recommend", "parl_recommend", "gov_missing", "main_domain", "dep",
+    "rechtsform", "gov_recommend", "nr_recommend", "parl_recommend", "main_domain", "dep",
     
     # table A (parl_consensus excluded: exact mean of the two shares)
     "nr_yes_share", "sr_yes_share", "nr_support", "sr_support", "interchamber_disagree", 
     "parl_support_signed", "parl_participation", "elite_consensus", "brpos_signed", 
-    "gov_parl_align", "parl_vote_missing",
+    "gov_parl_align",
     
     # table B (has_signature_phase excluded from lm: = 1[rechtsform in {2,3}])
     "sig_speed_pc", "invalid_sig_share", "surplus_sig_ratio", "spare_days_frac", 

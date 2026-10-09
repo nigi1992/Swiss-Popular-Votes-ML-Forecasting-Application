@@ -36,54 +36,253 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
     if (any(sel)) fun(y[sel]) else fallback
   }, numeric(1))
 }
-
 # 1.2 Manual imputation -----------------------------------------------
 ## Signature collection section ---------------------------------------
 
-# Manually imputing values as they become available from the SwissVotes data set
-# dat-start, dat-limit, sammelfrist, dat-submit, dat-success, dat-message, dat-parl, dauer_bv, dauer_abst, 
-# i-dauer_tot, i-dauer_samm, i-dauer_br, fr-dauer_samm, fr-dauer_tot, sammeltempo, sparedays
+# Show all 'anr', where rechtsform == 3 & `dat-limit` == NA
+df$anr[df$rechtsform == 3 & is.na(df$`dat-limit`)] # this lists the initiatives without a collection deadline, not of concern
 
-library(tidyverse)
-# entering raw values as they appear on swissvotes.ch, NA means not yet known, Date format: "YYYY-MM-DD"
-#sig_parl_fixes <- tibble::tribble( 
-#  ~anr,   ~datum,        ~`dat-start`, ~`dat-limit`, ~`sammelfrist`, ~`dat-submit`, ~`dat-success`, ~`dat-message`, ~`dat-parl`, ~`dauer_bv`, ~`dauer_abst`, ~`i-dauer_tot`, ~`i-dauer_samm`, ~`i-dauer_br`, ~`fr-dauer_samm`, ~`fr-dauer_tot`, ~`sammeltempo`, ~`sparedays`,
-#  "688",  "2026-03-08",  
-#  "689",  "2026-03-08",  
-#  "690",  "2026-11-29",  
-#  "691",  "2026-11-29", 
-#  "692",  "2026-11-29",  
-#  "693",  "2026-11-29", 
-#)  
+# Show all 'anr' where rechtsform == 2 & `dat-submit` == NA
+df$anr[df$rechtsform == 2 & is.na(df$`dat-submit`)]
 
-# Applying the overrides in place, keyed on anr.
-#df <- df %>% rows_update(sig_parl_fixes, by = "anr") 
+dat_submit_fixes <- tibble::tribble(
+  ~anr,  ~`dat-submit`,
+  # BK Notices state that signatures arrived before 25.12.1977
+  "284", as.Date("1977-12-24"),
+  "285", as.Date("1977-12-24"),
+  "286", as.Date("1977-12-24"),
+  "289", as.Date("1977-12-24"),
+  
+  "422", as.Date("1995-01-11"), 
+  "513", as.Date("2004-01-22") 
+)
+fixed_anr <- dat_submit_fixes$anr
+df <- df %>% rows_update(dat_submit_fixes, by = "anr") 
+rm(dat_submit_fixes)
 
-## Faulty nrja, nrnein count values --------------------------------
+# Sources:
+# https://www.bk.admin.ch/ch/d/pore/rf/cr/1976/19760323.html 
+# https://swissvotes.ch/attachments/88480eea5c70a8017e9ac16fd9d83fd0abd0697986728dc3da1c6b4596beac69
+# https://www.svp.ch/news/artikel/medienmitteilungen/mutterschaftsreferendum-mit-ueber-72000-unterschriften-eingereicht/ 
+
+# recomputing the derived signature variables for the fixed rows only
+df <- df %>%
+  mutate(
+    `fr-dauer_samm` = if_else(anr %in% fixed_anr,
+                              as.numeric(as.Date(`dat-submit`) - as.Date(`dat-start`)),
+                              `fr-dauer_samm`),
+    sparedays       = if_else(anr %in% fixed_anr,
+                              pmax(as.numeric(as.Date(`dat-limit`) - as.Date(`dat-submit`)), 0),
+                              sparedays),
+    sammeltempo     = if_else(anr %in% fixed_anr,
+                              floor(unter_g / `fr-dauer_samm` + 0.5),
+                              sammeltempo)
+  )
+
+# checking the six rows
+df %>%
+  filter(anr %in% fixed_anr) %>%
+  select(anr, `dat-start`, `dat-limit`, `dat-submit`, unter_g,
+         `fr-dauer_samm`, sparedays, sammeltempo)
+
+rm(fixed_anr)
+
+## Signature Values from new Votes ------------------------------------
+
+# Manually imputing and calculating values as they become available: 
+# dat-start, dat-limit, sammelfrist, dat-submit, dat-success, dat-message, dat-parl, unter_g, unter_u, 
+# dauer_bv, dauer_abst, i-dauer_tot, i-dauer_samm, i-dauer_br, fr-dauer_samm, fr-dauer_tot, sammeltempo, sparedays
+
+# Date Format: "YYYY-MM-DD". Sources: bk.admin.ch
+# 27.9.2026:
+# https://www.bk.admin.ch/de/details-volksinitiativen?voteNumber=688
+# https://www.bk.admin.ch/de/details-volksinitiativen?voteNumber=689
+# 29.11.2026:
+# https://www.bk.admin.ch/de/details-referenden-und-weitere-erlasse/?referendum=4099
+# https://www.bk.admin.ch/de/details-volksinitiativen/?initiative=525 
+# https://www.bk.admin.ch/de/details-volksinitiativen/?initiative=537 
+# https://www.bk.admin.ch/de/details-referenden-und-weitere-erlasse/?referendum=4075 
+# https://www.fedlex.admin.ch/eli/fga/2026/22/de 
+
+#new_votes <- tribble(
+rm(new_votes)
+new_votes <- tibble::tribble(   
+  ~anr,  ~datum,       ~rechtsform, ~`pa-iv`, ~`dat-start`, ~`dat-limit`, ~`unter-quorum`, ~`dat-submit`, ~`dat-success`, ~`dat-message`, ~`dat-parl`,  ~unter_g, ~unter_u, #vote_done, # For the Future in case new votes are integrated into training-set  
+  # As of 4.10.2026:
+  "688", "2026-09-27", 3,           0,        "2022-11-08", "2024-05-08", 100000L,         "2024-04-11",  "2024-05-28",   "2024-11-27",   "2026-03-20", 129806,   2112,     #"voted",
+  "689", "2026-09-27", 3,           0,        "2023-06-13", "2024-12-13", 100000L,         "2024-08-16",  "2024-09-23",   "2025-08-13",   "2026-03-20", 112736,   324,      #"voted",
+  # As of 7.10.2026:
+  "690", "2026-11-29", 1,           0,        "",           "",           0L,              "",            "",             "2024-10-16",   "2026-06-19", NA_real_, NA_real_, #"voted"
+  "691", "2026-11-29", 3,           0,        "2022-05-03", "2023-11-03", 100000L,         "2023-11-03",  "2023-12-01",   "2024-10-16",   "2026-06-19", 137193,   1044,     #"voted" 
+  "692", "2026-11-29", 3,           0,        "2022-09-27", "2024-03-27", 100000L,         "2024-03-27",  "2024-04-16",   "2025-03-07",   "2026-06-19", 101382,   669,      #"voted"
+  "693", "2026-11-29", 2,           0,        "2026-01-07", "2026-04-17", 50000L,          "2026-04-17",  "2026-04-29",   "2025-02-12",   "2025-12-19", 58767,    185       #"voted"  
+)
+
+# Parsing yyyy-mm-dd strings, leaving columns that are already Date untouched
+parse_ymd <- function(x) {
+  if (inherits(x, "Date")) return(x)
+  x <- trimws(as.character(x))
+  x[x %in% c("", ".", "0")] <- NA
+  # Stopping on anything that is not strictly yyyy-mm-dd
+  ok <- is.na(x) | grepl("^\\d{4}-\\d{2}-\\d{2}$", x)
+  out <- as.Date(ifelse(ok, x, NA), format = "%Y-%m-%d")
+  bad <- !is.na(x) & (is.na(out) | out < as.Date("1848-01-01") | out > as.Date("2100-12-31"))
+  if (any(bad)) stop("unparseable date(s): ", paste(x[bad], collapse = ", "))
+  out
+}
+
+# Counting calendar days from one date to another, end date not counted twice
+days_between <- function(from, to) as.integer(to - from)
+
+# Rounding half up like Excel (base round() rounds half to even)
+round_half_up <- function(x) as.integer(floor(x + 0.5))
+
+date_cols <- c("datum", "dat-start", "dat-limit", "dat-submit",
+               "dat-success", "dat-message", "dat-parl")
+
+# Deriving the duration and signature variables following the Swissvotes codebook
+calc_swissvotes_vars <- function(df) {
+  df %>%
+    mutate(
+      is_init  = rechtsform == 3,
+      is_fr    = rechtsform == 2,
+      has_coll = is_init | is_fr,
+      is_paiv  = `pa-iv` == 1,
+      #dauer_bv = if_else(pa_iv == 1, NA_integer_, dauer_bv),
+      
+      # Collection phase: 0 / 9999 codes for votes without signature collection
+      dauer_samm  = if_else(has_coll, days_between(`dat-start`, `dat-submit`), NA_integer_),
+      sammelfrist = if_else(has_coll, days_between(`dat-start`, `dat-limit`), 0L),
+      sparedays   = if_else(has_coll, pmax(days_between(`dat-submit`, `dat-limit`), 0L), 9999L),
+      sammeltempo = if_else(has_coll, round_half_up(unter_g / dauer_samm), 0L),
+      
+      # Parliamentary phase: Missing for proposals based on a parliamentary initiative
+      dauer_bv   = if_else(is_paiv, NA_integer_, days_between(`dat-message`, `dat-parl`)),
+      dauer_abst = days_between(`dat-parl`, datum),
+      
+      # Popular initiatives only
+      `i-dauer_tot`  = if_else(is_init, days_between(`dat-submit`, datum), NA_integer_),
+      `i-dauer_samm` = if_else(is_init, dauer_samm, NA_integer_),
+      `i-dauer_br`   = if_else(is_init, days_between(`dat-submit`, `dat-message`), NA_integer_),
+      
+      # Optional referendums only
+      `fr-dauer_tot`  = if_else(is_fr & !is_paiv, days_between(`dat-message`, datum), NA_integer_),
+      `fr-dauer_samm` = if_else(is_fr, dauer_samm, NA_integer_)
+    ) %>%
+    select(-is_init, -is_fr, -has_coll, -is_paiv, -dauer_samm)
+}
+
+rm(sig_parl_fixes)
+sig_parl_fixes <- new_votes %>%
+  mutate(across(all_of(date_cols), parse_ymd)) %>% #parse_dmy)) %>%
+  calc_swissvotes_vars()
+
+# Checking the chronological order of the collected dates
+stopifnot(
+  with(sig_parl_fixes, all(`dat-start`   <= `dat-submit`, na.rm = TRUE)),
+  with(sig_parl_fixes, all(`dat-submit`  <= `dat-success`, na.rm = TRUE)),
+  with(sig_parl_fixes, all(`dat-message` <= `dat-parl`, na.rm = TRUE)),
+  with(sig_parl_fixes, all(`dat-parl`    <  datum, na.rm = TRUE))
+)
+
+sig_parl_fixes <- sig_parl_fixes %>%
+  select(anr, sammelfrist, sparedays, sammeltempo, dauer_bv, dauer_abst, `unter-quorum`, unter_g, unter_u,
+         `dat-start`, `dat-limit`, `dat-submit`, `dat-success`, `dat-message`, `dat-parl`,
+         `i-dauer_tot`, `i-dauer_samm`, `i-dauer_br`, `fr-dauer_tot`, `fr-dauer_samm`)
+print(sig_parl_fixes, width = Inf)
+
+sig_parl_fixes %>%
+  select(anr, sammelfrist, sparedays, sammeltempo, dauer_bv, dauer_abst,
+         `i-dauer_tot`, `i-dauer_samm`, `i-dauer_br`, `fr-dauer_tot`, `fr-dauer_samm`) %>%
+  print(width = Inf)
+
+# Applying the overrides in place, keyed on 'anr'
+df <- df %>% rows_update(sig_parl_fixes, by = "anr") 
+rm(sig_parl_fixes, new_votes, date_cols, parse_ymd, days_between, round_half_up, calc_swissvotes_vars)
+
+## Eligible Voters -------------------------------------------------
+
+# Eligible voters (berecht) are the number of citizens eligible to vote in a given proposal
+# Shown are the most recent available numbers before the vote. Sources: SwissVotes, Bfs
+# https://www.bfs.admin.ch/bfs/de/home/statistiken/politik/abstimmungen/jahr-2026/2026-09-27.assetdetail.36842622.html
+
+# As of 4.10.2026: 5677306
+elig_voters <- tibble::tribble(
+  ~anr,        ~berecht,
+  "688",      5677306,
+  "689",      5677306,
+  "690",      5677306,
+  "691",      5677306,
+  "692",      5677306,
+  "693",      5677306
+)
+
+str(elig_voters)
+str(df$berecht)
+
+# Applying the overrides in place, keyed on 'anr'
+df <- df %>% rows_update(elig_voters, by = "anr")   
+rm(elig_voters)
+## Faulty + missing nr- and sr- ja/nein count values ----------------
 
 # Manual corrections: one row per anr, anr must be character to match df
 nr_fixes <- tibble::tribble(
-  ~anr,        ~nrja, ~nrnein,
-  "543",      126,   58,
-  #"YYYY",      000L,   000L
+  ~anr,       ~nrja, ~nrnein,
+  "543",      126,   58, # SwissVotes Entry is wrong, see https://www.parlament.ch/de/ratsbetrieb/amtliches-bulletin/amtliches-bulletin-die-verhandlungen?SubjectId=13590
+  "274",      73,    95, # Imputing NAs, see https://swissvotes.ch/attachments/9ef9b2041ec0c3e4d7b6110f1632bd8242632fdb09dd7b4a014b7f88d4686668 p.1513
+  "556",      93,    70, # Imputing NAs, see https://www.parlament.ch/de/ratsbetrieb/amtliches-bulletin/amtliches-bulletin-die-verhandlungen?SubjectId=19725#votum13
+  "568",      66,    62  # Imputing NAs, see https://www.parlament.ch/de/ratsbetrieb/amtliches-bulletin/amtliches-bulletin-die-verhandlungen?SubjectId=17151
 )
 
 # Applying the overrides in place, keyed on anr.
 df <- df %>%
   rows_update(nr_fixes, by = "anr")
+rm(nr_fixes)
+
+# Manual corrections: one row per anr, anr must be character to match df
+sr_fixes <- tibble::tribble(
+  ~anr,       ~srja, ~srnein,
+  "274",      4,     30, # Imputing NAs, see https://swissvotes.ch/attachments/9ef9b2041ec0c3e4d7b6110f1632bd8242632fdb09dd7b4a014b7f88d4686668, p.364
+  "556",      13,    24, # Imputing NAs, see https://swissvotes.ch/attachments/84fbd8f252fee5ebd9b0252b3a095f92a6780d2f55a8bc79963b8662e3b4fdaf p.61
+  "568",      10,    26  # Imputing NAs, see https://www.parlament.ch/de/ratsbetrieb/amtliches-bulletin/amtliches-bulletin-die-verhandlungen?SubjectId=15777 
+)
+
+df <- df %>%
+  rows_update(sr_fixes, by = "anr")
+rm(sr_fixes)
 
 ## Missing dep value -----------------------------------------------
+
+# Because the other proposal, that concerns itself with voting rights for 18 year olds, 
+# was also lead by the "Schweizerische Bundeskanzlei (BK)", n = 8 is picked for NAs
 
 # Manual dep corrections
 df <- df %>%
   mutate(dep = if_else(anr == 293, "8", dep))
+
+## Missing br-pos values -------------------------------------------
+
+# Imputing missing values for br-pos, keeping anr as character to avoid mismatches (227.2/227.20)
+# Sources: SwissVotes Dataset (2026), (Amtliches Bulletin, Bundesblatt, Erläuterungen des Bundesrates); 
+# Parlament.ch (2026); Année Politique Suisse (2026); Linder et al. (2010: 311-363)
+
+br_fill <- read_csv(file.path(input_path, "br-pos_NAs_filled_raw.csv"), col_types = cols(.default = "c")) %>%
+  transmute(anr = as.character(anr), br_pos_fill = as.character(`br-pos`))
+
+# Patching rows where br-pos is missing 
+df <- df %>%
+  #mutate(anr = as.character(anr)) %>%
+  left_join(br_fill, by = "anr") %>%
+  mutate(`br-pos` = coalesce(as.character(`br-pos`), br_pos_fill)) %>%
+  select(-br_pos_fill)
+rm(br_fill)
 
 # 2. Calendar / Structural-break controls --------------------------
 
 #df <- df %>% filter(datum >= as.Date("1971-06-06"))
 #str(df)
 
-# Era breaks as defined in my predictor list
+# Era breaks as defined in predictor list
 # season = quarter, because there are 4 possible official voting Sundays per year
 
 df <- df %>%
@@ -157,7 +356,7 @@ cal_features <- c("era", "season", "months_to_election", "months_since_election"
 # dep
 sum(is.na(df$dep)) # 1 NA, manually imputing, based on historical comparisons?
 which(is.na(df$dep)) # Finding row via row identifier (anr)
-df |> filter(is.na(dep)) %>% select(anr, datum, titel_kurz_d, dep) 
+df %>% filter(is.na(dep)) %>% select(anr, datum, titel_kurz_d, dep) 
 
 # Creating separate df, where d1e2 = 1.4, select columns 'anr', 'titel_off_d', 'd1e2', 'dep'
 df_dep <- df %>%
@@ -183,7 +382,7 @@ colnames(df[df$vote_done == "voted", ])[colSums(is.na(df[df$vote_done == "voted"
 
 # nrja, nrnein, srja, srnein missing values where bv-pos = 3
 which(is.na(df$nrja)) # Finding row via row identifier (anr)
-df |> filter(is.na(nrja)) %>% select(anr, datum, titel_kurz_d, `bv-pos`, `nr-pos`, nrja, nrnein, `sr-pos`, srja, srnein)
+df %>% filter(is.na(nrja)) %>% select(anr, datum, titel_kurz_d, `bv-pos`, `nr-pos`, nrja, nrnein, `sr-pos`, srja, srnein)
 
 
 ## Directionless codebook values for gov-pos variables, see p. 12-14 for reference
@@ -200,7 +399,7 @@ rm(df_gov_pos)
 ## 2 instances in which bv-pos = 3, but nr and sr have differing recommendations -> leave them be.
 
 # 3. Institutional features -------------------------------------------
-
+# 3.1 Gov. + Parl. Recommendations ------------------------------------
 df <- df %>%
   mutate(
     # Institutional considerations
@@ -208,19 +407,19 @@ df <- df %>%
     double_majority_required = as.integer(rechtsform %in% c("1", "3", "4", "5")), # identical
     
     # Gov. + parl. recommendations
-    gov_recommend            = factor_with_miss(`br-pos`), # includes 30 NAs as 'miss', and n=3 and n=8 as their own categories
-    gov_missing              = as.integer(is.na(`br-pos`)), # binary (0/1) Indicator: was there a rec. or not?
-    parl_recommend           = factor_with_miss(`bv-pos`), # nr + sr recommendation
+    gov_recommend            = factor_with_miss(`br-pos`), # NAs as 'miss', and n=3 and n=8 as their own categories
+    #gov_missing             = as.integer(is.na(`br-pos`)), # Binary (0/1) Indicator: Was there a recom. or not?
+    parl_recommend           = factor_with_miss(`bv-pos`), # Position of parliament
     gov_parl_recommend_n     = as.integer(gov_recommend == "1") +
-      as.integer(parl_recommend == "1"), # useless, since gov is not allowed to diverge from parl, they have same direction
+      as.integer(parl_recommend == "1"), # Useless, since Gov is not allowed to diverge from Parl, they have same direction
     # (Art. 10a, Abs. 4 BPR)
-    nr_recommend             = factor_with_miss(`nr-pos`), # better approximation for elite support
+    nr_recommend             = factor_with_miss(`nr-pos`), # Better approximation for elite support
     # than nr + sr, according to Trechsel/Sciarini 1998, 108
-    
+    sr_recommend             = factor_with_miss(`sr-pos`),
     # Differentiation by domain/policy area
     main_domain              = factor(d1e1, levels = 1:12),
-    #dep                      = factor_with_miss(dep)
   )
+
 
 # policy areas as multi-hot indicators over the three slots
 policy_slots <- c("d1e1", "d2e1", "d3e1")
@@ -231,18 +430,47 @@ for (k in 1:12) {
 }
 
 inst_features <- c("changes_constitution", "double_majority_required",
-                   "gov_recommend", "gov_missing", "parl_recommend",
-                   "nr_recommend", "main_domain")
+                   "gov_recommend", "parl_recommend",
+                   "nr_recommend", "sr_recommend", "main_domain")
 
-## More "dumb" classifiers -------------------------------------------
+# 3.2 Legislative Friction -------------------------------------------
 
-# Legislative friction: 
-# dauer_bv  as proxy for contentious parliamentary process and elite conflict/complexity
+# Adding missing dat-message values for 2 known cases (244, 247) where SwissVotes left them empty
+dat_message_fixes <- tibble::tribble(
+  ~anr,  ~`dat-message`,
+  "244", as.Date("1974-04-03"), # BBl 1974 I, 1309 
+  "247", as.Date("1974-04-10") # BBl 1974 I 1253
+)
+df <- df %>% rows_update(dat_message_fixes, by = "anr") 
+# Sources:
+# 244: https://swissvotes.ch/attachments/d4f0c11ea2f6401739115814a67d3d2e166ac226fff2fc8fa9e2f7abbe8f1ee0
+# 247: https://www.fedlex.admin.ch/eli/fga/1974/1_1253_1209_1201/de 
+
+# dauer_bv as proxy for contentious parliamentary process and elite conflict/complexity
 # dauer_bv is structurally missing for pa-iv proposals (no bundesraetliche Botschaft exists, 34 of 38 NAs), 
-# so pa_iv doubles as the missingness indicator and the fill is 0
+# pa_iv doubles as the missingness indicator and the fill is 0
+
 df <- df %>%
-  mutate(pa_iv        = as.numeric(`pa-iv`),
-         log_dauer_bv = log1p(if_else(is.na(dauer_bv), 0, dauer_bv)))
+  mutate(
+    pa_iv = as.numeric(`pa-iv`),
+    # Recomputing dauer_bv from the dates where Swissvotes left it empty
+    dauer_bv = if_else(is.na(dauer_bv) & pa_iv == 0,
+                       as.numeric(as.Date(`dat-parl`) - as.Date(`dat-message`)), dauer_bv),
+    # Enforcing the Codebook rule for pa-iv proposals (p.13, 678 carries a dauer_bv value)
+    dauer_bv = if_else(pa_iv == 1, NA_real_, dauer_bv),
+    # Filling pa-iv rows with 0, the pa_iv dummy absorbs them
+    log_dauer_bv = if_else(pa_iv == 1, 0, log1p(dauer_bv))
+  )
+
+# Listing what is still unknown after the repair
+df %>% filter(is.na(dauer_bv), pa_iv == 0) %>%
+  select(anr, datum, `dat-message`, `dat-parl`)
+
+# 3.3 More "dumb" Features ------------------------------------------
+
+# Departments of Federal Council as Factor Variable
+df <- df %>%
+  mutate(dep = factor_with_miss(dep))
 
 dumb_features <- c("pa_iv", "log_dauer_bv", "anzahl", "dep", "d1e1", paste0("policy_", sprintf("%02d", 1:12)))
 
@@ -372,7 +600,7 @@ df <- df %>%
 # Three votes lack a final-vote count (no Schlussabstimmung) 
 df <- df %>%
   mutate( # imputing neutrality and letting the indicator carry the information
-    parl_vote_missing = as.integer(is.na(nr_yes_share) | is.na(sr_yes_share)),
+    #parl_vote_missing = as.integer(is.na(nr_yes_share) | is.na(sr_yes_share)),
     across(c(nr_yes_share, sr_yes_share),        ~ if_else(is.na(.x), 0.5, .x)),
     across(c(interchamber_disagree, parl_support_signed, nr_support, sr_support,
              elite_consensus, parl_participation), ~ if_else(is.na(.x), 0, .x)),
@@ -381,8 +609,7 @@ df <- df %>%
 
 elite_features <- c("nr_yes_share", "sr_yes_share", "nr_support", "sr_support",
                     "parl_support_signed", "parl_consensus", "interchamber_disagree",
-                    "elite_consensus", "brpos_signed", "gov_parl_align",
-                    "parl_vote_missing", "parl_participation")
+                    "elite_consensus", "brpos_signed", "gov_parl_align", "parl_participation")
 
 ## Some data discovery ------------------------------------------------
 
@@ -415,8 +642,6 @@ sum(df$gov_parl_align == "1" & df$volk == "0", na.rm = TRUE)
 sum(df$gov_parl_align == "0" & df$volk == "1", na.rm = TRUE)
 
 # Gov-parl alignment is a miserable predictor of outcome, nr-pos is a way better predictor
-
-
 
 # 6. Roll call dataset features for shorter time frame ------------------
 
@@ -925,14 +1150,14 @@ df <- df %>%
                                 unter_g / `unter-quorum`, NA_real_),
     # Population-normalized collection speed
     sig_speed_pc      = if_else(has_signature_phase == 1,
-                                sammeltempo / berecht * 1e5, NA_real_), # per 100k eligible voters  
+                                sammeltempo / berecht * 1e5, NA_real_), # Per 100k eligible voters  
     # Invalid signature share
     invalid_sig_share = if_else(has_signature_phase == 1,
                                 unter_u / (unter_g + unter_u), NA_real_),
     # Spare Days fraction
     spare_days_frac   = if_else(has_signature_phase == 1,
                                 sparedays / sammelfrist, NA_real_),
-    # initiatives launched before 1.7.1978 had no deadline: maximal slack
+    # Initiatives launched before 1.7.1978 had no deadline -> Maximal slack
     spare_days_frac   = if_else(sig_no_deadline == 1, 1, spare_days_frac)
   )
 
