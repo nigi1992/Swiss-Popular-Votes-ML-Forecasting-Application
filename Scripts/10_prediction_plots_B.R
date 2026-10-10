@@ -925,7 +925,9 @@ perm_plots <- perm_summary %>%
       ggplot(aes(delta, feature)) +
       geom_vline(xintercept = 0, linewidth = 0.3, colour = "grey50") +
       geom_col(fill = "#2c7fb8", width = 0.7) +
-      geom_errorbarh(aes(xmin = delta - se, xmax = delta + se), height = 0.2) +
+      #geom_errorbarh(aes(xmin = delta - se, xmax = delta + se), height = 0.2) +
+      geom_errorbar(aes(xmin = delta - se, xmax = delta + se),
+                    orientation = "y", width = 0.2) +
       labs(title = paste0("Permutation importance: ", lab),
            subtitle = paste0("Increase in out-of-sample MAE when the column is ",
                              "shuffled in the test fold, averaged over folds"),
