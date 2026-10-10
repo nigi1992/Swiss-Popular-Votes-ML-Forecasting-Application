@@ -300,9 +300,12 @@ dat_submit_fixes <- tibble::tribble(
   "285", as.Date("1977-12-24"),
   "286", as.Date("1977-12-24"),
   "289", as.Date("1977-12-24"),
-  
+  # Manual Research
   "422", as.Date("1995-01-11"), 
   "513", as.Date("2004-01-22") 
+  # For most of these there is no data available, but it exists and could be imputed
+  # "248" "249" "254" "257" "258" "276" "278" "280" "283" "290" "291" "292" "298" "301" "309" "310" "335" "336" "341" "344" "345" "348" "349" 
+  # "363" "364" "368" "372" "375" "376" "377" "381" "382" "383" "384" "385" "386" "387" "398" "409" "414" "415" "417" "419" "420" "424" "431" "433" 
 )
 fixed_anr <- dat_submit_fixes$anr
 df <- df %>% rows_update(dat_submit_fixes, by = "anr") 
