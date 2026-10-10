@@ -228,7 +228,114 @@ df <- df %>%
 str(df)
 str(df_raw)
 
-# 3. Sanity checks -----------------------------------------------------
+
+# 3. Data Imputation ------------------------------------------------
+
+## Faulty + missing nr- and sr- ja/nein count values ----------------
+
+# Manual corrections: one row per anr, anr must be character to match df
+nr_fixes <- tibble::tribble(
+  ~anr,       ~nrja, ~nrnein,
+  "543",      126,   58, # SwissVotes Entry is wrong, see https://www.parlament.ch/de/ratsbetrieb/amtliches-bulletin/amtliches-bulletin-die-verhandlungen?SubjectId=13590
+  "274",      73,    95, # Imputing NAs, see https://swissvotes.ch/attachments/9ef9b2041ec0c3e4d7b6110f1632bd8242632fdb09dd7b4a014b7f88d4686668 p.1513
+  "556",      93,    70, # Imputing NAs, see https://www.parlament.ch/de/ratsbetrieb/amtliches-bulletin/amtliches-bulletin-die-verhandlungen?SubjectId=19725#votum13
+  "568",      66,    62  # Imputing NAs, see https://www.parlament.ch/de/ratsbetrieb/amtliches-bulletin/amtliches-bulletin-die-verhandlungen?SubjectId=17151
+)
+
+# Applying the overrides in place, keyed on anr.
+df <- df %>%
+  rows_update(nr_fixes, by = "anr")
+rm(nr_fixes)
+
+# Manual corrections: one row per anr, anr must be character to match df
+sr_fixes <- tibble::tribble(
+  ~anr,       ~srja, ~srnein,
+  "274",      4,     30, # Imputing NAs, see https://swissvotes.ch/attachments/9ef9b2041ec0c3e4d7b6110f1632bd8242632fdb09dd7b4a014b7f88d4686668, p.364
+  "556",      13,    24, # Imputing NAs, see https://swissvotes.ch/attachments/84fbd8f252fee5ebd9b0252b3a095f92a6780d2f55a8bc79963b8662e3b4fdaf p.61
+  "568",      10,    26  # Imputing NAs, see https://www.parlament.ch/de/ratsbetrieb/amtliches-bulletin/amtliches-bulletin-die-verhandlungen?SubjectId=15777 
+)
+
+df <- df %>%
+  rows_update(sr_fixes, by = "anr")
+rm(sr_fixes)
+
+## Missing dep value -----------------------------------------------
+
+# Because the other proposal, that concerns itself with voting rights for 18 year olds, 
+# was also lead by the "Schweizerische Bundeskanzlei (BK)", n = 8 is picked for NAs
+
+# Manual dep corrections
+df <- df %>%
+  mutate(dep = if_else(anr == 293, "8", dep))
+
+## Missing br-pos values -------------------------------------------
+
+# Imputing missing values for br-pos, keeping anr as character to avoid mismatches (227.2/227.20)
+# Sources: SwissVotes Dataset (2026), (Amtliches Bulletin, Bundesblatt, Erläuterungen des Bundesrates); 
+# Parlament.ch (2026); Année Politique Suisse (2026); Linder et al. (2010: 311-363)
+
+br_fill <- read_csv(file.path(input_path, "br-pos_NAs_filled_raw.csv"), col_types = cols(.default = "c")) %>%
+  transmute(anr = as.character(anr), br_pos_fill = as.character(`br-pos`))
+
+# Patching rows where br-pos is missing 
+df <- df %>%
+  #mutate(anr = as.character(anr)) %>%
+  left_join(br_fill, by = "anr") %>%
+  mutate(`br-pos` = coalesce(as.character(`br-pos`), br_pos_fill)) %>%
+  select(-br_pos_fill)
+rm(br_fill)
+
+## Signature collection section ---------------------------------------
+
+# Show all 'anr', where rechtsform == 3 & `dat-limit` == NA
+df$anr[df$rechtsform == 3 & is.na(df$`dat-limit`)] # this lists the initiatives without a collection deadline, not of concern
+
+# Show all 'anr' where rechtsform == 2 & `dat-submit` == NA
+df$anr[df$rechtsform == 2 & is.na(df$`dat-submit`)]
+
+dat_submit_fixes <- tibble::tribble(
+  ~anr,  ~`dat-submit`,
+  # BK Notices state that signatures arrived before 25.12.1977
+  "284", as.Date("1977-12-24"),
+  "285", as.Date("1977-12-24"),
+  "286", as.Date("1977-12-24"),
+  "289", as.Date("1977-12-24"),
+  
+  "422", as.Date("1995-01-11"), 
+  "513", as.Date("2004-01-22") 
+)
+fixed_anr <- dat_submit_fixes$anr
+df <- df %>% rows_update(dat_submit_fixes, by = "anr") 
+rm(dat_submit_fixes)
+
+# Sources:
+# https://www.bk.admin.ch/ch/d/pore/rf/cr/1976/19760323.html 
+# https://swissvotes.ch/attachments/88480eea5c70a8017e9ac16fd9d83fd0abd0697986728dc3da1c6b4596beac69
+# https://www.svp.ch/news/artikel/medienmitteilungen/mutterschaftsreferendum-mit-ueber-72000-unterschriften-eingereicht/ 
+
+# recomputing the derived signature variables for the fixed rows only
+df <- df %>%
+  mutate(
+    `fr-dauer_samm` = if_else(anr %in% fixed_anr,
+                              as.numeric(as.Date(`dat-submit`) - as.Date(`dat-start`)),
+                              `fr-dauer_samm`),
+    sparedays       = if_else(anr %in% fixed_anr,
+                              pmax(as.numeric(as.Date(`dat-limit`) - as.Date(`dat-submit`)), 0),
+                              sparedays),
+    sammeltempo     = if_else(anr %in% fixed_anr,
+                              floor(unter_g / `fr-dauer_samm` + 0.5),
+                              sammeltempo)
+  )
+
+# checking the six rows
+df %>%
+  filter(anr %in% fixed_anr) %>%
+  select(anr, `dat-start`, `dat-limit`, `dat-submit`, unter_g,
+         `fr-dauer_samm`, sparedays, sammeltempo)
+
+rm(fixed_anr)
+
+# 4. Sanity checks -----------------------------------------------------
 
 # anr: character, plain and decimal ids intact
 df %>% count(anr_decimal = str_detect(anr, "\\."))
@@ -275,7 +382,7 @@ library(tidyverse)
 SwissVotes_Df1_ref <- df
 rm(df, df_raw)
 
-# 4. Saving dataset for the ML pipeline --------------------------------
+# 5. Saving dataset for the ML pipeline --------------------------------
 
 saveRDS(SwissVotes_Df1, file.path(input_path, "swissvotes_prepared.rds"))
 

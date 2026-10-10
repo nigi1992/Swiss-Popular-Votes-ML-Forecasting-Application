@@ -79,8 +79,8 @@ print(test_all %>%
         summarise(n = n(),
                   mae = mae(yes_share, roll_yes_rechtsform),
                   volksmehr_acc = volksmehr_acc(yes_share, roll_yes_rechtsform)))
-# 1. Best for predicting popular initiatives (acc. > 85%, MAE > 9.9) 
-# 2. A bit worse for obligatory referendem (acc. > 80%, MAE > 11.5)
+# 1. Best for predicting popular initiatives (acc. > 85%, MAE = 9) 
+# 2. A bit worse for obligatory referendem (acc. > 80%, MAE < 11.5)
 # 3. Even worse for fak. referendum (acc. < 75%, MAE = 9.9) 
 # 4. Almost useless for counterproposal (acc. < 60%, MAE > 16.5)
 
@@ -151,12 +151,11 @@ m0_calibration <- test_all %>%
             acceptance_rate = round(mean(yes_share >= 50, na.rm = TRUE), 2),
             volksmehr_acc   = round(volksmehr_acc(yes_share, roll_yes_rechtsform), 3),
             .groups = "drop") %>%
-  mutate(rechtsform = case_match(as.character(rechtsform),
+  mutate(rechtsform = recode_values(as.character(rechtsform),
                                  "1" ~ "1 obligat. Ref.",
                                  "2" ~ "2 fak. Ref.",
                                  "3" ~ "3 Volksinitiative",
                                  "4" ~ "4 Gegenentwurf"))
-
 print(m0_calibration)
 
 # 'bias' separates systematic error from scatter: 
