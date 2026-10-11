@@ -1,7 +1,103 @@
-Id,Date,Title,Rechtsform,Share_Yes_Votes,Pop_Majority,Prob_Pop_Majority,Total_Stände,Stände_Yes_Votes,Ständemehr,Needs_Ständemehr,Proposal_accepted,MAE
-688,27.09.2026,Neutralitätsinitiative,Volksinitiative,38.5%,No,18.5%,23,0,No,Yes,No,±8.77
-689,27.09.2026,Ernährungsinitiative,Volksinitiative,26.5%,No,2.1%,23,0,No,Yes,No,±8.77
-690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,52.3%,Yes,63.4%,23,18,Yes,Yes,Yes,±8.77
-691,29.11.2026,Feuerwerksinitiative,Volksinitiative,35%,No,13%,23,0,No,Yes,No,±8.77
-692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,42.1%,No,24.8%,23,0,No,Yes,No,±8.77
-693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,54.1%,Yes,69.7%,-,-,-,No,Yes,±8.77
+Id,Date,Title,Rechtsform,Share_Yes_Votes,Pop_Majority,Prob_Pop_Majority,Total_Stände,Stände_Yes_Votes,Ständemehr,Needs_Ständemehr,Proposal_accepted
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,36.3%,No,15.1%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,39%,No,19.3%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,39.9%,No,21.4%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,38.5%,No,18.9%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,38.5%,No,18.5%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,38.7%,No,18.1%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,39.4%,No,18.9%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,38.6%,No,19.7%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,39.7%,No,18.9%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,37.2%,No,15.1%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,37.7%,No,13.7%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,39.2%,No,15.3%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,40.1%,No,17.6%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,39.3%,No,15.3%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,39.1%,No,15.3%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,40.5%,No,16.8%,23,0,No,Yes,No
+688,27.09.2026,Neutralitätsinitiative,Volksinitiative,39.8%,No,16.8%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,34.7%,No,12.6%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,27.6%,No,2.9%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,29%,No,4.2%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,25.8%,No,1.7%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,26.5%,No,2.1%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,26.5%,No,2.1%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,26.9%,No,2.5%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,29.5%,No,5.9%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,29.4%,No,5%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,30.8%,No,7.1%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,37.6%,No,13.7%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,26.2%,No,0.8%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,26.1%,No,0.8%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,26.1%,No,0.8%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,26.6%,No,0.8%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,28.6%,No,1.5%,23,0,No,Yes,No
+689,27.09.2026,Ernährungsinitiative,Volksinitiative,29.5%,No,4.6%,23,0,No,Yes,No
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,57.4%,Yes,73.9%,23,23,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,51.2%,Yes,53.8%,23,14,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,52.6%,Yes,61.3%,23,18,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,52.4%,Yes,61.8%,23,18,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,52.3%,Yes,63.4%,23,18,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,52.6%,Yes,66.4%,23,18,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,54%,Yes,69.7%,23,21,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,51.8%,Yes,57.6%,23,16,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,55.7%,Yes,72.7%,23,23,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,50.6%,Yes,52.5%,23,11,No,Yes,No
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,58.7%,Yes,78.6%,23,23,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,55.3%,Yes,71%,23,22.5,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,54.3%,Yes,67.2%,23,21,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,55.7%,Yes,74%,23,23,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,55.7%,Yes,76.3%,23,23,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,55.6%,Yes,70.2%,23,23,Yes,Yes,Yes
+690,29.11.2026,Erhöhung der Mehrwertsteuer zugunsten der AHV,Obl. Referendum,56%,Yes,67.9%,23,23,Yes,Yes,Yes
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,36.2%,No,14.7%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,35.5%,No,13%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,36.6%,No,16.8%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,35%,No,13%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,35%,No,13%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,35.1%,No,13.4%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,36.1%,No,14.7%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,36.4%,No,14.3%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,37%,No,16%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,38.7%,No,17.2%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,37%,No,13.7%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,35.8%,No,9.9%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,34.5%,No,8.4%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,35.8%,No,9.9%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,35.8%,No,9.9%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,33.2%,No,5.3%,23,0,No,Yes,No
+691,29.11.2026,Feuerwerksinitiative,Volksinitiative,33.7%,No,8.4%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,36.8%,No,16.4%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,43.4%,No,26.5%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,43.6%,No,31.5%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,44.1%,No,30.3%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,42.1%,No,24.8%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,42.3%,No,25.6%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,42.7%,No,24.4%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,44.1%,No,32.4%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,41.8%,No,22.7%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,41.1%,No,24.4%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,35.1%,No,10.7%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,41.2%,No,18.3%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,42.6%,No,21.4%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,40.9%,No,16.8%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,40.4%,No,16%,23,0,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,47.9%,No,40.5%,23,2.5,No,Yes,No
+692,29.11.2026,Initiative zur Besteuerung von Ehepaaren,Volksinitiative,44.5%,No,28.2%,23,0,No,Yes,No
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,60.1%,Yes,81.9%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,53%,Yes,63.4%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,51.5%,Yes,59.7%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,53.6%,Yes,67.2%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,54.1%,Yes,69.7%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,54.4%,Yes,70.6%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,55.9%,Yes,75.2%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,55.4%,Yes,71.8%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,55.9%,Yes,72.7%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,55.8%,Yes,71%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,58.6%,Yes,78.6%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,56.9%,Yes,77.9%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,57.4%,Yes,80.2%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,57.3%,Yes,80.9%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,57.6%,Yes,82.4%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,55.4%,Yes,70.2%,-,-,-,No,Yes
+693,29.11.2026,Änderung des Kriegsmaterialgesetzes,Fak. Referendum,55.9%,Yes,67.9%,-,-,-,No,Yes

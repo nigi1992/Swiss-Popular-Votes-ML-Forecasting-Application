@@ -319,13 +319,12 @@ forecast_public <- forecast %>%
     Proposal_accepted = case_when(
       accepted_hat == TRUE  ~ "Yes",
       accepted_hat == FALSE ~ "No",
-      TRUE                  ~ NA_character_),
-    MAE = paste0("\u00b1", round(mae_sel, 2)#, " pp"
-    ) 
-  ) %>%
+      TRUE                  ~ NA_character_)#,
+    #MAE = paste0("\u00b1", round(mae_sel, 2)#, " pp"
+    ) %>%
   select(Id, Date, Title, Rechtsform, Share_Yes_Votes, Pop_Majority,
          Prob_Pop_Majority, Total_Stände, Stände_Yes_Votes, Ständemehr,
-         Needs_Ständemehr, Proposal_accepted, MAE)
+         Needs_Ständemehr, Proposal_accepted) #, MAE)
 
 write_csv(forecast_public, file.path(output_path, "forecast_upcoming_public.csv"))
 
@@ -337,7 +336,7 @@ forecast_public_ext <- forecast_public %>%
   mutate(anr = Id) %>%
   left_join(upcoming %>% select(anr, urheber, gov_parl_recommend_n, nrja, nrnein, srja, srnein), by = "anr") %>%
   select(anr, Date, Title, Rechtsform, urheber, gov_parl_recommend_n, nrja, nrnein, srja, srnein, Share_Yes_Votes, Pop_Majority,
-         Prob_Pop_Majority, Total_Stände, Stände_Yes_Votes, Ständemehr, Needs_Ständemehr, Proposal_accepted, MAE) %>%
+         Prob_Pop_Majority, Total_Stände, Stände_Yes_Votes, Ständemehr, Needs_Ständemehr, Proposal_accepted) %>% #, MAE) %>%
   mutate(
     Id = anr,
     Authors = urheber,
