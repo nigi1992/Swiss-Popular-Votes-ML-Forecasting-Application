@@ -46,14 +46,14 @@ paro_parties  <- c("fdp", "sps", "svp", "center", "evp", "gps", "glp", "bdp")
 paro_verbands <- c("eco", "sgv", "sbv", "sgb", "travs", "sav")
 
 # 2. Feature blocks ----------------------------------------------------
-## Table A: calendar (t0) ----------------------------------------------
+## Table A: calendar (t0, long + short) --------------------------------
 
 # months_to_election + months_since_election = 47.8-48.1 months on every row -> never both
 # era: the e2008plus level is unseen in the training window of long fold 2 (test block reaches 2008-02-24)
 # and then estimated from that single voting day in fold 3 -> excluded from every predictive set
 b_cal_lm <- c("season", "months_since_election")
 
-## Table B: institutional + deliberation process features (t0) ----------
+## Table B: institutional + deliberation process features (t0, long + short) ----
 
 # pa_iv is the missingness indicator of log_dauer_bv: dauer_bv does not exist for parliamentary initiatives,
 # log_dauer_bv is filled with 0 there (real range 2.8-7.9) and pa_iv absorbs that level shift
@@ -84,7 +84,7 @@ b_elite_wide <- c("parl_support_signed", "nr_support", "sr_support", b_elite_ext
 # brpos_signed                = 1:1 recode of gov_recommend
 # gov_parl_align              = 470 of 475 rows equal 1 (near-zero variance)
 
-## Core Feature-set: the three-feature base model -----------------------
+## Core Feature-set: the three-feature base model (t0, long + short) ----
 
 core <- c(b_hist_lm, b_elite_lm)   # old m1_2g / m2_base1
 

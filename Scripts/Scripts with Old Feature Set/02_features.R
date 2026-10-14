@@ -397,7 +397,7 @@ df <- df %>% rows_update(dat_message_fixes, by = "anr")
 # 244: https://swissvotes.ch/attachments/d4f0c11ea2f6401739115814a67d3d2e166ac226fff2fc8fa9e2f7abbe8f1ee0
 # 247: https://www.fedlex.admin.ch/eli/fga/1974/1_1253_1209_1201/de 
 
-# dauer_bv as proxy for contentious parliamentary process and elite conflict/complexity
+# dauer_bv as proxy for contentious parliamentary deliberation process and elite conflict/complexity
 # dauer_bv is structurally missing for pa-iv proposals (no bundesraetliche Botschaft exists, 34 of 38 NAs), 
 # pa_iv doubles as the missingness indicator and the fill is 0
 
