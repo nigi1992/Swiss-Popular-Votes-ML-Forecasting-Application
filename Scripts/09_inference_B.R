@@ -32,6 +32,7 @@ frame <- df %>%
 
 upcoming <- df %>% # Upcoming federal referendums are the inference target
   filter(vote_done != "voted") %>% # (not yet voted)
+  filter(rechtsform %in% c("1", "2", "3", "4")) %>% # (only the 4 proposal types that are modeled)
   mutate(rechtsform = factor(as.character(rechtsform),
                              levels = levels(frame$rechtsform))) %>%
   arrange(datum, anr)

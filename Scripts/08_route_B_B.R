@@ -117,6 +117,9 @@ route_b <- map_dfr(seq_along(folds_long), function(b) {
               kt_ja_true = `kt-ja`, kt_nein_true = `kt-nein`, # Count of cantons voting Yes/No
               annahme_true = as.character(annahme)) %>% # Proposal outcome: Accepted/Rejected
     left_join(kt_long %>% select(anr, kt, kt_yes, devhat, std), by = "anr") %>%
+    #inner_join(kt_long %>% select(anr, kt, kt_yes, devhat, std), by = "anr") %>%
+    # inner_join: a vote whose canton results are not entered yet (national result only)
+    # drops out of the canton-level evaluation instead of turning every metric into NA
     mutate(
       kt_hat = nat_hat + devhat, # Route B prediction mechanism
       # Predicted cantonal yes-share = Predicted national yes-share + Predicted cantonal deviation from national
