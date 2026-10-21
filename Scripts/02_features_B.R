@@ -425,11 +425,11 @@ df <- df %>%
     roll_acc_rechtsform = asof_stat(datum, acc_hist, group = as.character(rechtsform)),
     roll_acc_rechtsform = if_else(is.na(roll_acc_rechtsform), 0.5, roll_acc_rechtsform),
     
-    # Issue base rate; Acceptance rate (%) in same d1e1 domain before this date
+    # Issue base rate; Running mean of volksja-proz in same d1e1 domain before this date
     roll_yes_domain     = asof_stat(datum, y_hist, group = as.character(main_domain)),
     roll_yes_domain     = if_else(is.na(roll_yes_domain), roll_yes_grand, roll_yes_domain),
     
-    # Momentum; Yes/No of previous vote in same domain
+    # Momentum; Yes-share (%) of previous vote in same domain
     last_domain_outcome = asof_stat(datum, y_hist, group = as.character(main_domain),
                                     fun = function(v) tail(v, 1)),
     last_domain_outcome = if_else(is.na(last_domain_outcome),
