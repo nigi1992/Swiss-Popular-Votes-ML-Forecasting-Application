@@ -794,8 +794,171 @@ p_agree <- forecast %>%
 save_plot(p_agree, "10_model_agreement.png", 11, 6)
 
 
+# 14. Upcoming votes champion models ----------------------------------
+
+library(tidyverse)
+library(scales)
+
+## Shared plot settings -----------------------------------------------
+
+col_yes <- "#1B8C6E"
+col_no  <- "#E8622C"
+
+pct1 <- function(x) sprintf("%.1f%%", x)
+
+theme_vote <- function(base_size = 10) {
+  theme_minimal(base_size = base_size) +
+    theme(panel.grid.major.y  = element_blank(),
+          panel.grid.minor    = element_blank(),
+          axis.title.y        = element_blank(),
+          axis.text.y         = element_text(colour = "black", hjust = 1),
+          legend.position     = "bottom",
+          legend.title        = element_text(size = rel(0.85)),
+          plot.title          = element_text(face = "bold", size = rel(1.05)),
+          plot.title.position = "plot",
+          plot.background     = element_rect(fill = "white", colour = NA))
+}
+
+# building one yes/no bar per row: y = row position, yes = yes-share in %
+# lo/hi only filled on forecast rows, NA rows draw no interval
+vote_bars <- function(rows, model_name, bar_h = 0.7, clip = "on") {
+  bars <- bind_rows(
+    rows %>% transmute(y, side = "Yes", xmin = 0,   xmax = yes),
+    rows %>% transmute(y, side = "No",  xmin = yes, xmax = 100)
+  ) %>%
+    mutate(side = factor(side, levels = c("Yes", "No")),
+           xmid = (xmin + xmax) / 2,
+           lab  = pct1(xmax - xmin))
+  
+  iv     <- rows %>% filter(!is.na(lo), !is.na(hi)) %>% mutate(y_iv = y - 0.12)
+  iv_end <- iv %>% select(y_iv, lo, hi) %>% pivot_longer(c(lo, hi), values_to = "x")
+  
+  ggplot() +
+    geom_rect(data = bars,
+              aes(xmin = xmin, xmax = xmax, ymin = y - bar_h / 2, ymax = y + bar_h / 2,
+                  fill = side),
+              colour = "white", linewidth = 0.3) +
+    geom_vline(xintercept = 50, linetype = "dashed", linewidth = 0.4) +
+    geom_label(data = bars, aes(x = xmid, y = y + 0.15, label = lab),
+               size = 2.8, label.padding = unit(0.12, "lines"), fill = "white") +
+    geom_segment(data = iv,
+                 aes(x = lo, xend = hi, y = y_iv, yend = y_iv, colour = "80% interval"),
+                 linewidth = 0.6) +
+    geom_point(data = iv_end, aes(x = x, y = y_iv, colour = "80% interval"), size = 2) +
+    scale_fill_manual(values = c(Yes = col_yes, No = col_no), name = NULL) +
+    # model name as title of the interval key so the reference sits inside the legend
+    scale_colour_manual(values = c(`80% interval` = "black"),
+                        name = paste0("Model: ", model_name)) +
+    scale_x_continuous(breaks = seq(0, 100, 25), labels = label_percent(scale = 1)) +
+    # zooming instead of scale limits so text placed right of 100% is kept
+    coord_cartesian(xlim = c(0, 100), expand = TRUE, clip = clip) +
+    guides(fill = guide_legend(order = 1), colour = guide_legend(order = 2)) +
+    labs(x = "Share of valid votes") +
+    theme_vote()
+}
+
+## Upcoming votes of 29.11.2026 (anr 690-693) -------------------------
+
+model_up     <- ""             # champion model from 09
+pred_date_up <- ""             # date of the 09 prediction run, dd.mm.yyyy
+vote_date_up <- "29.11.2026"
+anr_up       <- as.character(690:693)
+
+# reading the 09 forecast export; file name has to match the run suffix written in 09
+fc_up <- read_csv(file.path(output_path, "forecast_upcoming.csv"),
+                  col_types = cols(anr = col_character())) %>%
+  filter(anr %in% anr_up) %>%
+  arrange(anr)
+
+stopifnot(nrow(fc_up) == length(anr_up),
+          !anyNA(fc_up[c("yes_hat", "lo80_rf", "hi80_rf", "p_volksmehr_rf")]))
+
+up_rows <- fc_up %>%
+  mutate(y       = -(row_number() - 1),
+         yes     = yes_hat,
+         lo      = lo80_rf,
+         hi      = hi80_rf,
+         # accepted_hat already applies the double majority for rechtsform 1, 3, 4
+         verdict = if_else(coalesce(accepted_hat, yes_hat >= 50), "Accepted", "Rejected"),
+         y_lab   = paste0(str_wrap(titel, 22), "\n", verdict,
+                          "\nP(yes majority) ", percent(p_volksmehr_rf, accuracy = 1)))
+
+p_up <- vote_bars(up_rows, model_up) +
+  annotate("text", x = 51, y = max(up_rows$y) + 0.5, label = "50% threshold",
+           hjust = 0, fontface = "italic", size = 3) +
+  scale_y_continuous(breaks = up_rows$y, labels = up_rows$y_lab,
+                     expand = expansion(add = c(0.45, 0.65))) +
+  labs(title = paste0("Federal vote of ", vote_date_up,
+                      "\nForecast of ", pred_date_up)) +
+  theme(legend.box = "vertical", legend.spacing.y = unit(0, "pt"))
+
+print(p_up)
+ggsave(file.path(output_path, "10_forecast_upcoming_20261129.png"),
+       p_up, width = 4, height = 6.6, dpi = 300, bg = "white")
+
+## Forecast vs. result of 27.9.2026 (anr 688-689) ---------------------
+
+model_past     <- "lm_m1_2a"
+pred_date_past <- "25.9.2026"
+vote_date_past <- "27.9.2026"
+
+# manual input: forecast of the 25.9.2026 lm_m1_2a run
+# p_volksmehr_rf from the same run; NA drops the P(yes majority) line
+fc_past <- tribble(
+  ~anr,  ~titel,                   ~yes_hat, ~lo80_rf, ~hi80_rf, ~p_volksmehr_rf,
+  "688", "Neutralitätsinitiative", 39.2,     27.5,     51.6,     0.12,
+  "689", "Ernährungsinitiative",   26.0,     14.3,     38.3,     0.01
+)
+
+# manual input: official result (yes-share of valid votes, yes-Stände out of 23)
+res_past <- tribble(
+  ~anr,  ~yes_act, ~staende_yes,
+  "688", 29.85,    0,
+  "689", 27.5,     0
+)
+
+past <- fc_past %>%
+  left_join(res_past, by = "anr") %>%
+  mutate(y_fc        = -(row_number() - 1) * 2.6,
+         y_res       = y_fc - 1,
+         # forecast verdict on the Volksmehr only, no Stände forecast in the manual input
+         verdict_fc  = if_else(yes_hat >= 50, "Accepted", "Rejected"),
+         verdict_act = if_else(yes_act > 50 & staende_yes > 11.5, "Accepted", "Rejected"),
+         hit         = if_else(verdict_fc == verdict_act, "forecast correct", "forecast wrong"),
+         covered     = if_else(between(yes_act, lo80_rf, hi80_rf),
+                               "inside 80% interval", "outside 80% interval"),
+         err         = sprintf("forecast - result: %+.1f pp", yes_hat - yes_act))
+
+past_rows <- bind_rows(
+  past %>% transmute(y = y_fc, yes = yes_hat, lo = lo80_rf, hi = hi80_rf,
+                     y_lab = paste0(titel, "\nForecast"),
+                     note  = if_else(is.na(p_volksmehr_rf), verdict_fc,
+                                     paste0(verdict_fc, "\nP(yes majority) ",
+                                            percent(p_volksmehr_rf, accuracy = 1)))),
+  past %>% transmute(y = y_res, yes = yes_act, lo = NA_real_, hi = NA_real_,
+                     y_lab = "Result",
+                     note  = paste0(verdict_act, " | Stände ", staende_yes, "/23\n",
+                                    hit, " | ", covered, "\n", err))
+)
+
+p_past <- vote_bars(past_rows, model_past, clip = "off") +
+  geom_text(data = past_rows, aes(x = 101.5, y = y, label = note),
+            hjust = 0, size = 2.6, lineheight = 0.9) +
+  annotate("text", x = 51, y = max(past_rows$y) + 0.75,
+           label = "50% threshold for acceptance",
+           hjust = 0, fontface = "italic", size = 3) +
+  scale_y_continuous(breaks = past_rows$y, labels = past_rows$y_lab,
+                     expand = expansion(add = c(0.5, 0.9))) +
+  labs(title = paste0("Forecast of ", pred_date_past, " vs. result of the federal vote of ",
+                      vote_date_past)) +
+  theme(plot.margin = margin(10, 175, 10, 10))
+
+print(p_past)
+ggsave(file.path(output_path, "10_forecast_vs_result_20260927.png"),
+       p_past, width = 10, height = 4.2, dpi = 300, bg = "white")
+
 # D. Engine-specific interpretation ---------------------------------------
-# 14. Single display tree --------------------------------------------------
+# 15. Single display tree -------------------------------------------------
 
 # ranger grows 500 randomised trees and no single one of them represents the forest,
 # so plotting one ranger tree would be misleading. I fit one rpart tree on the same
@@ -814,7 +977,7 @@ rpart.plot(tree_fit, type = 2, extra = 101, box.palette = "BuGn",
                          " (Illustrative, not ranger() ML engine)"))
 dev.off()
 
-# 15. xgboost gain importance ----------------------------------------------
+# 16. xgboost gain importance ----------------------------------------------
 
 # Refitting the xgb model on the full short frame, same settings as 09B
 frame_frak <- frame %>% filter(!is.na(frak_left_sup))
@@ -847,7 +1010,7 @@ p_xgb <- imp_xgb %>%
 save_plot(p_xgb, "10_xgb_importance.png", 9, 5)
 
 
-# 16. Permutation importance ------------------------------------------------
+# 17. Permutation importance ------------------------------------------------
 
 registry %>% select(model, frame_tag, engine)
 
@@ -937,7 +1100,7 @@ perm_plots <- perm_summary %>%
     p
   })
 
-# 17. Saving the metric table ----------------------------------------------
+# 18. Saving the metric table ----------------------------------------------
 
 write_csv(perm_imp %>%
             group_by(model, frame_tag, feature) %>%
