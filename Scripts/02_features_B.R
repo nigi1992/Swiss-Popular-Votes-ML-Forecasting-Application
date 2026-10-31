@@ -542,7 +542,7 @@ sum(df$gov_parl_align == "0" & df$volk == "1", na.rm = TRUE)
 # 6. Roll call dataset features for shorter time frame ------------------
 
 # Faction roll-call voting blocs from about 1994 to present (Nationalrat Schlussabstimmung)
-# Voting blocs in upper chamber as a proxy for party paroles (as these are not available at campaign start)
+# Voting blocs in lower chamber as a proxy for party paroles (as these are not available at campaign start)
 # Joining the external feature datasets onto the master feature table by Proposal ID (anr) as key 
 # Data originates from parlament.ch, for more details on how faction blocs were derived from roll call data,
 # see other GitHub Repository with the accompanying Python scripts and documentation:
