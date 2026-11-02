@@ -23,7 +23,7 @@ SwissVotes_Df0 <- file.path(input_path, "Cleaned Dataset for R - 2.7.26.csv")
 
 ## Data import as characters ------------------------------------------
 
-# Reading every column as text first so nothing gets auto-coerced;
+# Reading every column as text first so nothing gets auto-coerced
 # Only empty cells become NA, '.', '0' and '9999' as literal strings
 df_raw <- read_csv(
   SwissVotes_Df0,
@@ -38,9 +38,11 @@ str(df_raw)
 
 # 2. Data cleaning ----------------------------------------------------
 ## Documented manual corrections of the source data -------------------
-# cell-level fact corrections only, never statistical fills; each entry
-# names its basis so the deviation from the swissvotes original stays
-# auditable; the raw csv remains untouched
+
+# cell-level fact corrections only, never statistical fills 
+# each entry names its basis so the deviation from the swissvotes original 
+# stays auditable and the raw csv remains untouched
+
 #manual_corrections <- tribble(
 #  ~anr,  ~variable, ~value, ~basis,
 #  "293", "dep",     "8",    paste("Federfuehrung analog anr 369 (identische Vorlage,",
@@ -63,6 +65,7 @@ str(df_raw)
 #}
 
 #df_raw <- apply_corrections(df_raw, manual_corrections)
+
 ## Dropping phantom rows and stray whitespace -------------------------
 
 df_raw <- df_raw %>%
@@ -104,9 +107,6 @@ df <- df %>%
 ## Excluding the pre-Frauenstimmrecht votes ----------------------------
 
 # anr 219-224 predate the 7.2.1971 introduction of women's suffrage;
-# berecht jumps from 1.65M to 3.57M at this point, a hard discontinuity, not a gradual drift; 
-# These votes were decided by the male only franchise it later abolished, 
-# so its yes-share is not comparable to any later row's target variable
 df <- df %>% filter(datum >= as.Date("1971-06-06"))
 
 ## Keeping gesch_nr as character ---------------------------------------
@@ -303,7 +303,7 @@ dat_submit_fixes <- tibble::tribble(
   # Manual Research
   "422", as.Date("1995-01-11"), 
   "513", as.Date("2004-01-22") 
-  # For most of these there is no data available, but it exists and could be imputed
+  # For most of these there is no data available, but it exists and could be imputed later in theory
   # "248" "249" "254" "257" "258" "276" "278" "280" "283" "290" "291" "292" "298" "301" "309" "310" "335" "336" "341" "344" "345" "348" "349" 
   # "363" "364" "368" "372" "375" "376" "377" "381" "382" "383" "384" "385" "386" "387" "398" "409" "414" "415" "417" "419" "420" "424" "431" "433" 
 )
