@@ -15,10 +15,12 @@ make_time_folds <- function(dates, initial_frac = 0.5, k = 6) {
   blocks   <- split(test_idx, cut(seq_along(test_idx), k, labels = FALSE))
   lapply(seq_len(k), function(b) {
     test  <- blocks[[b]]
-    #train <- ord[seq_len(n_init + if (b > 1) length(unlist(blocks[1:(b - 1)])) else 0)]
-    #list(train = train, test = test)
     t0   <- min(dates[test])
     list(train = ord[dates[ord] < t0], test = test)
+    
+    # Using row positions, which lets a vote see results from its own voting day
+    #train <- ord[seq_len(n_init + if (b > 1) length(unlist(blocks[1:(b - 1)])) else 0)]
+    #list(train = train, test = test)
   })
 }
 
