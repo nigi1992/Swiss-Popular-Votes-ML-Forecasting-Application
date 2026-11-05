@@ -3,7 +3,7 @@
 # Producing the actual forecasts for the not-yet-voted ballots:
 #   1. Fitting the 07 champion on every voted row
 #   2. Point prediction + empirical intervals from the pooled CV residuals
-#      (short-frame residuals: deployment-era error spread, no normality assumption)
+#      (long-frame residuals: deployment-era error spread, no normality assumption)
 #   3. Route B Ständemehr for double-majority proposals via as-of canton deviations from 08
 #   4. Combined verdict per proposal
 
@@ -32,7 +32,7 @@ frame <- df %>%
 
 upcoming <- df %>% # Upcoming federal referendums are the inference target
   filter(vote_done != "voted") %>% # (not yet voted)
-  filter(rechtsform %in% c("1", "2", "3", "4")) %>% # (only the 4 proposal types that are modeled)
+  filter(rechtsform %in% c("1", "2", "3", "4")) %>% # (excluding Stichfragen, rechtsform = 5)
   mutate(rechtsform = factor(as.character(rechtsform),
                              levels = levels(frame$rechtsform))) %>%
   arrange(datum, anr)
@@ -53,7 +53,7 @@ stopifnot(champion_spec$engine %in% c("lm", "lasso", "ridge"))
 
 tr <- frame[, c("yes_share", champion_spec$feats)] %>%
   droplevels() %>% drop_zero_variance()
-g  <- fit_lm_guarded(tr)
+g  <- fit_lm_guarded(tr) # always fits on lm()! Lasso and Ridge are never selected!
 up <- upcoming[, names(g$data)[names(g$data) != "yes_share"], drop = FALSE] %>%
   harmonize_factor_levels(ref = g$data)
 
@@ -100,8 +100,9 @@ pred <- upcoming %>%
             # P(Volksmehr) from the empirical residual distribution: Share of CV residuals that would push the true share past 50%
             p_volksmehr = vapply(yhat, function(m) mean(m + r >= 50, na.rm = TRUE), numeric(1))
             ) # For each vote's point forecast m, this estimates P(true yes-share ≥ 50%) empirically: 
-              # Takes full vector of CV residuals r and shifts each onto m (as in constructing a full empirical predictive distribution m + r 
-              # by treating every historical residual as a plausible error for this new prediction)
+              # Takes full vector of CV residuals r and shifts each onto m 
+              # (as in constructing a full empirical predictive distribution (m + r) by treating 
+              # every historical residual as a plausible error for this new prediction)
               # Then it computes the fraction of that shifted distribution that clears 50%
 
 ## Rechtsform-conditional residual pool (Mondrian-style) -----------------

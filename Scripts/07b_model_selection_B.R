@@ -171,10 +171,10 @@ n_coef <- function(set) {
   }))
 }
 
-# 1 Standard Error rule on the paired difference, required on both frames
+# 1-Standard Error rule on the paired difference, required on both frames
 elig <- sel %>% mutate(ok = dmae <= se_dmae)
 
-# Ranking engines by determinism and fit variance, used only as a tie-break inside the set where 1-Standard error rule = True
+# Ranking engines by determinism and fit variance, used only as a tie-break inside the set where 1-Standard Error rule = True
 engine_rank <- c(lm = 1, ridge = 2, lasso = 2, knn = 3, tree = 3,
                  rf = 4, gbm = 4, xgb = 4)
 
@@ -193,11 +193,11 @@ cands <- pass %>%
             .groups = "drop") %>%
   mutate(engine = sub("_.*$", "", model),
          set    = sub("^[a-z]+_", "", model),
-         e_rank = coalesce(unname(engine_rank[engine]), 4),
+         #e_rank = coalesce(unname(engine_rank[engine]), 4),
          k      = if_else(engine %in% c("lm", "ridge", "lasso"),
                           map_int(set, n_coef), NA_integer_)) %>%
-  arrange(e_rank, k, recent_mean)
-  
+  arrange(k, recent_mean)
+
 print(cands)
 
 champion_name <- cands$model[1]

@@ -130,7 +130,7 @@ frames_by_tag <- list(long = frame, short = frame_frak)
 folds_by_tag  <- list(long = folds_long, short = folds_short)
 
 upcoming <- df %>%
-  filter(vote_done != "voted") %>%
+  filter(vote_done != "voted", rechtsform %in% c("1", "2", "3", "4")) %>%
   mutate(rechtsform = factor(as.character(rechtsform),
                              levels = levels(frame$rechtsform))) %>%
   arrange(datum, anr)
