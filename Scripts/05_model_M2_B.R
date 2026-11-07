@@ -79,7 +79,7 @@ run_m2_set <- function(set_name, feats, train_frame = "short") {
 
 run_these_m2 <- c(
   # t0 core + champion candidates, trained short
-  "m1B_core", "m1B_sig", "m1B_ref", "m1B_sig_ref", "m1_2eB",
+  "m1B_core", "m1B_sig", "m1B_ref", "m1B_sig_ref", "m1_2eB", "m1B_parl",
   # Slot swaps: the faction support signal replaces parl_support_signed (vs m1B_core)
   "m2B_wsup", "m2B_gov", "m2B_breadth",
   # Add-ons on the core (vs m1B_core)

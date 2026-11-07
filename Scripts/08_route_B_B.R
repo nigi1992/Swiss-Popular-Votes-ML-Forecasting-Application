@@ -28,7 +28,7 @@ df            <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 feature_sets  <- readRDS(file.path(input_path, "feature_sets_B.rds")) # B registry from 02_feature_set_B.R
 champion_spec <- readRDS(file.path(output_path, "champion_spec.rds"))
 
-# 2. Frames + folds (identical to 04-07) -------------------------------
+# 2. Frames + Folds (identical to 04-07) -------------------------------
 
 frame <- df %>%
   filter(vote_done == "voted", rechtsform %in% c("1", "2", "3", "4")) %>%

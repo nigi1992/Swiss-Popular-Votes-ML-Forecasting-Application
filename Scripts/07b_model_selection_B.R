@@ -247,9 +247,9 @@ resid_of <- function(mx) {
 
 # Recording rules for frame selection 
 selection <- list(
-  rule           = "1) One-Standard Error rule on paired dMAE vs frame-best,
-                    2) Tie-break: No. of coefficients (features), 
-                    3) then recent-fold MAE,
+  rule           = "1) One-Standard Error rule on paired dMAE vs frame-best
+                    2) Tie-break: No. of coefficients (features) 
+                    3) Then recent-fold MAE
                     4) Hard constraints, such as engine types filter candidates before any ranking",
   frames         = c("long", "short"),
   test           = "Vote-date clustered paired bootstrap on MAE, B = 4000",

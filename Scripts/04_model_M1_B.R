@@ -76,7 +76,7 @@ run_these <- c(
   # Benchmarks + legacy references (old pooled coding)
   "m0", "m1_1e", "m1_2a", "m1_2e",
   # One-block probes on the core (each vs m1B_core)
-  "m1B_core", "m1B_sig", "m1B_urh", "m1B_ref", "m1B_pair", "m1B_struct",
+  "m1B_core", "m1B_sig", "m1B_urh", "m1B_ref", "m1B_pair", "m1B_struct", "m1B_parl",
   # Combined candidates
   "m1B_urh_sig", "m1B_sig_ref", "m1_2eB",
   # Widest lm-safe set (contrast for ridge / lasso in 06)

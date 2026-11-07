@@ -211,6 +211,7 @@ feature_sets <- list(
 
 # One-block probes on the core, each against m1B_core
 feature_sets$m1B_core    <- core
+feature_sets$m1B_parl    <- b_elite_lm                       
 feature_sets$m1B_sig     <- c(core, b_sig_lm)                       # CV screen: -0.16 MAE vs core (long), driven by init_sig_spare
 feature_sets$m1B_urh     <- c(core, b_urh_lm)
 feature_sets$m1B_ref     <- c(core, b_urh_ref)
@@ -300,6 +301,7 @@ meta <- tribble(
   "m1_1e",              "t0",  "long,short",   "lm",    "m0",             "legacy",
   "m1_2a",              "t0",  "long,short",   "lm",    "m1B_core",       "legacy",
   "m1_2e",              "t0",  "long,short",   "lm",    "m1_2a",          "legacy",
+  "m1B_parl",           "t0",  "long,short",   "lm",    "m0",             "core",
   "m1B_core",           "t0",  "long,short",   "lm",    "m0",             "core",
   "m1B_sig",            "t0",  "long,short",   "lm",    "m1B_core",       "probe",
   "m1B_urh",            "t0",  "long,short",   "lm",    "m1B_core",       "probe",
