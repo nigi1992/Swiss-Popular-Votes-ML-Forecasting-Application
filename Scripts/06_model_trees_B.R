@@ -1,6 +1,6 @@
 ### 06_model_trees_B.R ###
 
-# Non-lm engines on the identical temporal folds from 84 (long, k=6) and 05 (short, k=4):
+# Non-lm engines on the identical temporal folds from 04 (long, k=6) and 05 (short, k=4):
 # ridge / lasso   glmnet on the dummy-coded matrix (regularized-linear check for wide sets)
 # tree            rpart, single CART (transparency anchor, expected to lose)
 # rf              ranger random forest (main tree engine)

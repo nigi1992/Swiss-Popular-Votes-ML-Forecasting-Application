@@ -65,7 +65,14 @@ rerun_lm <- function(set_name, feats, frame_use, folds_use) {
 }
 
 # Hook for feature-sets that 06 did not fit
-lm_finalists <- character(0)
+
+#lm_finalists <- character(0)
+lm_finalists <- c("m1B_urh", "m1B_ref", "m1B_pair", "m1B_struct", "m1B_urh_sig", 
+                  #"m1B_core", "m1B_ref", "m1B_sig", "m1B_sig_ref", "m1_2eB", "m1B_wide", "m1B_tree",
+                  "m2B_wsup", "m2B_gov", "m2B_breadth", "m2B_cue", "m2B_enth", "m2B_bc", "m2B_defect")  
+
+missing_sets <- setdiff(lm_finalists, names(feature_sets))
+if (length(missing_sets) > 0) stop("Not in feature_sets_B: ", paste(missing_sets, collapse = ", "))
 
 build_matrix <- function(frame_use, folds_use, tree_results, frame_tag) { 
   test_idx <- unlist(map(folds_use, "test"))
@@ -108,6 +115,11 @@ mx_short <- drop_excluded(mx_short)
 
 # 4. Date-clustered paired bootstrap against frame-best -------------------
 
+# The function resamples whole vote dates 4000 times, using the same draw for every model. 
+# In each draw it recomputes every MAE and subtracts the reference’s MAE. The SD of those 4000 gaps is se_dmae
+# Whole dates are resampled because votes on the same Abstimmungstag share shocks
+# Resampling single rows would understate the noise (Cameron & Miller, 2015)
+
 B <- 4000 # No. of bootstrap draws for the paired bootstrap, 4000 is enough to get a stable p-value
 
 boot_table <- function(mx, frame_use, folds_use) {
@@ -126,7 +138,7 @@ boot_table <- function(mx, frame_use, folds_use) {
   BM <- sweep(t(S) %*% W, 2, drop(n_g %*% W), "/")
   mae_pt <- colMeans(E) # Point estimate of the MAE (pt for 'point', as opposed to the bootstrap replicates in BM)
   # It's the mean absolute error of the model over all pooled test rows of the frame: colMeans(E), where E holds |y − ŷ| per row and model.
-  best   <- names(which.min(mae_pt))
+  best   <- names(which.min(mae_pt)) # Per frame, the model with the lowest MAE over all pooled test rows becomes the frame best
   D      <- sweep(BM, 2, BM[best, ])
   # Flagging the later half of the folds as the deployment-relevant period
   fold_of <- rep(seq_along(folds_use), lengths(map(folds_use, "test")))
@@ -139,7 +151,8 @@ boot_table <- function(mx, frame_use, folds_use) {
          # Measures how much dmae would vary under a different sample of vote dates -> 0 for best model
          p_worse = rowMeans(D > 0),
          mae_recent = unname(colMeans(E[recent, , drop = FALSE])),
-         volksmehr_acc = map_dbl(mx$P, ~ volksmehr_acc(y, .x)))
+         volksmehr_acc = map_dbl(mx$P, ~ volksmehr_acc(y, .x)),
+         n_na = unname(colSums(is.na(E)))) # counting test rows without a prediction per model)
 }
 
 sel <- bind_rows(boot_table(mx_long,  frame,      folds_long),
@@ -158,7 +171,7 @@ sel <- bind_rows(boot_table(mx_long,  frame,      folds_long),
 # 4. Hard constraints filter candidates before any ranking, never inside a score:
 #   - Ex-ante availability of every feature or the interpretable meaning of each feature across all rechtsform types.
 
-# Fixing the engine family by use case before looking at results, 09 needs coefficients
+# Option to fix the engine family by use case before looking at results, because 09 needs coefficients, 09b for non-lm
 #engines_allowed <- c("lm")
 
 # Counting estimated coefficients, a factor costs (levels - 1)
@@ -171,20 +184,31 @@ n_coef <- function(set) {
   }))
 }
 
-# 1-Standard Error rule on the paired difference, required on both frames
+# One-Standard Error rule on the paired difference
 elig <- sel %>% mutate(ok = dmae <= se_dmae)
 
-# Ranking engines by determinism and fit variance, used only as a tie-break inside the set where 1-Standard Error rule = True
+# warning about models that filter(ok) drops silently, with the number of missing prediction rows
+na_ok <- elig %>% filter(is.na(ok))
+if (nrow(na_ok)) warning("excluded for NA MAE/SE: ",
+                         paste0(na_ok$model, " [", na_ok$frame, ", ", na_ok$n_na, " NA rows]",
+                                collapse = "; "))
+
+# Ranking engines by determinism and fit variance, used only as a tie-break inside the set where One-Standard Error rule = True
 engine_rank <- c(lm = 1, ridge = 2, lasso = 2, knn = 3, tree = 3,
                  rf = 4, gbm = 4, xgb = 4)
 
-# Requiring the band on both frames, falling back to the long frame (09's training frame) if exclusions empty it
-pass <- elig %>% filter(ok) %>% group_by(model) %>% filter(n_distinct(frame) == 2) %>% ungroup()
-if (nrow(pass) == 0) {
-  warning("no model passes on both frames after exclusions, ranking on the long frame only")
-  pass <- elig %>% filter(ok, frame == "long")
-}
+# Noise Band: A model survives if dmae <= se_dmae 
+# Falling back to the long frame (09's training frame) if exclusions empty it
+# This is a variant of the One-Standard Error rule (Breiman et al., 1984; Hastie et al., 2009).
+pass <- elig %>% filter(ok) #%>% group_by(model) %>% filter(n_distinct(frame) == 2) %>% ungroup()
 
+#if (nrow(pass) == 0) {
+ # warning("no model passes on both frames after exclusions, ranking on the long frame only")
+  #pass <- elig %>% filter(ok, frame == "long")
+#}
+
+#Ranking survivors: Fewest coefficients k wins. Recent-fold MAE only breaks exact ties in k. 
+# Non-linear engines get k = NA, and arrange() puts NA last, so a tree model can only win if no lm/ridge/lasso survives.
 cands <- pass %>%
   group_by(model) %>%
   summarise(mae_long    = mae[frame == "long"][1],
@@ -194,9 +218,11 @@ cands <- pass %>%
   mutate(engine = sub("_.*$", "", model),
          set    = sub("^[a-z]+_", "", model),
          #e_rank = coalesce(unname(engine_rank[engine]), 4),
-         k      = if_else(engine %in% c("lm", "ridge", "lasso"),
+         #k      = if_else(engine %in% c("lm", "ridge", "lasso"),
+         k      = if_else(engine %in% c("lm", "ridge", "lasso", "knn", "tree", "rf", "gbm", "xgb"),
                           map_int(set, n_coef), NA_integer_)) %>%
   arrange(k, recent_mean)
+  #arrange(e_rank, k, recent_mean)
 
 print(cands)
 
@@ -221,9 +247,10 @@ resid_of <- function(mx) {
 
 # Recording rules for frame selection 
 selection <- list(
-  rule           = "1) 1-Standard error rule on paired dMAE vs frame-best on both frames,
-                    2) Engine tier (linear models prefered due to feature engineering process), 
-                    3) Tie-break: No. of coefficients (features), 4) then recent-fold MAE",
+  rule           = "1) One-Standard Error rule on paired dMAE vs frame-best,
+                    2) Tie-break: No. of coefficients (features), 
+                    3) then recent-fold MAE,
+                    4) Hard constraints, such as engine types filter candidates before any ranking",
   frames         = c("long", "short"),
   test           = "Vote-date clustered paired bootstrap on MAE, B = 4000",
   n_candidates   = nrow(sel),

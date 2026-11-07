@@ -562,6 +562,236 @@ p_cor_num <- as_tibble(C, rownames = "v1") %>%
 side <- max(12, 0.34 * length(var_order))
 save_plot(p_cor_num, "10_correlation_matrix_numbered.png", side, side * 0.95)
 
+## Numbered, high correlations only ---------------------------------------
+
+thr <- 0.7
+
+# Flagging every off-diagonal pair at or above the threshold in absolute value
+hi_mask <- !is.na(C) & abs(C) >= thr
+diag(hi_mask) <- FALSE
+
+# Keeping only variables with at least one strong partner; the target stays as anchor
+keep_vars <- var_order[var_order == "yes_share" | rowSums(hi_mask[var_order, var_order]) > 0]
+n_keep    <- length(keep_vars)
+if (n_keep < length(var_order))
+  message("no pair with |r| >= ", thr, ", dropped: ",
+          paste(setdiff(var_order, keep_vars), collapse = ", "))
+
+# Recomputing the bucket separators on the reduced variable set
+sep_keep <- var_bucket %>%
+  filter(var %in% keep_vars) %>%
+  mutate(i = row_number()) %>%
+  group_by(bucket) %>%
+  summarise(last_i = max(i), .groups = "drop") %>%
+  arrange(last_i) %>%
+  pull(last_i)
+sep_keep <- head(sep_keep, -1) + 0.5
+
+# Lower triangle without the diagonal, so every pair appears exactly once
+cor_hi <- as_tibble(C[keep_vars, keep_vars], rownames = "v1") %>%
+  pivot_longer(-v1, names_to = "v2", values_to = "r") %>%
+  filter(match(v2, keep_vars) > match(v1, keep_vars)) %>%
+  mutate(v1   = factor(v1, levels = keep_vars[-n_keep]),
+         v2   = factor(v2, levels = rev(keep_vars[-1])),
+         high = !is.na(r) & abs(r) >= thr,
+         # Dropping the leading zero to keep the labels short
+         lab  = sub("^(-?)0\\.", "\\1.", sprintf("%.2f", r)),
+         # White text on saturated tiles, dark text on pale ones
+         txt  = if_else(abs(r) > 0.7, "white", "grey15"))
+
+# Separator geometry for the triangle: each bucket boundary becomes an L-shaped step
+sep_y <- n_keep - sep_keep + 1
+
+p_cor_hi <- ggplot(cor_hi, aes(v1, v2)) +
+  # Faint background tiles so the triangle stays readable where nothing passes
+  geom_tile(fill = "grey96", colour = "white", linewidth = 0.2) +
+  geom_tile(data = filter(cor_hi, high), aes(fill = r), colour = "white", linewidth = 0.2) +
+  geom_text(data = filter(cor_hi, high), aes(label = lab, colour = txt), size = 2.2) +
+  scale_colour_identity() +
+  annotate("segment", x = sep_keep, xend = sep_keep, y = 0.5, yend = sep_y,
+           colour = "grey20", linewidth = 0.4) +
+  annotate("segment", x = 0.5, xend = sep_keep, y = sep_y, yend = sep_y,
+           colour = "grey20", linewidth = 0.4) +
+  scale_fill_gradient2(low = "#d95f02", mid = "white", high = "#2c7fb8",
+                       midpoint = 0, limits = c(-1, 1),
+                       breaks = c(-1, -0.5, 0.5, 1), name = "r") +
+  coord_fixed() +
+  labs(title = "Strong correlations among predictors and target",
+       subtitle = paste0("Only pairs with |r| >= ", thr, " shown; variables without ",
+                         "such a pair dropped\nBlocked by feature bucket, target in the ",
+                         "first column"),
+       x = NULL, y = NULL) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+        axis.text.y = element_text(size = 7),
+        panel.grid = element_blank(),
+        panel.background = element_blank())
+
+side_hi <- max(8, 0.3 * n_keep)
+save_plot(p_cor_hi, "10_correlation_matrix_numbered_high.png", side_hi, side_hi * 0.95)
+
+# Same pairs as a sorted table, flagging cross-bucket redundancy
+hi_pairs <- cor_hi %>%
+  filter(high) %>%
+  transmute(var_1 = as.character(v1), var_2 = as.character(v2), r = round(r, 2)) %>%
+  left_join(rename(var_bucket, bucket_1 = bucket), by = c(var_1 = "var")) %>%
+  left_join(rename(var_bucket, bucket_2 = bucket), by = c(var_2 = "var")) %>%
+  mutate(same_bucket = bucket_1 == bucket_2) %>%
+  arrange(desc(abs(r)))
+
+## Numbered, most relevant variables only ---------------------------------
+
+thr        <- 0.5    # cells below this |r| stay blank
+top_pairs  <- 12     # strongest predictor-predictor pairs, these decide which variables are shown
+top_target <- 12     # strongest correlates of yes_share, kept regardless of the pairs
+cross_only <- FALSE  # TRUE ignores within-bucket pairs when selecting, those are mostly expected redundancy
+add_vars   <- character(0)
+#drop_vars  <- character(0)
+#add_vars   <- c("roll_yes_rechtsform", "parl_support_signed", "roll_yes_domain", "init_sig_surplus", "init_sig_spare", "ref_sig_surplus", "ref_pole_left", "pole_yes_dev")  
+drop_vars  <- c("elite_cue_lr", "months_to_election", "changes_constitution", "nr_yes_share", "sr_yes_share", "sr_support", "brpos_signed", "frak_fdp_sup", "frak_svp_sup", 
+                "frak_left_sup", "frak_center_sup", "frak_gps_sup", "frak_sp_sup", "parl_consensus", "left_pro", "left_contra", "actor_init_loss")
+
+# Every pair once (upper triangle of the bucket-ordered matrix), with both buckets attached
+pairs_all <- as_tibble(C, rownames = "v1") %>%
+  pivot_longer(-v1, names_to = "v2", values_to = "r") %>%
+  filter(match(v1, var_order) < match(v2, var_order), !is.na(r),
+         # Excluded variables leave before the ranking, so they do not use up top_pairs slots
+         !v1 %in% drop_vars, !v2 %in% drop_vars) %>%
+  left_join(rename(var_bucket, b1 = bucket), by = c(v1 = "var")) %>%
+  left_join(rename(var_bucket, b2 = bucket), by = c(v2 = "var"))
+
+# Predictor pairs with the strongest redundancy
+sel_pairs <- pairs_all %>%
+  filter(v1 != "yes_share", abs(r) >= thr, !cross_only | b1 != b2) %>%
+  slice_max(abs(r), n = top_pairs, with_ties = FALSE)
+
+# Predictors most correlated with the target; yes_share sits first in var_order, so it is always v1
+sel_target <- pairs_all %>%
+  filter(v1 == "yes_share") %>%
+  slice_max(abs(r), n = top_target, with_ties = FALSE)
+
+# Keeping the bucket order of var_order for the selected variables
+#keep_vars <- intersect(var_order, c("yes_share", sel_pairs$v1, sel_pairs$v2, sel_target$v2))
+# Keeping the bucket order of var_order for the selected variables; drop_vars wins over add_vars
+keep_vars <- intersect(var_order,
+                       setdiff(c("yes_share", sel_pairs$v1, sel_pairs$v2, sel_target$v2,
+                                 add_vars),
+                               drop_vars))
+n_keep    <- length(keep_vars)
+message(n_keep, " of ", length(var_order), " variables shown")
+
+# Bucket separators recomputed on the reduced variable set
+sep_keep <- var_bucket %>%
+  filter(var %in% keep_vars) %>%
+  mutate(i = row_number()) %>%
+  group_by(bucket) %>%
+  summarise(last_i = max(i), .groups = "drop") %>%
+  arrange(last_i) %>%
+  pull(last_i)
+sep_keep <- head(sep_keep, -1) + 0.5
+
+cor_sel <- as_tibble(C[keep_vars, keep_vars], rownames = "v1") %>%
+  pivot_longer(-v1, names_to = "v2", values_to = "r") %>%
+  mutate(diag = v1 == v2,
+         # The target row and column are labelled in full as reference, elsewhere only strong pairs
+         show = !diag & !is.na(r) &
+           (abs(r) >= thr | v1 == "yes_share" | v2 == "yes_share"),
+         r_fill = if_else(show, r, NA_real_),
+         # Dropping the leading zero to keep the labels short
+         lab = sub("^(-?)0\\.", "\\1.", sprintf("%.2f", r)),
+         # White text on saturated tiles, dark text on pale ones
+         txt = if_else(abs(r) > 0.7, "white", "grey15"),
+         v1  = factor(v1, levels = keep_vars),
+         v2  = factor(v2, levels = rev(keep_vars)))
+
+p_cor_sel <- ggplot(cor_sel, aes(v1, v2)) +
+  geom_tile(aes(fill = r_fill), colour = "white", linewidth = 0.3) +
+  geom_tile(data = filter(cor_sel, diag), fill = "grey80", colour = "white", linewidth = 0.3) +
+  geom_text(data = filter(cor_sel, show), aes(label = lab, colour = txt), size = 2.6) +
+  scale_colour_identity() +
+  geom_vline(xintercept = sep_keep, colour = "grey20", linewidth = 0.4) +
+  geom_hline(yintercept = n_keep - sep_keep + 1, colour = "grey20", linewidth = 0.4) +
+  scale_fill_gradient2(low = "#d95f02", mid = "white", high = "#2c7fb8",
+                       midpoint = 0, limits = c(-1, 1), na.value = "grey96",
+                       breaks = c(-1, -0.5, 0, 0.5, 1), name = "r") +
+  coord_fixed() +
+  labs(title = "Strongest correlations among predictors and target",
+       subtitle = paste0("Variables from the ", top_pairs, " strongest predictor pairs and the ",
+                         top_target, " strongest target correlates\n",
+                         "Cells with |r| < ", thr, " blank except in the target row and column",
+                         "\nMostly ignores within-bucket pairs"),
+       x = NULL, y = NULL) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
+        axis.text.y = element_text(size = 8),
+        panel.grid = element_blank(),
+        panel.background = element_blank())
+
+side_sel <- max(7, 0.42 * n_keep + 3)
+save_plot(p_cor_sel, "10_correlation_matrix_selected.png", side_sel, side_sel * 0.9)
+
+# The selected pairs as a sorted table, flagging cross-bucket redundancy
+sel_table <- bind_rows(target = sel_target, predictors = sel_pairs, .id = "type") %>%
+  transmute(type, var_1 = v1, var_2 = v2, r = round(r, 2),
+            bucket_1 = b1, bucket_2 = b2, same_bucket = b1 == b2) %>%
+  arrange(type, desc(abs(r)))
+
+## Hand-picked variables ---------------------------------------------------
+
+man_vars <- c("roll_yes_rechtsform", "parl_support_signed", "roll_yes_domain",
+              "init_sig_surplus", "init_sig_spare", "ref_sig_surplus", "ref_sig_spare",
+              "ref_pole_left", "pole_yes_dev")
+man_order <- c("yes_share", man_vars)
+thr_lab   <- 0      # set to 0.5 to blank the weak cells again
+
+# Checking the names before anything is computed
+stopifnot(all(man_order %in% names(frame)))
+
+# Computing straight from frame, so the plot does not depend on feature_buckets or the usable filter
+C_man <- cor(frame[, man_order], use = "pairwise.complete.obs")
+# Pairwise overlap, since the signature variables only exist for their own instrument
+N_man <- crossprod(!is.na(as.matrix(frame[, man_order])))
+n_full <- max(N_man)
+
+fmt_r <- function(r) sub("^(-?)0\\.", "\\1.", sprintf("%.2f", r))
+
+cor_man <- as_tibble(C_man, rownames = "v1") %>%
+  pivot_longer(-v1, names_to = "v2", values_to = "r") %>%
+  mutate(n    = N_man[cbind(v1, v2)],
+         diag = v1 == v2,
+         # Adding the overlap n to every cell computed on a subsample, so the base is visible
+         lab  = case_when(diag             ~ "",
+                          is.na(r)         ~ "n/a",
+                          abs(r) < thr_lab ~ "",
+                          n < n_full       ~ paste0(fmt_r(r), "\n(n=", n, ")"),
+                          TRUE             ~ fmt_r(r)),
+         r_fill = if_else(diag | is.na(r) | abs(r) < thr_lab, NA_real_, r),
+         # White text on saturated tiles, dark text on pale ones
+         txt  = if_else(!is.na(r) & abs(r) > 0.7, "white", "grey15"),
+         v1   = factor(v1, levels = man_order),
+         v2   = factor(v2, levels = rev(man_order)))
+
+p_cor_man <- ggplot(cor_man, aes(v1, v2)) +
+  geom_tile(aes(fill = r_fill), colour = "white", linewidth = 0.3) +
+  geom_tile(data = filter(cor_man, diag), fill = "grey80", colour = "white", linewidth = 0.3) +
+  geom_text(aes(label = lab, colour = txt), size = 2.6, lineheight = 0.85) +
+  scale_colour_identity() +
+  # Setting the target row and column apart from the predictors
+  geom_vline(xintercept = 1.5, colour = "grey20", linewidth = 0.4) +
+  geom_hline(yintercept = length(man_order) - 0.5, colour = "grey20", linewidth = 0.4) +
+  scale_fill_gradient2(low = "#d95f02", mid = "white", high = "#2c7fb8",
+                       midpoint = 0, limits = c(-1, 1), na.value = "grey96",
+                       breaks = c(-1, -0.5, 0, 0.5, 1), name = "r") +
+  coord_fixed() +
+  labs(title = "Correlations of selected predictors and target",
+       subtitle = paste0("Pairwise complete observations; n shown where a cell rests on ",
+                         "fewer than ", n_full, " votes"),
+       x = NULL, y = NULL) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
+        axis.text.y = element_text(size = 8),
+        panel.grid = element_blank(),
+        panel.background = element_blank())
+
+save_plot(p_cor_man, "10_correlation_matrix_handpicked.png", 8, 7.4)
+
 ## Spreadsheets ----------------------------------------------------------
 
 # Correlation Matrix Spreadsheet
@@ -859,8 +1089,8 @@ vote_bars <- function(rows, model_name, bar_h = 0.7, clip = "on") {
 
 ## Upcoming votes of 29.11.2026 (anr 690-693) -------------------------
 
-model_up     <- ""             # champion model from 09
-pred_date_up <- ""             # date of the 09 prediction run, dd.mm.yyyy
+model_up     <- champion_name #"" # champion model from 09
+pred_date_up <- "10.10.2026"      # date of the 09 prediction run, dd.mm.yyyy
 vote_date_up <- "29.11.2026"
 anr_up       <- as.character(690:693)
 
@@ -889,7 +1119,7 @@ p_up <- vote_bars(up_rows, model_up) +
   scale_y_continuous(breaks = up_rows$y, labels = up_rows$y_lab,
                      expand = expansion(add = c(0.45, 0.65))) +
   labs(title = paste0("Federal vote of ", vote_date_up,
-                      "\nForecast of ", pred_date_up)) +
+                      "\nForecast Date: ", pred_date_up)) +
   theme(legend.box = "vertical", legend.spacing.y = unit(0, "pt"))
 
 print(p_up)
@@ -977,7 +1207,61 @@ rpart.plot(tree_fit, type = 2, extra = 101, box.palette = "BuGn",
                          " (Illustrative, not ranger() ML engine)"))
 dev.off()
 
-# 16. xgboost gain importance ----------------------------------------------
+# 16. Champ regression table + relative importance ---------------------
+
+library(patchwork)
+
+diag_09 <- readRDS(file.path(output_path, "champion_diagnostics.rds"))
+
+# Same feature order in both panels, largest LMG share on top
+feat_order <- rev(diag_09$lmg$term)
+
+coef_plot <- diag_09$coef %>%
+  filter(term != "(Intercept)") %>%
+  mutate(term = factor(term, levels = feat_order),
+         sig  = if_else(p_cl < 0.05, "p < 0.05", "p \u2265 0.05"))
+
+lmg_plot <- diag_09$lmg %>%
+  mutate(term = factor(term, levels = feat_order))
+
+# Panel A: standardised coefficients with 95% CIs clustered by vote date
+p_coef <- ggplot(coef_plot, aes(beta_std, term)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey55") +
+  geom_errorbar(aes(xmin = beta_lo, xmax = beta_hi), width = 0.25, colour = "grey30") +
+  geom_point(aes(shape = sig), size = 2.6, fill = "white") +
+  scale_shape_manual(values = c("p < 0.05" = 16, "p \u2265 0.05" = 21), name = NULL) +
+  labs(title = "A  Regression coefficients", subtitle = "Fit on all voted rows: n = 475 votes \n95% CIs clustered by vote date",
+       x = "standardised coefficient\n(SD of yes-share per SD of feature)", y = NULL) +
+  theme(legend.position = "bottom")
+print(p_coef)
+ggsave(file.path(output_path, "10_champion_coef.png"),
+       p_coef, width = 6, height = 5, dpi = 300, bg = "white")
+
+# Panel B: LMG share of the model R²
+p_lmg <- ggplot(lmg_plot, aes(share, term)) +
+  geom_col(fill = "grey70", width = 0.6) +
+  geom_text(aes(label = percent(share, accuracy = 0.1)), hjust = -0.15, size = 3) +
+  scale_x_continuous(labels = percent, expand = expansion(mult = c(0, 0.15))) +
+  labs(title = "B  Relative importance (LMG)", subtitle = "Fit on all voted rows: n = 475 votes, R\u00b2 = 0.54",
+
+       x = "share of model R\u00b2", y = NULL) +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), # feature names already on panel A
+        plot.margin = margin(5.5, 5.5, 5.5, 18))      # keeping "0%" clear of panel A's axis
+print(p_lmg)
+ggsave(file.path(output_path, "10_champion_lmg.png"),
+       p_lmg, width = 6, height = 5, dpi = 300, bg = "white")
+
+p_champ <- (p_coef | p_lmg) +
+  plot_annotation(
+    title    = paste0("Champion model: ", diag_09$meta$model),
+    subtitle = sprintf("Fit on all voted rows: n = %d votes, R\u00b2 = %.2f. 95%% CIs clustered by vote date",
+                       diag_09$meta$n_obs, diag_09$meta$r2))
+
+print(p_champ)
+ggsave(file.path(output_path, "10_champion_coef_importance.png"),
+       p_champ, width = 10, height = 5, dpi = 300, bg = "white")
+
+# 17. xgboost gain importance ----------------------------------------------
 
 # Refitting the xgb model on the full short frame, same settings as 09B
 frame_frak <- frame %>% filter(!is.na(frak_left_sup))
@@ -1008,9 +1292,9 @@ p_xgb <- imp_xgb %>%
        x = "gain", y = NULL)
 
 save_plot(p_xgb, "10_xgb_importance.png", 9, 5)
+rm(xgb_fit)
 
-
-# 17. Permutation importance ------------------------------------------------
+# 18. Permutation importance ------------------------------------------------
 
 registry %>% select(model, frame_tag, engine)
 
@@ -1100,7 +1384,7 @@ perm_plots <- perm_summary %>%
     p
   })
 
-# 18. Saving the metric table ----------------------------------------------
+# 19. Saving the metric table ----------------------------------------------
 
 write_csv(perm_imp %>%
             group_by(model, frame_tag, feature) %>%

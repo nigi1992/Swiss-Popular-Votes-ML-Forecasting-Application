@@ -59,7 +59,7 @@ b_cal_lm <- c("season", "months_since_election")
 # log_dauer_bv is filled with 0 there (real range 2.8-7.9) and pa_iv absorbs that level shift
 # -> always together; without pa_iv the 0-fill reads as "shortest deliberation" and the slope is biased
 b_proc_lm   <- c("pa_iv", "log_dauer_bv")
-b_inst_wide <- c("rechtsform", "gov_recommend", "main_domain", "dep",
+b_inst_wide <- c("rechtsform", "gov_recommend", "main_domain", "dep", 
                  "pa_iv", "log_dauer_bv", "anzahl", paste0("policy_", sprintf("%02d", 1:12)))
 # main_domain never next to roll_yes_domain in lm: GVIF of roll_yes_domain rises to 6.4 (short frame, fold 1)
 # changes_constitution / double_majority_required = functions of rechtsform -> dropped, also from trees

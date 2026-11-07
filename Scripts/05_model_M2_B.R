@@ -3,7 +3,7 @@
 # External-source models on the post-1994 faction frame
 
 # Every model is tested on the identical post-1994 test blocks, against 4 reference cells:
-# m1_2 trained long (1971+), m1_2 trained short (1994+)
+# M1B trained long (1971+), M2B trained short (1994+)
 # The current best M1 set trained long and short plus the M0 anchor
 # The long-vs-short reference pair measures what capping at 1994 costs
 
@@ -36,7 +36,7 @@ frame <- df %>%
          yes_share  = `volkja-proz`) %>%
   arrange(datum, anr)
 
-frame_frak <- frame %>% filter(!is.na(frak_left_sup))
+frame_frak <- frame %>% filter(!is.na(frak_left_sup)) # This filters pre-1994+ votes
 
 # k = 4 because of shorter post 1994+ time frame
 folds <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4) # (k=4, 131 test rows)

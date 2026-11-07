@@ -19,7 +19,8 @@ library(tidyverse)
 library(glmnet)    # lasso, ridge
 library(ranger)    # rf
 library(xgboost)   # xgb
-library(gbm3)      # gbm
+library(gbm)       # gbm
+library(gbm3)      # gbm3
 library(FNN)       # knn regression
 
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
@@ -41,7 +42,7 @@ set.seed(42)
 
 # Model selection, tagged with the frame each one is fitted and evaluated on 
 # Engine and feature set are parsed out of the name, same convention as 07
-models_long  <- c("lm_m1B_sig_ref", "lm_m1B_sig", "lm_m1_2eB", "lasso_m1B_sig_ref", "ridge_m1_2eB", "lm_m1B_core",
+models_long  <- c("lm_m1B_sig_ref", "lm_m1B_sig", "lasso_m1B_sig_ref", "ridge_m1_2eB", "lm_m1B_core", # "lm_m1_2eB",
                   "rf_m1B_tree", "lasso_m1B_wide", "xgb_m1B_tree", "knn_m1B_sig_ref")
 models_short <- c("lm_m1B_sig_ref", "lm_m2B_champ_sig", "lasso_m1B_sig_ref", "lasso_m2B_champ_cue",
                   "rf_m2B_tree", "xgb_m2B_tree", "knn_m1B_sig_ref", "lm_m1B_sig", "lm_m1B_core")

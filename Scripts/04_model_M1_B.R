@@ -1,10 +1,10 @@
 ### 04_model_M1_B.R ###
 
-# Structural-feature models on the shared temporal folds:
-#   M1.1  Simple model variations ("dumb" institutional model)
-#   M1.2  Model variations with more features
-#   M1.3  placeholder: runs automatically once its feature set is
-#         filled in 02_features.R (m1_2 + external features)
+# Structural-feature models on the shared temporal folds with long frame
+#   M0    Benchmarks
+#   m1_   Legacy references (old feature-set)
+#   M1B   Model variations with one block probes on the core, combined candidates 
+#         and the widest lm-safe set
 # Engine: lm as the transparent baseline and tree engines slot in later
 
 # 1. Data import -----------------------------------------------------

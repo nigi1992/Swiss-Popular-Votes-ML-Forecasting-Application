@@ -57,6 +57,7 @@ volksmehr_acc <- function(y, yhat) mean((yhat >= 50) == (y >= 50), na.rm = TRUE)
 
 # Converting an lm point prediction into a proper acceptance probability:
 # under the Gaussian error model, P(yes_share >= 50) = pnorm((yhat - 50) / sigma)
+# It calculates the cumulative probability of a value based on a normal distribution
 # sigma comes from the fold's fitted model (summary(fit)$sigma)
 lm_accept_prob <- function(yhat, sigma) pnorm((yhat - 50) / sigma)
 
@@ -73,7 +74,7 @@ brier <- function(y, yhat) {
 # Average precision (area under the precision-recall curve)
 # with the accepted proposal (yes_share >= 50) as the positive class
 # PR-AUC only needs a ranking score and takes yhat directly
-# Fold-level values on ~30-40 rows are unstable (observed spread 0.57-0.96 within one model);
+# Fold-level values on ~30-40 rows are unstable (observed spread 0.57-0.96 within one model)
 # the pooled value over all test rows is the reference number
 pr_auc <- function(y, yhat) {
   ok <- !is.na(y) & !is.na(yhat)

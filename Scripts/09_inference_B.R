@@ -368,3 +368,65 @@ forecast_public_ext <- forecast_public %>%
          Parole_GP, Parole_SP, Parole_GLP, Parole_Mitte, Parole_FDP, Parole_SVP)
 
 write_csv(forecast_public_ext, file.path(output_path, "forecast_upcoming_public_ext.csv"), na = "-")
+
+# 10. Champion diagnostics: regression table + relative importance -----------------
+
+# Regression table of the lm champion, standard errors clustered by vote date (votes on the same
+# Abstimmungstag share shocks, same reason as the date-clustered bootstrap in 07; Cameron & Miller 2015)
+# Standardised coefficient = SD change in yes-share per SD change in the feature, comparable across features
+# Importance = LMG share of R²: each feature's R² gain averaged over all orders of entry, so correlated
+# features (parl_support_signed vs roll_yes_rechtsform) split their shared part evenly (Groemping 2006)
+# In-sample on the final fit after the model selection in 07, so the p-values are optimistic (Berk et al. 2013)
+
+library(sandwich)
+
+champ_lm <- g$fit                                # final lm from section 3
+feats_ch <- attr(terms(champ_lm), "term.labels") # features left after drop_zero_variance() / alias guard
+d_ch     <- model.frame(champ_lm)                # yes_share + features, same rows as frame
+stopifnot(nrow(d_ch) == nrow(frame),                         # rows line up with frame$datum
+          identical(names(coef(champ_lm))[-1], feats_ch))    # one coefficient per feature (no factors)
+
+V_cl     <- vcovCL(champ_lm, cluster = frame$datum) # CR1 clustered covariance
+df_cl    <- n_distinct(frame$datum) - 1
+sd_ratio <- c(NA, sapply(d_ch[feats_ch], sd)) / sd(d_ch$yes_share)
+
+coef_tab <- tibble(
+  term     = names(coef(champ_lm)),
+  estimate = unname(coef(champ_lm)),
+  se_cl    = unname(sqrt(diag(V_cl))),
+  t_cl     = estimate / se_cl,
+  p_cl     = 2 * pt(-abs(t_cl), df = df_cl),
+  beta_std = estimate * sd_ratio,
+  beta_lo  = (estimate - qt(0.975, df_cl) * se_cl) * sd_ratio,
+  beta_hi  = (estimate + qt(0.975, df_cl) * se_cl) * sd_ratio
+)
+
+# R² of the lm on a subset of the features (0 for the empty set)
+r2_of <- function(vars) {
+  if (length(vars) == 0) return(0)
+  summary(lm(reformulate(vars, "yes_share"), data = d_ch))$r.squared
+}
+
+# LMG: average R² gain from adding feature j to the subsets of the other features of size k,
+# first averaged within each size k, then across sizes k = 0, ..., p - 1
+lmg <- sapply(feats_ch, function(j) {
+  others <- setdiff(feats_ch, j)
+  mean(sapply(0:length(others), function(k) {
+    mean(sapply(combn(others, k, simplify = FALSE), function(s) r2_of(c(s, j)) - r2_of(s)))
+  }))
+})
+stopifnot(abs(sum(lmg) - summary(champ_lm)$r.squared) < 1e-8) # shares must add up to the model R²
+
+lmg_tab <- tibble(term = feats_ch, lmg_r2 = unname(lmg), share = lmg_r2 / sum(lmg_r2)) %>%
+  arrange(desc(share))
+
+print(coef_tab %>% mutate(across(where(is.numeric), ~ round(.x, 3))), width = Inf)
+print(lmg_tab  %>% mutate(across(where(is.numeric), ~ round(.x, 3))))
+summary(champ_lm)$r.squared
+
+write_csv(coef_tab, file.path(output_path, "champion_regression_table.csv"))
+write_csv(lmg_tab,  file.path(output_path, "champion_lmg_importance.csv"))
+saveRDS(list(coef = coef_tab, lmg = lmg_tab,
+             meta = list(model = champion_spec$name, n_obs = nrow(d_ch),
+                         r2 = summary(champ_lm)$r.squared)),
+        file.path(output_path, "champion_diagnostics.rds")) # read by 10

@@ -1,6 +1,6 @@
 ### 05b_model_M3_B.R ###
 
-# M3: T1 parole/endorsement-tier models tested on both the long and short frames
+# M3B: T1 parole/endorsement-tier models tested on both the long and short frames
 # Long frame  (n = 238 test rows, k = 6, 1999–2026) — parole features cover 1971+
 # Short frame (n = 131 test rows, k = 4, 2012–2026) — proxy-gap head-to-heads against M2 faction features
 # Engine: lm as the transparent baseline and tree engines slot in later
