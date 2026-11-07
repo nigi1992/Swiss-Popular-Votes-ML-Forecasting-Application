@@ -72,7 +72,7 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
   }, numeric(1))
 }
 
-kt_long <- kt_long %>%
+kt_long <- kt_long %>% # Empirical-Bayes shrinkage estimator of the cantonal deviation
   mutate(
     grp_kd  = paste(kt, main_domain, sep = "_"), # Composite key: combines canton and domain for 'dev'
     dev_kt  = asof_stat(datum, dev, group = kt,     fallback = 0), # As-of-date stat of cant. deviation, grouped by kt -> Canton-level baseline deviation

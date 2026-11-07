@@ -8,8 +8,9 @@ library(DiagrammeRsvg)
 library(rsvg)
 
 # A. ML Pipeline ----------------------------------------------------------
-# 2. Defining the pipeline graph in dot notation ------------------------
-# one node per pipeline stage, grouped by color: gray = shared, blue = Route A,
+# 2. Defining the pipeline graph in dot notation --------------------------
+
+# One node per pipeline stage, grouped by color: gray = shared, blue = Route A,
 # teal = Route B, amber = selection/champion, purple = output/evaluation
 g2 <- grViz("
 digraph pipeline {
@@ -18,38 +19,39 @@ digraph pipeline {
 
   # data sources
   node [fillcolor = '#faeae7', color = '#e79c92', fontcolor = '#7f2c1e']
-  sv  [label = 'SwissVotes Dataset\\nVoted Proposals + Cantonal Yes-Shares']
-  pr  [label = 'Parliament Roll-Calls\\nFaction Blocs, OData API (1994-2026)']
+  sv  [label = 'SwissVotes Dataset\\nVoted Proposals + Cantonal Yes Shares']
+  pr  [label = 'Parliament Roll-Calls\\nFaction Blocs, OWS API (1994-2026)']
   pp  [label = 'Partei Parolen\\nT1 Tier (M3 comparison only)']
-  ur  [label = 'Urheber Coding\\nActors / Poles, ~485 Votes']
+  ur  [label = 'Urheber Coding\\nAuthors, Actors, Poles']
 
   # shared preprocessing + modelling
   node [fillcolor = '#f1efe8', color = '#b4b2a9', fontcolor = '#444441']
-  fe  [label = '01-02c: Data Preparation + Feature Engineering\\nAs-of Features from strictly earlier Votes only:\\nRolling Base Rates, Elite Cues, Signatures, Sponsor History']
-  cv  [label = '00: Expanding-window temporal CV\\nLong Frame k=6, 238 pooled test rows (1999-2026)\\nShort Frame k=4, 131 test rows']
+  fe  [label = '01-02c: Data Preparation + Feature Engineering\\nAs-of Features from strictly earlier Votes only:\\nRolling Base Rates, Elite Cues, Signatures, Author History']
+  cv  [label = '00: Expanding-window temporal CV\\nLong Frame k=6, 238 pooled test rows (1999-2026)\\nShort Frame k=4, 131 pooled test rows (2012-2026)']
   ml  [label = '03-05b: OLS Models\\nM0 Base Rate, M1 Curated Sets,\\nM2 + Faction Blocs, M3 + Parolen']
-  eg  [label = '06: Engine grid on identical Folds\\nlm, ridge, lasso, rpart, ranger, gbm, xgboost, kNN']
+  eg  [label = '06, 06f: Engine Grid on identical Folds (M1 + M2, M3)\\nlm, ridge, lasso, rpart, ranger, gbm, xgboost, kNN']
 
   # model selection
-  sel [label = '07: Model Selection\\nRow-level paired Bootstrap on dMAE (B = 4000), Both Frames\\nChampion: OLS on m1_2eB - MAE 8.67 (long) / 7.65 (short)\\nPooled CV Residuals stored', fillcolor = '#faeeda', color = '#e0b878', fontcolor = '#633806']
+  sel [label = '07: Model Selection\\nPaired, date-clustered Bootstrap on dMAE (B = 4000)\\nChampion: lm_m1B_sig: MAE 8.77 (long) / 7.88 (short)\\nPooled CV Residuals stored', fillcolor = '#faeeda', color = '#e0b878', fontcolor = '#633806']
 
   # route A
   node [fillcolor = '#e6f1fb', color = '#85b7eb', fontcolor = '#0c447c']
-  a1 [label = '09: Final Champion Fit on all voted Rows\\nPoint Yes-Share per upcoming Vote']
-  a2 [label = 'Empirical 80/95% Intervals + p(Volksmehr)\\nFrom pooled CV Residual quantiles']
-  a3 [label = 'Threshold 50% -> Volksmehr Forecast']
+  a1 [label = '09: Final Champion Fit on all voted Rows\\nPoint Yes Share per Upcoming Vote']
+  a2 [label = 'Empirical 80/95% Intervals + p(Volksmehr)\\nFrom Pooled CV Residual Quantiles']
+  a3 [label = 'Threshold 50% => Volksmehr Forecast']
 
   # route B (rechtsform 1, 3, 4)
   node [fillcolor = '#e1f5ee', color = '#5dcaa5', fontcolor = '#085041']
-  b1 [label = '08: Cantonal Yes-Share =\\nNational Anchor + As-of cantonal Deviation']
-  b2 [label = 'EB Shrinkage: canton x domain Deviation\\nToward Canton Mean (m = 8)']
-  b3 [label = 'Weighted Standesstimmen -> Ständemehr\\n(6 Half-Cantons Count 0.5)']
+  b1 [label = '08: Cantonal Yes Share =\\nNational Anchor + As-of Cantonal Deviation']
+  b2 [label = 'EB Shrinkage: canton x domain Deviation\\nToward Cantonal Mean (m = 8)']
+  b3 [label = 'Weighted Standesstimmen => Ständemehr\\n(6 Half-Cantons count 0.5)']
 
   # output + evaluation
   node [fillcolor = '#eeedfe', color = '#afa9ec', fontcolor = '#3c3489']
-  out [label = 'Combined Verdict (09)\\nProposal Accepted = Volksmehr (+ Ständemehr)\\n-> Forecast on 6 upcoming Votes\\n09b: 15-Model Robustness Run']
-  ea  [label = 'Route A Evaluation\\nMAE, RMSE, Volksmehr Acc., Brier, PR-AUC']
-  eb  [label = 'Route B Evaluation\\nCanton MAE, Ständemehr Acc., Double-Majority Acc.']
+  ea  [label = 'Route A Evaluation (03-07, 09-09b)\\nMAE, RMSE, Volksmehr Acc., Brier, PR-AUC']
+  eb  [label = 'Route B Evaluation (08-09b)\\nCanton MAE, Ständemehr Acc., Double Majority Acc.']
+  out [label = '09: Combined Verdict\\nProposal Accepted = Volksmehr (+ Ständemehr)\\n=> Forecast on 6 Upcoming Votes\\n09b: 19-Model-Frame Robustness Run']
+
 
   # edges
   sv -> fe  pr -> fe  pp -> fe  ur -> fe
@@ -59,13 +61,18 @@ digraph pipeline {
   sel -> a1 [color = '#378add']  sel -> b1 [color = '#1d9e75']
   a1 -> a2 -> a3 [color = '#378add']
   b1 -> b2 -> b3 [color = '#1d9e75']
-  a3 -> out  b3 -> out
-  out -> ea  out -> eb
+  a3 -> ea   b3 -> eb
+  ea -> out  eb -> out
 }")
 g2   # rendering in the RStudio viewer
 
+# Old View Eval Boxes on the bottom
+#  a3 -> out  b3 -> out
+#  out -> ea  out -> eb
+
 # 3. Exporting to png ---------------------------------------------------
-# rasterizing the svg at ~2x for a crisp figure
+
+# Rasterizing the svg at ~2x for a crisp figure
 export_svg(g2) |> charToRaw() |> rsvg_png("Output/B/Plots/11_ml_pipeline_schematic.png", width = 2200)
 
 # B. Data Frames Overview -------------------------------------------------
@@ -93,7 +100,7 @@ digraph df_schema {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1efe8" COLOR="#b4b2a9" STYLE="ROUNDED">
       <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#444441"><B>factions_blocs.csv</B></FONT></TD></TR>
       <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#5f5e5a">NR Roll-Calls (1994 - 2026)</FONT></TD></TR>
-      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#5f5e5a">OData API + PDF Parser</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#5f5e5a">OWS API + PDF Parser</FONT></TD></TR>
     </TABLE>>]
 
   src_urh [label=<
@@ -111,8 +118,8 @@ digraph df_schema {
     df_main [label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="9" BGCOLOR="#e6f1fb" COLOR="#85b7eb" STYLE="ROUNDED">
       <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="15" COLOR="#0c447c"><B>swissvotes_features.rds</B></FONT></TD></TR>
-      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10.5" COLOR="#185fa5">1971 - 2026   ·   n = 485</FONT></TD></TR>
-      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10.5" COLOR="#185fa5">Tables 0, A – F, Y, Z   ·   T0 + T1 Cues</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10.5" COLOR="#185fa5">1971 - 2026   ·   n = 475   ·  T0 + T1 Cues</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10.5" COLOR="#185fa5">Tables A - H, Legacy Features, Tree Extras</FONT></TD></TR>
       <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10.5" COLOR="#854f0b">Target: volksja_proz  ·  stand</FONT></TD></TR>
     </TABLE>>]
 
@@ -179,4 +186,75 @@ print(g3)
 
 rsvg_png(charToRaw(export_svg(g3)),
          file  = "Output/B/Plots/11_df_overview.png",
+         width = 2237)
+
+# C. Data Frames Overview Short  ------------------------------------------
+# 6. DOT source -----------------------------------------------------------
+
+# All external .csv spreadsheets feed the main df, which forks into the canton table and the
+# fold generator, and the two routes reconverge on the combined forecast.
+#node [fillcolor = '#f1efe8', color = '#b4b2a9', fontcolor = '#444441'] # DOT syntax outside the string, R reads it as an object
+#node [fillcolor = '#faeae7', color = '#e79c92', fontcolor = '#7f2c1e'] f8f8f6
+dot2 <- '
+digraph df_schema {
+  graph [rankdir=TB, splines=spline, pad=0.45, #bgcolor="#f8f8f6", 
+         ranksep=0.85, nodesep=0.70, fontname="Helvetica"]
+  node  [shape=plain, fontname="Helvetica"]
+  edge  [fontname="Helvetica", fontsize=9, fontcolor="#5f5e5a",
+         color="#8b8981", arrowhead=onormal, arrowsize=0.9, penwidth=1.1]
+
+  src_sv [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1efe8" COLOR="#b4b2a9" STYLE="ROUNDED">
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#444441"><B>swissvotes.csv</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#5f5e5a">      1848 - 2026</FONT></TD></TR>
+    </TABLE>>]
+
+  src_rc [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1efe8" COLOR="#b4b2a9" STYLE="ROUNDED">
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#444441"><B>factions_blocs.csv</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#5f5e5a">NR Roll-Calls (1994 - 2026)</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#5f5e5a">    OWS API + PDF Parser</FONT></TD></TR>
+    </TABLE>>]
+
+  src_urh [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1efe8" COLOR="#b4b2a9" STYLE="ROUNDED">
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#444441"><B>urheber_df.csv</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#5f5e5a">       1971 - 2026</FONT></TD></TR>
+    </TABLE>>]
+
+  df_par [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1efe8" COLOR="#b4b2a9" STYLE="ROUNDED">
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#444441"><B>parteiparolen_df</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#5f5e5a">         T1 Features</FONT></TD></TR>
+    </TABLE>>]
+
+    df_main [label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="9" BGCOLOR="#e6f1fb" COLOR="#85b7eb" STYLE="ROUNDED">
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="15" COLOR="#0c447c"><B>swissvotes_features.rds</B></FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10.5" COLOR="#185fa5">1971 - 2026   ·   n = 475   ·  T0 + T1 Cues</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10.5" COLOR="#185fa5">Tables A - H, Legacy Features, Tree Extras</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10.5" COLOR="#854f0b">           Target: volksja_proz  ·  stand</FONT></TD></TR>
+    </TABLE>>]
+
+  { rank=same; src_sv; src_rc; src_urh; df_par; }
+  { rank=same;  df_main }
+
+
+
+  src_sv  -> df_main
+  src_rc  -> df_main
+  src_urh -> df_main
+  df_par  -> df_main
+
+
+}
+'
+#  src_sv -> df_par [style=invis]
+# 7. Render and Export ----------------------------------------------------
+
+g4 <- grViz(dot2)
+print(g4)
+
+rsvg_png(charToRaw(export_svg(g4)),
+         file  = "Output/B/Plots/11_df_overview_short.png",
          width = 2237)
