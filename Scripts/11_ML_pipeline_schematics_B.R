@@ -19,7 +19,9 @@ digraph pipeline {
 
   # data sources
   node [fillcolor = '#faeae7', color = '#e79c92', fontcolor = '#7f2c1e']
-  sv  [label = 'SwissVotes Dataset\\nVoted Proposals + Cantonal Yes Shares']
+
+  sv  [label = 'SwissVotes Dataset\\nVoted Proposals (1971-2026)']
+    
   pr  [label = 'Parliament Roll-Calls\\nFaction Blocs, OWS API (1994-2026)']
   pp  [label = 'Partei Parolen\\nT1 Tier (M3 comparison only)']
   ur  [label = 'Urheber Coding\\nAuthors, Actors, Poles']
@@ -46,13 +48,15 @@ digraph pipeline {
   b2 [label = 'EB Shrinkage: canton x domain Deviation\\nToward Cantonal Mean (m = 8)']
   b3 [label = 'Weighted Standesstimmen => Ständemehr\\n(6 Half-Cantons count 0.5)']
 
-  # output + evaluation
+  # output
+  node [fillcolor = '#fda4af', color = '#db2777', fontcolor = '#4c0519']
+  out [label = '09: Combined Verdict\\nProposal Accepted = Volksmehr (+ Ständemehr)\\n=> Forecast on 6 Upcoming Votes\\n09b: 19-Model-Frame Robustness Run']
+  
+  # evaluation
   node [fillcolor = '#eeedfe', color = '#afa9ec', fontcolor = '#3c3489']
   ea  [label = 'Route A Evaluation (03-07, 09-09b)\\nMAE, RMSE, Volksmehr Acc., Brier, PR-AUC']
   eb  [label = 'Route B Evaluation (08-09b)\\nCanton MAE, Ständemehr Acc., Double Majority Acc.']
-  out [label = '09: Combined Verdict\\nProposal Accepted = Volksmehr (+ Ständemehr)\\n=> Forecast on 6 Upcoming Votes\\n09b: 19-Model-Frame Robustness Run']
-
-
+  
   # edges
   sv -> fe  pr -> fe  pp -> fe  ur -> fe
   fe -> cv
@@ -61,19 +65,45 @@ digraph pipeline {
   sel -> a1 [color = '#378add']  sel -> b1 [color = '#1d9e75']
   a1 -> a2 -> a3 [color = '#378add']
   b1 -> b2 -> b3 [color = '#1d9e75']
-  a3 -> ea   b3 -> eb
-  ea -> out  eb -> out
+  a3 -> out  b3 -> out
+  out -> ea  out -> eb
+  
 }")
-g2   # rendering in the RStudio viewer
 
-# Old View Eval Boxes on the bottom
-#  a3 -> out  b3 -> out
-#  out -> ea  out -> eb
+g2   # rendering in the RStudio viewer
 
 # 3. Exporting to png ---------------------------------------------------
 
 # Rasterizing the svg at ~2x for a crisp figure
 export_svg(g2) |> charToRaw() |> rsvg_png("Output/B/Plots/11_ml_pipeline_schematic.png", width = 2200)
+
+## Alternative illustration ---------------------------------------------
+
+#sv  [label = 'SwissVotes Dataset\\nVoted Proposals + Cantonal Yes Shares']
+#sv  [label = 'SwissVotes Dataset\\nHistorical Data + Results (1971-2026)']
+
+# Old View Eval Boxes on the bottom
+#  a3 -> out  b3 -> out
+#  out -> ea  out -> eb
+
+# Alternative View Eval Boxes before final verdict
+#a3 -> ea   b3 -> eb
+#ea -> out  eb -> out
+
+# output + evaluation
+#node [fillcolor = '#eeedfe', color = '#afa9ec', fontcolor = '#3c3489']
+#ea  [label = 'Route A Evaluation (03-07, 09-09b)\\nMAE, RMSE, Volksmehr Acc., Brier, PR-AUC']
+#eb  [label = 'Route B Evaluation (08-09b)\\nCanton MAE, Ständemehr Acc., Double Majority Acc.']
+#out [label = '09: Combined Verdict\\nProposal Accepted = Volksmehr (+ Ständemehr)\\n=> Forecast on 6 Upcoming Votes\\n09b: 19-Model-Frame Robustness Run']
+
+node [fillcolor = '#fbcfe8', color = '#f472b6', fontcolor = '#fda4af']
+node [fillcolor = '#fda4af', color = '#e11d48', fontcolor = '#4c0519']
+node [fillcolor = '#fda4af', color = '#f472b6', fontcolor = '#db2777']
+node [fillcolor = '#fda4af', color = '#db2777', fontcolor = '#4c0519']
+
+#'#fbcfe8' (Soft light pink/rose)
+#'#f472b6' (Muted pastel pink with a warm red undertone)
+#'#fda4af' (Soft coral-pink)
 
 # B. Data Frames Overview -------------------------------------------------
 # 4. DOT source -----------------------------------------------------------
