@@ -205,3 +205,4 @@ write_csv(vote_level, file.path(output_path, "route_b_votes.csv"))
 write_csv(bind_cols(kt_metrics, vote_metrics),
           file.path(output_path, "metrics_route_b.csv"))
 saveRDS(kt_long, file.path(output_path, "canton_deviations.rds"))
+

@@ -70,7 +70,7 @@ run_lm_set_long <- function(set_name, feats) {
 
 run_these_long <- c(
   # t0 references on the long frame
-  "m1B_core", "m1B_sig_ref", "m1_2eB",
+  "m1B_core", "m1B_sig_ref", "m1B_sig",
   # Slot swaps (vs m1B_core): the parole signal replaces parl_support_signed
   "m3B_wsup", "m3B_gov", "m3B_breadth", "m3B_big4",
   # Add-ons on the core (vs m1B_core)
@@ -173,7 +173,7 @@ run_m3_set_short <- function(set_name, feats, train_frame = "short") {
 # M3 sets on the short frame (proxy-gap head-to-heads vs M2 faction features)
 run_these_short <- c(
   # t0 references
-  "m1B_core", "m1B_sig_ref",
+  "m1B_core", "m1B_sig_ref", "m1B_sig",
   # t0 faction counterparts of the proxy-gap pairs
   "m2B_wsup", "m2B_gov", "m2B_breadth", "m2B_cue", "m2B_enth", "m2B_champ_cue",
   # t1 parole sets: m3B_wsup/gov/breadth/cue/abst vs their m2B twin, m3B_champ_* vs m1B_sig_ref

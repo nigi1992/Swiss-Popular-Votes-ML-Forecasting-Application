@@ -452,7 +452,7 @@ p_cor <- as_tibble(C, rownames = "v1") %>%
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         panel.grid = element_blank())
 
-save_plot(p_cor, "10_correlation_matrix.png", 10, 9)
+save_plot(p_cor, "Correlation/10_correlation_matrix.png", 10, 9)
 
 ## By feature bucket-------------------------------------------------------
 
@@ -526,7 +526,7 @@ p_cor <- as_tibble(C, rownames = "v1") %>%
         axis.text.y = element_text(size = 6),
         panel.grid = element_blank())
 
-save_plot(p_cor, "10_correlation_matrix_ordered.png", 12, 11)
+save_plot(p_cor, "Correlation/10_correlation_matrix_ordered.png", 12, 11)
 
 ## Numbered --------------------------------------------------------------
 
@@ -560,7 +560,7 @@ p_cor_num <- as_tibble(C, rownames = "v1") %>%
 
 # The canvas has to grow with the number of cells, otherwise the labels overplot
 side <- max(12, 0.34 * length(var_order))
-save_plot(p_cor_num, "10_correlation_matrix_numbered.png", side, side * 0.95)
+save_plot(p_cor_num, "Correlation/10_correlation_matrix_numbered.png", side, side * 0.95)
 
 ## Numbered, high correlations only ---------------------------------------
 
@@ -627,7 +627,7 @@ p_cor_hi <- ggplot(cor_hi, aes(v1, v2)) +
         panel.background = element_blank())
 
 side_hi <- max(8, 0.3 * n_keep)
-save_plot(p_cor_hi, "10_correlation_matrix_numbered_high.png", side_hi, side_hi * 0.95)
+save_plot(p_cor_hi, "Correlation/10_correlation_matrix_numbered_high.png", side_hi, side_hi * 0.95)
 
 # Same pairs as a sorted table, flagging cross-bucket redundancy
 hi_pairs <- cor_hi %>%
@@ -726,7 +726,7 @@ p_cor_sel <- ggplot(cor_sel, aes(v1, v2)) +
         panel.background = element_blank())
 
 side_sel <- max(7, 0.42 * n_keep + 3)
-save_plot(p_cor_sel, "10_correlation_matrix_selected.png", side_sel, side_sel * 0.9)
+save_plot(p_cor_sel, "Correlation/10_correlation_matrix_selected.png", side_sel, side_sel * 0.9)
 
 # The selected pairs as a sorted table, flagging cross-bucket redundancy
 sel_table <- bind_rows(target = sel_target, predictors = sel_pairs, .id = "type") %>%
@@ -790,7 +790,7 @@ p_cor_man <- ggplot(cor_man, aes(v1, v2)) +
         panel.grid = element_blank(),
         panel.background = element_blank())
 
-save_plot(p_cor_man, "10_correlation_matrix_handpicked.png", 8, 7.4)
+save_plot(p_cor_man, "Correlation/10_correlation_matrix_handpicked.png", 8, 7.4)
 
 ## Spreadsheets ----------------------------------------------------------
 
@@ -886,7 +886,7 @@ p_acc <- cv_metrics %>%
   labs(title = "Volksmehr direction accuracy",
        x = "Share of test rows above 50% line", y = NULL, fill = "Frame")
 
-save_plot(p_mae / p_acc, "10_cv_error_metrics.png", 9, 9)
+save_plot(p_mae / p_acc, "Eval Metrics/10_cv_error_metrics.png", 9, 9)
 
 # 8. Interval width versus error ------------------------------------------
 
@@ -900,7 +900,7 @@ p_width <- cv_metrics %>%
        subtitle = "Bottom-left is better - A narrow interval at high MAE is overconfident",
        x = "MAE (%)", y = "Width of the 10-90 residual band (%)", colour = "Frame")
 
-save_plot(p_width, "10_interval_width_vs_error.png", 9, 6)
+save_plot(p_width, "Eval Metrics/10_interval_width_vs_error.png", 9, 6)
 
 # 9. ROC curves ------------------------------------------------------------
 
@@ -939,7 +939,7 @@ p_roc <- ggplot(roc_dat, aes(fpr, tpr, colour = label)) +
 # The Area Under the ROC curve (known as AUC) is a measure of how well the model can distinguish between the two classes. 
 # The highest possible value is 1 and therefore the higher the AUC the better the model is in predicting the two classes.
 
-save_plot(p_roc, "10_roc_curves.png", 11, 7)
+save_plot(p_roc, "Eval Metrics/10_roc_curves.png", 11, 7)
 
 # 10. Calibration of p_volksmehr -------------------------------------------
 
@@ -957,7 +957,7 @@ p_calib <- cv_scored %>%
   labs(title = "Calibration of the empirical p_volksmehr",
        x = "Predicted probability", y = "Observed frequency", colour = NULL, size = "n")
 
-save_plot(p_calib, "10_calibration.png", 11, 6)
+save_plot(p_calib, "Eval Metrics/10_calibration.png", 11, 6)
 
 # 11. Predicted versus observed and residuals ------------------------------
 
@@ -978,15 +978,27 @@ p_resid <- cv_scored %>%
        subtitle = "Residual = Observed - Predicted - A median above 0 means the model underestimates",
        x = "Residual (%)", y = NULL)
 
-save_plot(p_pvo, "10_pred_vs_obs.png", 12, 8)
-save_plot(p_resid, "10_residual_boxplots.png", 9, 6)
+save_plot(p_pvo, "Eval Metrics/10_pred_vs_obs.png", 12, 8)
+save_plot(p_resid, "Eval Metrics/10_residual_boxplots.png", 9, 6)
 
 
 # C. Forecast display ------------------------------------------------------
 # 12. Upcoming votes with intervals ----------------------------------------
 
+# listing the exact model names first so the drop vector matches
+unique(forecast$model)
+
+# defining the models to hide in the display
+models_drop <- c("xgb_m1B_tree", "ridge_m1B_sig", "lasso_m2B_champ_cue", "knn_m2B_champ_sig", "lasso_m1B_sig_ref")
+
+# subsetting the forecast table for plotting only, so the full table stays intact
+fc_plot <- forecast %>%
+  filter(!model %in% models_drop)
+
 p_fc <- forecast %>%
-  mutate(label = paste0(model, " [", frame_tag, "]"),
+  filter(!model %in% models_drop) %>%
+  filter(frame_tag == "long") %>%
+  mutate(label = model,
          vote  = paste0(anr, " ", str_trunc(titel, 40))) %>%
   ggplot(aes(yes_hat, label, colour = accepted_hat)) +
   geom_vline(xintercept = 50, linetype = "dashed") +
@@ -1000,8 +1012,44 @@ p_fc <- forecast %>%
        subtitle = "Thick band = 80%, Thin band = 95%, both from each model's own CV residuals",
        x = "Predicted yes-share (%)", y = NULL, colour = "Accepted")
 
-save_plot(p_fc, "10_forecast_intervals.png", 10,
+save_plot(p_fc, "Forecast/10_forecast_intervals.png", 10,
           max(6, 1.6 * n_distinct(forecast$anr)))
+
+
+## p_fc anr 690 ------------------------------------------------------------
+
+# checking which ballot numbers the forecast table actually holds
+forecast %>% distinct(anr, titel)
+
+# isolating the target ballot once so plot and height share the same rows
+target_anr <- "690"
+
+fc_one <- forecast %>%
+  filter(anr == target_anr) %>%
+  filter(frame_tag == "long") %>%
+  mutate(label = model,
+         vote  = paste0(anr, " ", str_trunc(titel, 40)))
+  #mutate(label = paste0(model, " [", frame_tag, "]"),
+   #      vote  = paste0(anr, " ", str_trunc(titel, 40)))
+
+# stopping early instead of failing inside ggsave
+stopifnot(nrow(fc_one) > 0)
+
+p_fc_one <- fc_one %>%
+  ggplot(aes(yes_hat, label, colour = accepted_hat)) +
+  geom_vline(xintercept = 50, linetype = "dashed") +
+  geom_linerange(aes(xmin = lo95, xmax = hi95), linewidth = 0.4, alpha = 0.5) +
+  geom_linerange(aes(xmin = lo80, xmax = hi80), linewidth = 1.1) +
+  geom_point(size = 2) +
+  facet_wrap(~ vote, ncol = 1, scales = "free_y") +
+  scale_colour_manual(values = c(`TRUE` = "#2c7fb8", `FALSE` = "#d95f02"),
+                      na.value = "grey60") +
+  labs(title = "Forecast per model",
+       subtitle = "Thick band = 80%, Thin band = 95%, both from each model's own CV residuals",
+       x = "Predicted yes-share (%)", y = NULL, colour = "Accepted")
+
+save_plot(p_fc_one, paste0("Forecast/10_forecast_intervals_", target_anr, ".png"), 10,
+          max(4, 0.6 + 0.25 * n_distinct(fc_one$label)))
 
 # 13. Model agreement ------------------------------------------------------
 
@@ -1021,7 +1069,7 @@ p_agree <- forecast %>%
        subtitle = "Cell value = Predicted yes-share", x = NULL, y = NULL, fill = NULL) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1), panel.grid = element_blank())
 
-save_plot(p_agree, "10_model_agreement.png", 11, 6)
+save_plot(p_agree, "Forecast/10_model_agreement.png", 11, 6)
 
 
 # 14. Upcoming votes champion models ----------------------------------
@@ -1123,7 +1171,7 @@ p_up <- vote_bars(up_rows, model_up) +
   theme(legend.box = "vertical", legend.spacing.y = unit(0, "pt"))
 
 print(p_up)
-ggsave(file.path(output_path, "10_forecast_upcoming_20261129.png"),
+ggsave(file.path(plot_path, "Forecast/10_forecast_upcoming_20261129.png"),
        p_up, width = 4, height = 6.6, dpi = 300, bg = "white")
 
 ## Forecast vs. result of 27.9.2026 (anr 688-689) ---------------------
@@ -1184,7 +1232,7 @@ p_past <- vote_bars(past_rows, model_past, clip = "off") +
   theme(plot.margin = margin(10, 175, 10, 10))
 
 print(p_past)
-ggsave(file.path(output_path, "10_forecast_vs_result_20260927.png"),
+ggsave(file.path(plot_path, "Forecast/10_forecast_vs_result_20260927.png"),
        p_past, width = 10, height = 4.2, dpi = 300, bg = "white")
 
 # D. Engine-specific interpretation ---------------------------------------
@@ -1193,7 +1241,9 @@ ggsave(file.path(output_path, "10_forecast_vs_result_20260927.png"),
 # ranger grows 500 randomised trees and no single one of them represents the forest,
 # so plotting one ranger tree would be misleading. I fit one rpart tree on the same
 # rows and features instead, purely as a readable picture of the split structure
-tree_set   <- "m1B_sig_ref"   # t0 champion set of the B registry
+
+#tree_set  <- "m1B_sig_ref"   # t0 champion set of the B registry
+tree_set   <- "m1B_core"      # core model set of the B registry
 tree_feats <- bundle$feature_sets[[tree_set]]
 
 tree_fit <- rpart(yes_share ~ .,
@@ -1230,11 +1280,11 @@ p_coef <- ggplot(coef_plot, aes(beta_std, term)) +
   geom_errorbar(aes(xmin = beta_lo, xmax = beta_hi), width = 0.25, colour = "grey30") +
   geom_point(aes(shape = sig), size = 2.6, fill = "white") +
   scale_shape_manual(values = c("p < 0.05" = 16, "p \u2265 0.05" = 21), name = NULL) +
-  labs(title = "A  Regression coefficients", subtitle = "Fit on all voted rows: n = 475 votes \n95% CIs clustered by vote date",
+  labs(title = "A.  Regression coefficients", subtitle = "Fit on all voted rows: n = 475 votes \n95% CIs clustered by vote date",
        x = "standardised coefficient\n(SD of yes-share per SD of feature)", y = NULL) +
   theme(legend.position = "bottom")
 print(p_coef)
-ggsave(file.path(output_path, "10_champion_coef.png"),
+ggsave(file.path(plot_path, "Feature Importance/10_champion_coef.png"),
        p_coef, width = 6, height = 5, dpi = 300, bg = "white")
 
 # Panel B: LMG share of the model R²
@@ -1242,13 +1292,13 @@ p_lmg <- ggplot(lmg_plot, aes(share, term)) +
   geom_col(fill = "grey70", width = 0.6) +
   geom_text(aes(label = percent(share, accuracy = 0.1)), hjust = -0.15, size = 3) +
   scale_x_continuous(labels = percent, expand = expansion(mult = c(0, 0.15))) +
-  labs(title = "B  Relative importance (LMG)", subtitle = "Fit on all voted rows: n = 475 votes, R\u00b2 = 0.54",
+  labs(title = "B.  Relative importance (LMG)", subtitle = "Fit on all voted rows: n = 475 votes, R\u00b2 = 0.54",
 
        x = "share of model R\u00b2", y = NULL) +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), # feature names already on panel A
         plot.margin = margin(5.5, 5.5, 5.5, 18))      # keeping "0%" clear of panel A's axis
 print(p_lmg)
-ggsave(file.path(output_path, "10_champion_lmg.png"),
+ggsave(file.path(plot_path, "10_champion_lmg.png"),
        p_lmg, width = 6, height = 5, dpi = 300, bg = "white")
 
 p_champ <- (p_coef | p_lmg) +
@@ -1258,14 +1308,14 @@ p_champ <- (p_coef | p_lmg) +
                        diag_09$meta$n_obs, diag_09$meta$r2))
 
 print(p_champ)
-ggsave(file.path(output_path, "10_champion_coef_importance.png"),
+ggsave(file.path(plot_path, "Feature Importance/10_champion_coef_importance.png"),
        p_champ, width = 10, height = 5, dpi = 300, bg = "white")
 
 # 17. xgboost gain importance ----------------------------------------------
 
 # Refitting the xgb model on the full short frame, same settings as 09B
 frame_frak <- frame %>% filter(!is.na(frak_left_sup))
-xgb_set    <- "m2B_tree"      # set of xgb_m2B_tree in the 09b short registry
+xgb_set    <- "m1B_tree"      # set of xgb_m1B_tree in the 09b short registry
 xgb_feats  <- bundle$feature_sets[[xgb_set]]
 xgb_dat <- frame_frak[, c("yes_share", xgb_feats)] %>% drop_na()
 X_xgb   <- model.matrix(~ . - 1, data = xgb_dat[, xgb_feats, drop = FALSE])
@@ -1291,7 +1341,7 @@ p_xgb <- imp_xgb %>%
        subtitle = "Share of loss reduction attributable to each split variable",
        x = "gain", y = NULL)
 
-save_plot(p_xgb, "10_xgb_importance.png", 9, 5)
+save_plot(p_xgb, "Feature Importance/10_xgb_importance.png", 9, 5)
 rm(xgb_fit)
 
 # 18. Permutation importance ------------------------------------------------
@@ -1379,7 +1429,7 @@ perm_plots <- perm_summary %>%
            subtitle = paste0("Increase in out-of-sample MAE when the column is ",
                              "shuffled in the test fold, averaged over folds"),
            x = "Delta MAE (%)", y = NULL)
-    save_plot(p, paste0("10_perm_importance_", d$model[1], "_", d$frame_tag[1], ".png"),
+    save_plot(p, paste0("Feature Importance/10_perm_importance_", d$model[1], "_", d$frame_tag[1], ".png"),
               9, max(4, 0.28 * nrow(d)))
     p
   })
@@ -1389,8 +1439,8 @@ perm_plots <- perm_summary %>%
 write_csv(perm_imp %>%
             group_by(model, frame_tag, feature) %>%
             summarise(delta_mae = mean(delta_mae), .groups = "drop"),
-          file.path(output_path, "modelB_permutation_importance.csv"))
+          file.path(output_path, "Feature Importance/modelB_permutation_importance.csv"))
 
-write_csv(imp_xgb, file.path(output_path, "modelB_xgb_importance.csv"))
+write_csv(imp_xgb, file.path(output_path, "Feature Importance/modelB_xgb_importance.csv"))
 
 message("plots written to: ", plot_path)

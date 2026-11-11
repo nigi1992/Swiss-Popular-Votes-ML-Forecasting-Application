@@ -22,6 +22,7 @@ library(xgboost)   # xgb
 library(gbm)       # gbm
 library(gbm3)      # gbm3
 library(FNN)       # knn regression
+library(rpart)
 
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
 input_path  <- file.path(base_path, "Input Data")
@@ -42,10 +43,10 @@ set.seed(42)
 
 # Model selection, tagged with the frame each one is fitted and evaluated on 
 # Engine and feature set are parsed out of the name, same convention as 07
-models_long  <- c("lm_m1B_sig_ref", "lm_m1B_sig", "lasso_m1B_sig_ref", "ridge_m1_2eB", "lm_m1B_core", # "lm_m1_2eB",
-                  "rf_m1B_tree", "lasso_m1B_wide", "xgb_m1B_tree", "knn_m1B_sig_ref")
+models_long  <- c("lm_m1B_sig_ref", "lm_m1B_sig", "lm_m1B_core", #"lm_m1B_parl_r", #"tree_m1B_parl_r", # "lm_m1_2eB",
+                  "lasso_m1B_sig", "ridge_m1B_sig", "rf_m1B_tree", "xgb_m1B_wide", "knn_m1B_sig")
 models_short <- c("lm_m1B_sig_ref", "lm_m2B_champ_sig", "lasso_m1B_sig_ref", "lasso_m2B_champ_cue",
-                  "rf_m2B_tree", "xgb_m2B_tree", "knn_m1B_sig_ref", "lm_m1B_sig", "lm_m1B_core")
+                  "rf_m1B_tree", "xgb_m1B_tree", "knn_m2B_champ_sig", "lm_m1B_sig")#, "lm_m1B_core", "xgb_m2B_wide")
 # gbm stays out: this script's fit_engine() has no gbm branch
 
 ### M3 Models can only be called for comparison purposes, when party paroles are publicly available! ###
@@ -365,7 +366,8 @@ cv_scored <- cv_raw %>%
 
 # Confusion matrix for the predicted Volksmehr (>= 50%) vs. actual Volksmehr (>= 50%)
 cv_conf <- cv_scored %>%
-  mutate(Annahme = as.numeric(as.character(y_bin))) %>%   # y_bin already True/False
+  #mutate(Annahme = as.numeric(as.character(y_bin))) %>%   # y_bin already True/False
+  mutate(Annahme = as.numeric((y_bin))) %>%   # y_bin already True/False
   count(model, frame_tag, predicted = yhat >= 50, actual = y_bin)
 
 conf_mat <- cv_conf %>%
@@ -573,3 +575,5 @@ saveRDS(list(cv_raw       = cv_raw,
              feature_sets = feature_sets[unique(model_registry$set)],
              run_timestamp = format(Sys.time(), tz = "UTC", usetz = TRUE)),
         file.path(output_path, "modelB_bundle.rds"))
+
+

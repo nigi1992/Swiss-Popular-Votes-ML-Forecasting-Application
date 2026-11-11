@@ -150,7 +150,7 @@ run_engine_set <- function(engine, set_name, feats, frame_use, folds_use) {
 # t1 parole sets for the engine grid (comparison only, never a 07 candidate)
 # m3B_tree / m3B_tree_short replace m1_4c/d/e (m1_4c was built from the non-existent feature_sets$tree_extras_m3)
 engines    <- c("lm", "ridge", "lasso", "tree", "rf", "gbm", if (has_xgb) "xgb", "knn")
-sets_long  <- c("m1B_sig_ref",  "m1B_core",                                 # t0 champion as reference row
+sets_long  <- c("m1B_sig_ref",  "m1B_core", "m1B_sig",                                # t0 champion as reference row
                 "m3B_champ_cue", "m3B_champ_verband", "m3B_wsup", "m3B_verband", "m3B_lm",
                 "m3B_wide", "m3B_tree")
 sets_short <- c("m1B_sig_ref", "m1B_core",
