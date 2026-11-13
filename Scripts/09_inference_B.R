@@ -369,7 +369,7 @@ forecast_public_ext <- forecast_public %>%
 
 write_csv(forecast_public_ext, file.path(output_path, "forecast_upcoming_public_ext.csv"), na = "-")
 
-# 10. Champion diagnostics: regression table + relative importance -----------------
+# 10. Champion model: relative importance + regression table -----------------
 
 # Regression table of the lm champion, standard errors clustered by vote date 
 # Votes on the same voting day share shocks, same reason as the date-clustered bootstrap in 07 (Cameron & Miller 2015)

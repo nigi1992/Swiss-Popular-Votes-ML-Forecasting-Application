@@ -230,7 +230,7 @@ champion_name <- cands$model[1]
 stopifnot(length(champion_name) == 1, !is.na(champion_name))
 message("champion: ", champion_name)
 
-# 6. Champion spec for 08/09 -------------------------------------------
+# 6. Champion spec for 08 + 09 ----------------------------------------
 
 champ_set   <- sub("^[a-z]+_", "", champion_name)
 champ_engine <- sub("_.*$", "", champion_name)
