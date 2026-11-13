@@ -117,8 +117,8 @@ mx_short <- drop_excluded(mx_short)
 
 # The function resamples whole vote dates 4000 times, using the same draw for every model. 
 # In each draw it recomputes every MAE and subtracts the reference’s MAE. The SD of those 4000 gaps is se_dmae
-# Whole dates are resampled because votes on the same Abstimmungstag share shocks
-# Resampling single rows would understate the noise (Cameron & Miller, 2015)
+# Whole dates are resampled because votes on the same voting day share shocks
+# Resampling single rows would understate the noise (Cameron and Miller 2015)
 
 B <- 4000 # No. of bootstrap draws for the paired bootstrap, 4000 is enough to get a stable p-value
 
@@ -165,7 +165,7 @@ sel <- bind_rows(boot_table(mx_long,  frame,      folds_long),
 # 1. Predictive loss (MAE on yes_share) comes first, but only up to its resolution. 
 #    A difference smaller than its own sampling noise carries no information.
 # 2. Parsimony is the tie-breaker inside that noise band. Reduces 2 problems that CV MAE does not show:
-#   - Selection-induced optimism: the minimum of about 70 noisy MAEs is biased downward (Cawley & Talbot 2010; Varma & Simon 2006)
+#   - Selection-induced optimism: the minimum of about 70 noisy MAEs is biased downward (Cawley and Talbot 2010; Varma and Simon 2006)
 #   - Variance under regime drift
 # 3. Recent-fold performance breaks the remaining ties, because the deployment target is in the near future, not the past.
 # 4. Hard constraints filter candidates before any ranking, never inside a score:

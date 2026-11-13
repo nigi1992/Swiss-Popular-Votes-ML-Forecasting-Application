@@ -293,11 +293,11 @@ feature_buckets <- list(
                  "init_n_sponsors", "ref_n_sponsors", "init_established", "ref_established",
                  "init_coalition", "ref_coalition", "cp_paired", "init_paired", "paired_no_double_yes"),
   factions   = c("frak_left_sup", "frak_center_sup", "frak_fdp_sup", "frak_svp_sup", "frak_breadth",
-                 "frak_enth_share", "elite_cue_lr", "weighted_parl_support", "n_gov_defectors",
+                 "frak_enth_share", "elite_cue_lr0", "weighted_parl_support", "n_gov_defectors",
                  "svp_defects", "sp_defects", "bourgeois_pro", "bourgeois_contra", "left_pro", "left_contra"),
   policy_area = paste0("policy_", sprintf("%02d", 1:12)),
   dumb_features = c("months_since_election", "months_to_election", "pa_iv",
-                    "log_dauer_bv", "anzahl", "d1e1"),
+                    "log_dauer_bv", "anzahl", "dauer_abst", "d1e1"),
   tree_extras = c("gov_parl_recommend_n", "changes_constitution", "double_majority_required", "parl_consensus", "parl_seats", 
                   "has_signature_phase", "sig_no_deadline", "sig_data_missing", "legislatur", "has_urheber", "n_sponsors_f", "established_f", 
                   "actor_code_r4", "pole_r4_left", "pole_r4_right", "pole_r4_center", "pole_r4_mixed", "pole_r4_environmental", "pole_r4_nonpartisan")
@@ -1293,12 +1293,11 @@ p_lmg <- ggplot(lmg_plot, aes(share, term)) +
   geom_text(aes(label = percent(share, accuracy = 0.1)), hjust = -0.15, size = 3) +
   scale_x_continuous(labels = percent, expand = expansion(mult = c(0, 0.15))) +
   labs(title = "B.  Relative importance (LMG)", subtitle = "Fit on all voted rows: n = 475 votes, R\u00b2 = 0.54",
-
        x = "share of model R\u00b2", y = NULL) +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), # feature names already on panel A
         plot.margin = margin(5.5, 5.5, 5.5, 18))      # keeping "0%" clear of panel A's axis
 print(p_lmg)
-ggsave(file.path(plot_path, "10_champion_lmg.png"),
+ggsave(file.path(plot_path, "Feature Importance/10_champion_lmg.png"),
        p_lmg, width = 6, height = 5, dpi = 300, bg = "white")
 
 p_champ <- (p_coef | p_lmg) +
@@ -1341,7 +1340,7 @@ p_xgb <- imp_xgb %>%
        subtitle = "Share of loss reduction attributable to each split variable",
        x = "gain", y = NULL)
 
-save_plot(p_xgb, "Feature Importance/10_xgb_importance.png", 9, 5)
+save_plot(p_xgb, "Feature Importance/10_xgb_importance.png", 9, 19)
 rm(xgb_fit)
 
 # 18. Permutation importance ------------------------------------------------
@@ -1439,8 +1438,8 @@ perm_plots <- perm_summary %>%
 write_csv(perm_imp %>%
             group_by(model, frame_tag, feature) %>%
             summarise(delta_mae = mean(delta_mae), .groups = "drop"),
-          file.path(output_path, "Feature Importance/modelB_permutation_importance.csv"))
+          file.path(output_path, "modelB_permutation_importance.csv"))
 
-write_csv(imp_xgb, file.path(output_path, "Feature Importance/modelB_xgb_importance.csv"))
+write_csv(imp_xgb, file.path(output_path, "modelB_xgb_importance.csv"))
 
 message("plots written to: ", plot_path)

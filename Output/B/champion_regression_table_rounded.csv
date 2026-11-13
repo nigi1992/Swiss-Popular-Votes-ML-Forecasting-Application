@@ -1,0 +1,9 @@
+term,estimate,se_cl,t_cl,p_cl,beta_std,beta_lo,beta_hi
+(Intercept),42.6,4.67,9.11,0,NA,NA,NA
+roll_yes_rechtsform,0.2,0.09,1.79,0.076,0.12,-0.01,0.26
+roll_yes_domain,-0.1,0.06,-1.36,0.177,-0.04,-0.09,0.02
+parl_support_signed,18.3,2.14,8.56,0,0.63,0.48,0.77
+init_sig_surplus,6.2,4.1,1.51,0.132,0.04,-0.01,0.1
+init_sig_spare,8.6,3.69,2.33,0.021,0.07,0.01,0.12
+sig_no_deadline,2.2,2.23,1,0.319,0.03,-0.03,0.08
+ref_sig_surplus,-4.2,4.33,-0.97,0.331,-0.04,-0.12,0.04
