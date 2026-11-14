@@ -1,0 +1,7 @@
+anr,datum,rechtsform,titel,yes_hat,lo80,hi80,lo95,hi95,volksmehr_hat,p_volksmehr,n_pool,lo80_rf,hi80_rf,p_volksmehr_rf,std_total,std_yes_hat,staende_hat,needs_staende,accepted_hat
+688,2026-09-27,3,Neutralitätsinitiative,38.53%,25.55%,55.47%,17.37%,61.48%,FALSE,0.185,115,28.67%,52.72%,0.122,23,0,FALSE,TRUE,FALSE
+689,2026-09-27,3,Ernährungsinitiative,26.50%,13.53%,43.45%,5.34%,49.46%,FALSE,0.021,115,16.65%,40.70%,0.026,23,0,FALSE,TRUE,FALSE
+690,2026-11-29,1,Erhöhung der Mehrwertsteuer zugunsten der AHV,52.33%,39.36%,69.28%,31.17%,75.29%,TRUE,0.634,238,39.36%,69.28%,0.634,23,18,TRUE,TRUE,TRUE
+691,2026-11-29,3,Feuerwerksinitiative,34.98%,22.01%,51.93%,13.83%,57.94%,FALSE,0.13,115,25.13%,49.18%,0.087,23,0,FALSE,TRUE,FALSE
+692,2026-11-29,3,Initiative zur Besteuerung von Ehepaaren,42.10%,29.12%,59.04%,20.94%,65.05%,FALSE,0.248,115,32.24%,56.29%,0.191,23,0,FALSE,TRUE,FALSE
+693,2026-11-29,2,Änderung des Kriegsmaterialgesetzes,54.07%,41.10%,71.02%,32.92%,77.03%,TRUE,0.697,86,38.52%,70.08%,0.709,NA,NA,NA,FALSE,TRUE

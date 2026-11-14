@@ -1159,7 +1159,7 @@ up_rows <- fc_up %>%
          # accepted_hat already applies the double majority for rechtsform 1, 3, 4
          verdict = if_else(coalesce(accepted_hat, yes_hat >= 50), "Accepted", "Rejected"),
          y_lab   = paste0(str_wrap(titel, 22), "\n", verdict,
-                          "\nP(yes majority) ", percent(p_volksmehr_rf, accuracy = 1)))
+                          "\nP(yes majority) ", p_volksmehr_rf))# percent(p_volksmehr_rf, accuracy = 1)))
 
 p_up <- vote_bars(up_rows, model_up) +
   annotate("text", x = 51, y = max(up_rows$y) + 0.5, label = "50% threshold",
@@ -1176,16 +1176,16 @@ ggsave(file.path(plot_path, "Forecast/10_forecast_upcoming_20261129.png"),
 
 ## Forecast vs. result of 27.9.2026 (anr 688-689) ---------------------
 
-model_past     <- "lm_m1_2a"
-pred_date_past <- "25.9.2026"
+model_past     <- "lm_m1B_sig"
+pred_date_past <- "10.10.2026"
 vote_date_past <- "27.9.2026"
 
 # manual input: forecast of the 25.9.2026 lm_m1_2a run
 # p_volksmehr_rf from the same run; NA drops the P(yes majority) line
 fc_past <- tribble(
   ~anr,  ~titel,                   ~yes_hat, ~lo80_rf, ~hi80_rf, ~p_volksmehr_rf,
-  "688", "Neutralitätsinitiative", 39.2,     27.5,     51.6,     0.12,
-  "689", "Ernährungsinitiative",   26.0,     14.3,     38.3,     0.01
+  "688", "Neutralitätsinitiative", 38.5,     28.7,     52.7,     0.12,
+  "689", "Ernährungsinitiative",   26.5,     16.6,     40.7,     0.03
 )
 
 # manual input: official result (yes-share of valid votes, yes-Stände out of 23)
@@ -1205,7 +1205,7 @@ past <- fc_past %>%
          hit         = if_else(verdict_fc == verdict_act, "forecast correct", "forecast wrong"),
          covered     = if_else(between(yes_act, lo80_rf, hi80_rf),
                                "inside 80% interval", "outside 80% interval"),
-         err         = sprintf("forecast - result: %+.1f pp", yes_hat - yes_act))
+         err         = sprintf("forecast - result: %+.2f pp", yes_hat - yes_act))
 
 past_rows <- bind_rows(
   past %>% transmute(y = y_fc, yes = yes_hat, lo = lo80_rf, hi = hi80_rf,
