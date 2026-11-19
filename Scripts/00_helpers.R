@@ -89,7 +89,7 @@ pr_auc <- function(y, yhat) {
 
 # 4. One row of evaluation output ------------------------------------
 
-# p is the model-based acceptance probability; when supplied, Brier is computed on it
+# p is the model-based acceptance probability. When supplied, Brier is computed on it
 # without p the legacy proxy is used (fallback for score-only baselines)
 eval_preds <- function(y, yhat, model, fold, p = NULL) {
   tibble::tibble(model = model, fold = fold, n = sum(!is.na(yhat)),

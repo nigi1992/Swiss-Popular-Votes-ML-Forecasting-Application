@@ -114,13 +114,60 @@ print(results %>% select(-pred))
 #print(results %>% select(-pred), n = Inf)
 
 #print(pooled %>% arrange(mae))
-# M0 reference rows exist only when 03_model_M0.R ran in the same session; bind_rows() skips the NULLs otherwise
+# M0 reference rows exist only when 03_model_M0.R ran in the same session, bind_rows() skips the NULLs otherwise
 print(bind_rows(if (exists("mgrand_pooled")) mgrand_pooled, if (exists("m0_pooled")) m0_pooled,
                 pooled %>% arrange(mae)), n = Inf)
 
 #print(pooled %>% arrange(desc(volksmehr_acc)))
 print(bind_rows(if (exists("mgrand_pooled")) mgrand_pooled,
                 pooled %>% arrange(desc(volksmehr_acc))), n = Inf)
+
+## Volksmehr accuracy by legal form ------------------------------------
+
+# Row-level calls of every model on the pooled test rows, joined with the legal form of the vote
+# M0 added as reference: within a legal form its call is one constant per fold
+rf_labels <- c("1" = "1 obligat. Ref.", "2" = "2 fak. Ref.", "3" = "3 Volksinitiative", "4" = "4 Gegenentwurf")
+
+calls_rf <- results %>%
+  select(model, pred) %>%
+  unnest(pred) %>%
+  select(model, row, yhat) %>%
+  bind_rows(tibble(model = "M0_rechtsform", row = test_idx, yhat = frame$roll_yes_rechtsform[test_idx])) %>%
+  left_join(frame %>% mutate(row = row_number()) %>% select(row, anr, datum, rechtsform, yes_share), by = "row") %>%
+  mutate(rechtsform = rf_labels[as.character(rechtsform)],
+         actual     = yes_share >= 50, # true Volksmehr
+         called     = yhat >= 50)      # volksmehr_hat
+
+acc_by_rf <- calls_rf %>%
+  group_by(model, rechtsform) %>%
+  summarise(n               = n(),
+            acceptance_rate = mean(actual),              # share of proposals that passed
+            called_accepted = mean(called),              # share the model calls as accepted
+            volksmehr_acc   = mean(called == actual),
+            acc_baseline    = max(acceptance_rate, 1 - acceptance_rate), # always calling the majority class
+            acc_skill       = volksmehr_acc - acc_baseline,
+            passed_hit      = sum(called & actual),      # passed, called accepted
+            passed_missed   = sum(!called & actual),     # passed, called rejected
+            failed_hit      = sum(!called & !actual),    # failed, called rejected
+            failed_missed   = sum(called & !actual),     # failed, called accepted
+            recall_failed   = failed_hit / (failed_hit + failed_missed), # share of the failures that is caught
+            .groups = "drop")
+
+# Champion candidates against the base rate, one block per legal form
+print(acc_by_rf %>%
+        filter(model %in% c("M0_rechtsform", "m1B_core", "m1B_sig", "m1B_sig_ref")) %>%
+        arrange(rechtsform, model) %>%
+        mutate(across(where(is.double), ~ round(.x, 3))),
+      n = Inf, width = Inf)
+
+# Optional referendums that failed at the ballot: which ones a model catches, and how close the others were
+print(calls_rf %>%
+        filter(model == "m1B_sig", rechtsform == "2 fak. Ref.", !actual) %>%
+        arrange(datum) %>%
+        transmute(anr, datum, yes_share, yhat = round(yhat, 1), caught = !called),
+      n = Inf)
+
+write_csv(acc_by_rf, file.path(output_path, "metrics_M1_by_rechtsform.csv"))
 
 # 5. Paired comparisons ----------------------------------------------
 
@@ -203,7 +250,7 @@ grad <- bind_rows(
                                        frame$roll_yes_rechtsform[.x$test]))))
 )
 
-# A gradient that survives the fixed window is an era effect; one that flattens was a sample-size effect
+# A gradient that survives the fixed window is an era effect, one that flattens was a sample-size effect
 print(grad %>% pivot_wider(names_from = scheme, values_from = mae))
 
 # 6. Saving dataset for the ML pipeline ------------------------------

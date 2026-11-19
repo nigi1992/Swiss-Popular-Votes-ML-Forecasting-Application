@@ -152,7 +152,7 @@ boot_table <- function(mx, frame_use, folds_use) {
          p_worse = rowMeans(D > 0),
          mae_recent = unname(colMeans(E[recent, , drop = FALSE])),
          volksmehr_acc = map_dbl(mx$P, ~ volksmehr_acc(y, .x)),
-         n_na = unname(colSums(is.na(E)))) # counting test rows without a prediction per model)
+         n_na = unname(colSums(is.na(E)))) # counting test rows without a prediction per model
 }
 
 sel <- bind_rows(boot_table(mx_long,  frame,      folds_long),

@@ -1,4 +1,6 @@
-### Temporary Notes ###
+### Notes and Data Presentation ###
+
+# Data Exploration --------------------------------------------------------
 
 rm(df_r1, df_r2, df_r3, df_r4)
 
@@ -13,6 +15,20 @@ df_r2 <- df %>%
   filter(rechtsform == 2)
 
 table(df_r2$volk, df_r2$stand)
+
+
+rm(df_r2_test)
+df_r2_test <- preds_long %>%
+  filter(model == "m1B_sig")
+
+df_r2_test <- df_r2_test %>%
+  left_join(df_r2, by = "anr")
+
+df_r2_test <- df_r2_test %>%
+  filter(rechtsform == 2)
+
+df_r2_test <- df_r2_test %>%
+  filter(df_r2_test$yes_share <= 50 & df_r2_test$yhat >= 50)
 
 
 df_r3 <- df %>%
@@ -88,12 +104,16 @@ table(df_r2$ref_pole_mixed, df_r2$annahme)
 table(df$dep, df$annahme)
 
 
-# Result Selection --------------------------------------------------------
+# Rounded Values and Percentages ----------------------------------------
 
+base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
+input_path  <- file.path(base_path, "Input Data")
+output_path <- file.path(base_path, "Output", "B") # B run kept apart from the old outputs
+
+# Results Selection Table
 result_select <- read_csv(file.path(input_path, "Results Selection.csv"),
                 show_col_types = FALSE)
      
-
 result_select <- result_select %>%
   mutate(
         mae = round(mae, 2),
@@ -105,3 +125,51 @@ result_select <- result_select %>%
         volksmehr_acc_short = round(volksmehr_acc_short*100, 2)
   )
 write_csv(result_select, file.path(output_path, "results_selection_rounded.csv"))
+
+
+# Champ LMG Importance Table
+champ_lmg_importance <- read_csv(file.path(output_path, "champion_lmg_importance.csv"),
+                          show_col_types = FALSE)
+
+champ_lmg_importance <- champ_lmg_importance %>%
+  mutate(
+    lmg_r2 = round(lmg_r2*100, 1),
+    share = round(share*100, 1)
+  )
+write_csv(champ_lmg_importance, file.path(output_path, "champion_lmg_importance_rounded.csv"))
+
+
+# Champ Regression Table
+champ_reg_table <- read_csv(file.path(output_path, "champion_regression_table.csv"),
+                          show_col_types = FALSE)
+
+champ_reg_table <- champ_reg_table %>%
+  mutate(
+    estimate = round(estimate, 1),
+    se_cl = round(se_cl, 2),
+    t_cl = round(t_cl, 2),
+    p_cl = round(p_cl, 3),
+    beta_std  = round(beta_std, 2),
+    beta_lo   = round(beta_lo, 2),
+    beta_hi   = round(beta_hi, 2)
+  )
+write_csv(champ_reg_table, file.path(output_path, "champion_regression_table_rounded.csv"))
+
+
+# Forecasting Table rounded values
+forecast_rounded <- read_csv(file.path(output_path, "forecast_upcoming.csv"),
+                             show_col_types = FALSE)
+
+forecast_rounded <- forecast_rounded %>%
+  mutate(
+    yes_hat = sprintf("%.2f%%", yes_hat),# * 100),
+    lo80 = sprintf("%.2f%%", lo80),# * 100),
+    hi80 = sprintf("%.2f%%", hi80),# * 100),
+    lo95 = sprintf("%.2f%%", lo95),# * 100),
+    hi95 = sprintf("%.2f%%", hi95),# * 100),
+    p_volksmehr = round(p_volksmehr, 3),
+    lo80_rf = sprintf("%.2f%%", lo80_rf),# * 100),
+    hi80_rf = sprintf("%.2f%%", hi80_rf),# * 100),
+    p_volksmehr_rf = round(p_volksmehr_rf, 3)
+  )
+write_csv(forecast_rounded, file.path(output_path, "forecast_upcoming_rounded.csv"))

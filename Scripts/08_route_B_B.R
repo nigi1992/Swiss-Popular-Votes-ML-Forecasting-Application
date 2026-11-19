@@ -1,7 +1,7 @@
 ### 08_route_B_B.R ###
 
 # Route B: canton-level yes-shares and the derived Ständemehr for the
-# double-majority votes (for rechtsform 1, 3 and 4; art. 140/142 BV)
+# double-majority votes (for rechtsform 1, 3 and 4, Art. 140/142 BV)
 #
 # Architecture:       
 # yes-share of canton = national anchor  + canton deviation

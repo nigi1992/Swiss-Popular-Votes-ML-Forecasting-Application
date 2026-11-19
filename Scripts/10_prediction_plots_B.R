@@ -1443,3 +1443,207 @@ write_csv(perm_imp %>%
 write_csv(imp_xgb, file.path(output_path, "modelB_xgb_importance.csv"))
 
 message("plots written to: ", plot_path)
+
+
+
+# E. Confusion Matrices ---------------------------------------------------
+# 20. Confusion matrices by legal form (rechtsform) -----------------------
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+## Orientation switch ----------------------------------------------------
+
+# row totals of the drawn matrices (104 Pass / 134 Fail, n = 238) equal the realized
+# outcomes in cv_scored -> rows = actual, columns = predicted
+rows_are_predicted <- FALSE
+row_ttl <- if (rows_are_predicted) "Predicted" else "Actual"
+col_ttl <- if (rows_are_predicted) "Actual" else "Predicted"
+
+## Raw counts, transcribed exactly as drawn (row, col, n) --------------
+
+rechtsform_labels <- c(
+  "1" = "Mandatory referendum",
+  "2" = "Optional referendum",
+  "3" = "Popular initiative",
+  "4" = "Counter-proposal"
+)
+
+cm_raw <- tribble(
+  ~rechtsform, ~row_cls, ~col_cls, ~n,
+  1, "Pass", "Pass",  19,
+  1, "Pass", "Fail",   0,
+  1, "Fail", "Pass",   4,
+  1, "Fail", "Fail",   0,
+  2, "Pass", "Pass",  58,
+  2, "Pass", "Fail",   4,
+  2, "Fail", "Pass",  21,
+  2, "Fail", "Fail",   3,
+  3, "Pass", "Pass",   1,
+  3, "Pass", "Fail",  14,
+  3, "Fail", "Pass",   0,
+  3, "Fail", "Fail", 100,
+  4, "Pass", "Pass",   8,
+  4, "Pass", "Fail",   0,
+  4, "Fail", "Pass",   5,
+  4, "Fail", "Fail",   1
+)
+
+# mapping drawn rows/columns onto predicted/actual
+cm <- cm_raw %>%
+  mutate(
+    predicted = if (rows_are_predicted) row_cls else col_cls,
+    actual    = if (rows_are_predicted) col_cls else row_cls,
+    cell = case_when(
+      predicted == "Pass" & actual == "Pass" ~ "TP",
+      predicted == "Pass" & actual == "Fail" ~ "FP",
+      predicted == "Fail" & actual == "Pass" ~ "FN",
+      predicted == "Fail" & actual == "Fail" ~ "TN"
+    )
+  )
+
+## Metrics ---------------------------------------------------------
+
+# guarding against 0/0 so an undefined metric shows as NA instead of NaN
+safe_div <- function(a, b) ifelse(b == 0, NA_real_, a / b)
+
+calc_metrics <- function(df) {
+  df %>%
+    summarise(
+      TP = sum(n[cell == "TP"]), FP = sum(n[cell == "FP"]),
+      FN = sum(n[cell == "FN"]), TN = sum(n[cell == "TN"]),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      n_total   = TP + FP + FN + TN,
+      precision = safe_div(TP, TP + FP),
+      recall    = safe_div(TP, TP + FN),
+      accuracy  = safe_div(TP + TN, n_total)
+    )
+}
+
+metrics <- cm %>%
+  group_by(rechtsform) %>%
+  calc_metrics() %>%
+  mutate(legal_form = rechtsform_labels[as.character(rechtsform)], .after = rechtsform)
+
+metrics_pooled <- calc_metrics(cm)
+
+print(metrics, width = Inf)
+print(metrics_pooled, width = Inf)
+
+write.csv(
+  bind_rows(metrics, metrics_pooled %>% mutate(rechtsform = NA, legal_form = "Pooled")),
+  file.path(output_path, "metrics_confusion_by_rechtsform.csv"),
+  row.names = FALSE
+)
+
+## Plot data --------------------------------------------------------
+
+fmt3 <- function(x) ifelse(is.na(x), "n/a", sprintf("%.3f", x))
+
+panel_lab <- metrics %>%
+  transmute(
+    rechtsform,
+    panel = sprintf("r = %d  |  %s  (n = %d)", rechtsform, legal_form, n_total)
+  )
+panel_levels <- panel_lab$panel
+
+plot_df <- cm %>%
+  group_by(rechtsform) %>%
+  mutate(share = n / sum(n)) %>%
+  ungroup() %>%
+  left_join(panel_lab, by = "rechtsform") %>%
+  mutate(
+    # placing Pass on the left/top, Fail on the right/bottom (same layout as the sketch)
+    #x = if_else(actual == "Pass", 1, 2),
+    #y = if_else(predicted == "Pass", 2, 1),
+    # keeping the layout of the sketch: drawn rows on y, drawn columns on x, Pass first
+    x = if_else(col_cls == "Pass", 1, 2),
+    y = if_else(row_cls == "Pass", 2, 1),
+    outcome = case_when(
+      n == 0                  ~ "Empty",
+      cell %in% c("TP", "TN") ~ "Correct",
+      TRUE                    ~ "Error"
+    ),
+    outcome   = factor(outcome, levels = c("Correct", "Error", "Empty")),
+    lab_n     = as.character(n),
+    lab_share = sprintf("%s  (%.1f%%)", cell, 100 * share),
+    panel     = factor(panel, levels = panel_levels)
+  )
+
+# building the metric strip under each matrix: one column per metric
+metric_df <- metrics %>%
+  left_join(panel_lab, by = "rechtsform") %>%
+  select(panel, precision, recall, accuracy) %>%
+  pivot_longer(-panel, names_to = "metric", values_to = "value") %>%
+  mutate(
+    x      = c(precision = 0.85, recall = 1.5, accuracy = 2.15)[metric],
+    metric = c(precision = "Precision", recall = "Recall", accuracy = "Accuracy")[metric],
+    value  = fmt3(value),
+    panel  = factor(panel, levels = panel_levels)
+  )
+
+# blue/red instead of green/red: green-red collapses under deuteranopia (validated dE 4.1 vs 23.8)
+fill_vals <- c(Correct = "#2a78d6", Error = "#d03b3b", Empty = "#ecebe7")
+ink_vals  <- c(Correct = "#ffffff", Error = "#ffffff", Empty = "#8a8984")
+
+## Plot ----------------------------------------------------------------
+
+p_cm <- ggplot(plot_df, aes(x, y)) +
+  geom_tile(aes(fill = outcome), width = 0.96, height = 0.96) +   # small gap between cells
+  geom_text(aes(label = lab_n, colour = outcome),
+            nudge_y = 0.07, size = 7, fontface = "bold", show.legend = FALSE) +
+  geom_text(aes(label = lab_share, colour = outcome),
+            nudge_y = -0.24, size = 3.2, show.legend = FALSE) +
+  # metric strip
+  geom_text(data = metric_df, aes(x = x, y = 0.36, label = metric),
+            inherit.aes = FALSE, size = 3.2, colour = "#52514e") +
+  geom_text(data = metric_df, aes(x = x, y = 0.16, label = value),
+            inherit.aes = FALSE, size = 4.3, fontface = "bold", colour = "#0b0b0b") +
+  # free scales force ggplot to draw both axes on every panel and reserve space for them
+  facet_wrap(~ panel, ncol = 2, scales = "free") +
+  scale_fill_manual(values = fill_vals, breaks = c("Correct", "Error"),
+                    labels = c("Correct (TP / TN)", "Error (FP / FN)"), name = NULL) +
+  scale_colour_manual(values = ink_vals, guide = "none") +
+  scale_x_continuous(breaks = 1:2, labels = c("Pass", "Fail"), position = "top", name = col_ttl) +
+  scale_y_continuous(breaks = 1:2, labels = c("Fail", "Pass"), name = row_ttl) +
+  coord_cartesian(xlim = c(0.5, 2.5), ylim = c(0.02, 2.5), expand = FALSE, clip = "off") +
+  labs(
+    title    = "Confusion matrices by legal form",
+    subtitle = "Swiss federal votes: predicted vs. actual outcome",
+    caption  = pooled_txt
+  ) +
+  theme_void(base_size = 12) +
+  theme(
+    strip.text       = element_text(face = "bold", size = 11, hjust = 0,
+                                    margin = margin(b = 4)),
+    strip.placement  = "outside",   # keeping the strip title above the top axis
+    axis.text.x.top  = element_text(colour = "#0b0b0b", size = 10, margin = margin(b = 4)),
+    axis.text.y      = element_text(colour = "#0b0b0b", size = 10, hjust = 1, margin = margin(r = 4)),
+    axis.title.x.top = element_text(colour = "#52514e", size = 9.5, margin = margin(b = 4)),
+    axis.title.y     = element_text(colour = "#52514e", size = 9.5, angle = 90, margin = margin(r = 6)),
+    aspect.ratio     = 2.48 / 2,     # keeping the tiles square (y range / x range)
+    panel.spacing.x  = unit(1.2, "lines"),
+    panel.spacing.y  = unit(1.6, "lines"),
+    legend.position  = "top",
+    legend.justification = "left",
+    legend.margin    = margin(b = 6),
+    plot.title       = element_text(face = "bold", size = 15, margin = margin(b = 4)),
+    plot.subtitle    = element_text(colour = "#52514e", margin = margin(b = 8)),
+    plot.caption     = element_text(colour = "#52514e", size = 8.5, hjust = 0,
+                                    lineheight = 1.2, margin = margin(t = 12)),
+    plot.title.position   = "plot",
+    plot.caption.position = "plot",
+    plot.background  = element_rect(fill = "#fcfcfb", colour = NA),
+    plot.margin      = margin(16, 18, 12, 16)
+  )
+
+print(p_cm)
+
+ggsave(file.path(plot_dir, "10_confusion_matrices.png"), p_cm,
+       width = 9.5, height = 11, dpi = 300, bg = "#fcfcfb")
+ggsave(file.path(plot_dir, "10_confusion_matrices.pdf"), p_cm,
+       width = 9.5, height = 11, bg = "#fcfcfb")
+

@@ -7,7 +7,7 @@
 # The current best M1 set trained long and short plus the M0 anchor
 # The long-vs-short reference pair measures what capping at 1994 costs
 
-# Engine: lm as the transparent baseline; tree engines slot in later
+# Engine: lm as the transparent baseline, tree engines slot in later
 
 # 1. Data import -----------------------------------------------------
 
@@ -43,7 +43,7 @@ folds <- make_time_folds(frame_frak$datum, initial_frac = 0.5, k = 4) # (k=4, 13
 
 # 3. Expanding-window evaluation of one feature set -------------------
 
-# Using fit_lm_guarded from 00_helpers.R (assign-based alias mapping, status return);
+# Using fit_lm_guarded from 00_helpers.R (assign-based alias mapping, status return)
 # no local redefinition, so 00 stays the single source of truth for the guard
 
 # train_frame = "long" trains on all votes before the test block,

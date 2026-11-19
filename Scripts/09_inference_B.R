@@ -131,8 +131,10 @@ pred <- pred %>%
 
 
 # Guard against 0-filled signature placeholders
-# spare_days_frac etc. are 0-filled in 02_features.R; for pending initiatives the raw
-# Swissvotes timing fields are still empty, so the 0 is a placeholder, not an observation
+# spare_days_frac etc. are 0-filled in 02_features.R, 
+# for pending initiatives the raw Swissvotes timing fields are still empty, 
+# so the 0 is a placeholder, not an observation
+
 #sig_feats <- c("surplus_sig_ratio", "sig_speed_pc", "invalid_sig_share", "spare_days_frac")
 #if (any(champion_spec$feats %in% sig_feats) && any(upcoming$sig_data_missing == 1))
   #stop("champion uses signature features that are placeholders for: ",

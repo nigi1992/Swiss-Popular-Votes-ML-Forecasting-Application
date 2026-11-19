@@ -159,7 +159,7 @@ run_engine_set <- function(engine, set_name, feats, frame_use, folds_use) {
 # 6. Model + engine selection ----------------------------------------------
 
 # Tree extras are part of m1B_tree / m2B_tree in the B registry, no in-script fallback needed
-# Only t0 sets here: 07 picks the forecasting champion from this grid; the t1 parole grid lives in 06f
+# Only t0 sets here: 07 picks the forecasting champion from this grid, the t1 parole grid lives in 06f
 engines    <- c("lm", "ridge", "lasso", "tree", "rf", "gbm", if (has_xgb) "xgb", "knn")
 # lm on *_wide / *_tree is rank-deficient by design -> read those rows as a sanity check only
 
