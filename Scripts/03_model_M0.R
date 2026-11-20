@@ -182,6 +182,8 @@ write_csv(m0_calibration, file.path(output_path, "metrics_M0_calibration.csv"))
 
 # !!!Only Run this section after running 06 and 07!!! -----------------------
 message("Stop! Warning! Run section 11 only after running 06 and 07, otherwise the M0 comparison will fail.")
+stop()
+
 # 8. Champion against M0 and the fold baselines ----------------------------
 
 # Applying sections 3-6 to the 07 champion (lm_m1B_sig) on the identical long-frame test rows
