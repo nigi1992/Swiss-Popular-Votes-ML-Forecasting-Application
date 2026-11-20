@@ -181,8 +181,8 @@ write_csv(m0_vs_base, file.path(output_path, "metrics_M0_vs_baseline.csv"))
 write_csv(m0_calibration, file.path(output_path, "metrics_M0_calibration.csv"))
 
 # !!!Only Run this section after running 06 and 07!!! -----------------------
-message("Stop! Warning! Run section 11 only after running 06 and 07, otherwise the M0 comparison will fail.")
-stop()
+message("Stop! Warning! Run section 11 only after running Script 06 and 07, otherwise the M0 comparison will fail.")
+stop("Stop! Read Comments!")
 
 # 8. Champion against M0 and the fold baselines ----------------------------
 
