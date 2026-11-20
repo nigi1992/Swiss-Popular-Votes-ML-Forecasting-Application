@@ -109,7 +109,7 @@ b_coal_wide <- c("coalition_kriesi", "n_gov_defectors", "svp_defects", "sp_defec
 # frak_gruene_sup, frak_lr_signed5  3 NA rows on the short frame (Grüne without cast votes):
 #                                   lm drops / NA-predicts them, 06 make_mm() drops the rows -> no frak5 sets
 
-## Table F: sponsor / urheber, instrument-specific (t0, long + short) ----------------
+## Table F: author / urheber, instrument-specific (t0, long + short) ----------------
 
 # pole_yes_dev: as-of, shrunk deviation of the rechtsform x pole cell from the instrument base rate
 # Centered by construction, so it carries no rechtsform level shift (VIF 1.2 next to the core)

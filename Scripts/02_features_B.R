@@ -932,14 +932,14 @@ df <- df %>%
     econ_labor_gap    = verband_econ_cue - verband_labor_cue
   )
 
-## Parole feature-set ------------------------------------------------------
+## Parole feature-set ----------------------------------------------------
 
 parole_features <- c(paste0("cue_", paro_parties), paste0("cue_", paro_verbands),
                      "parole_abstain_share", "parole_cue_lr", "parole_wsup",
                      "parole_gov_defectors", "parole_breadth",
                      "verband_econ_cue", "verband_labor_cue", "econ_labor_gap")
 
-# 8. Sponsors / Urheber -----------------------------------------------
+# 8. Authorship / Sponsors / Urheber -------------------------------------
 
 # See Scripts in /Urheber Scripts for the coding and review process
 
@@ -950,7 +950,7 @@ urh <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles_refined
   select(anr, urheber_r4, pole_refined_r4, pole_refined_origin, urheber_is_coalition = is_coalition,
          n_sponsors, established_actor, actor_label_r4, actor_code_r4)
 
-## Join audit, both directions ---------------------------------------
+## Join audit, both directions ------------------------------------------
 
 message("urheber orphans (coded but not in master): ",
         paste(anti_join(urh, df, by = "anr")$anr, collapse = " "))
