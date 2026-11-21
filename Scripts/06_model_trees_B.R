@@ -153,7 +153,7 @@ engines    <- c("lm", "ridge", "lasso", "tree", "rf", "gbm", if (has_xgb) "xgb",
 # lm on *_wide / *_tree is rank-deficient by design -> read those rows as a sanity check only
 
 # Sets on both frames are the 07 candidates (07 requires a model on both frames)
-sets_both  <- c("m1B_core", "m1B_ref", "m1B_sig", "m1B_sig_ref", "m1_2eB", "m1B_wide", "m1B_tree")
+sets_both  <- c("m1B_core", "m1B_ref", "m1B_sig", "m1B_sig_ref", "m1B_wide", "m1B_tree")
 sets_long  <- c(sets_both, "m1B_lm")                                    # + widest lm-safe long set
 sets_short <- c(sets_both, "m2B_champ_sig", "m2B_champ_cue", "m2B_lm",  # + faction-frame sets
                 "m2B_wide", "m2B_tree")
@@ -230,6 +230,12 @@ print(pooled %>% filter(frame == "short") %>% arrange(mae), n = 15)
 
 print(pooled %>% filter(frame == "long")  %>% arrange(desc(volksmehr_acc)), n = 15)
 print(pooled %>% filter(frame == "short") %>% arrange(desc(volksmehr_acc)), n = 15)
+
+print(pooled %>% filter(frame == "long")  %>% arrange(mae), n = 5)
+print(pooled %>% filter(frame == "short") %>% arrange(mae), n = 5)
+
+print(pooled %>% filter(frame == "long")  %>% arrange(desc(volksmehr_acc)), n = 5)
+print(pooled %>% filter(frame == "short") %>% arrange(desc(volksmehr_acc)), n = 5)
 
 # 9. Saving predictions + metrics for 07_model_selection.R --------------
 

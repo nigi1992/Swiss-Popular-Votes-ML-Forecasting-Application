@@ -70,7 +70,7 @@ p_target <- ggplot(frame, aes(yes_share)) +
   geom_vline(xintercept = 50, linetype = "dashed") +
   labs(title = "Distribution of the national yes-share in Federal Referendums",
        subtitle = paste0("Voted federal ballots, n = ", nrow(frame),
-                         "; Dashed line = Volksmehr threshold"),
+                         ", Dashed line = Volksmehr threshold"),
        x = "yes-share (%)", y = "count")
 
 # Splitting by legal form shows how much of the spread is a composition effect
@@ -88,7 +88,7 @@ p_target <- ggplot(frame, aes(yes_share)) +
   geom_vline(xintercept = 50, linetype = "dashed") +
   labs(title = "Distribution of the national yes-share in Federal Referendums",
        subtitle = paste0("Voted federal ballots, n = ", nrow(frame),
-                         "; Dashed line = Volksmehr threshold"),
+                         ", Dashed line = Volksmehr threshold"),
        x = "yes-share (%)", y = "count")
 
 ### No Legend ------------------------------------------------------------
@@ -552,7 +552,7 @@ p_cor_num <- as_tibble(C, rownames = "v1") %>%
                        midpoint = 0, limits = c(-1, 1), na.value = "grey92") +
   labs(title = "Correlation matrix of predictors and target",
        subtitle = paste0("blocked by feature bucket in registry order, clustered ",
-                         "within bucket; target in the first row and column"),
+                         "within bucket, target in the first row and column"),
        x = NULL, y = NULL) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6),
         axis.text.y = element_text(size = 6),
@@ -570,7 +570,7 @@ thr <- 0.7
 hi_mask <- !is.na(C) & abs(C) >= thr
 diag(hi_mask) <- FALSE
 
-# Keeping only variables with at least one strong partner; the target stays as anchor
+# Keeping only variables with at least one strong partner, the target stays as anchor
 keep_vars <- var_order[var_order == "yes_share" | rowSums(hi_mask[var_order, var_order]) > 0]
 n_keep    <- length(keep_vars)
 if (n_keep < length(var_order))
@@ -617,7 +617,7 @@ p_cor_hi <- ggplot(cor_hi, aes(v1, v2)) +
                        breaks = c(-1, -0.5, 0.5, 1), name = "r") +
   coord_fixed() +
   labs(title = "Strong correlations among predictors and target",
-       subtitle = paste0("Only pairs with |r| >= ", thr, " shown; variables without ",
+       subtitle = paste0("Only pairs with |r| >= ", thr, " shown, variables without ",
                          "such a pair dropped\nBlocked by feature bucket, target in the ",
                          "first column"),
        x = NULL, y = NULL) +
@@ -664,14 +664,14 @@ sel_pairs <- pairs_all %>%
   filter(v1 != "yes_share", abs(r) >= thr, !cross_only | b1 != b2) %>%
   slice_max(abs(r), n = top_pairs, with_ties = FALSE)
 
-# Predictors most correlated with the target; yes_share sits first in var_order, so it is always v1
+# Predictors most correlated with the target, yes_share sits first in var_order, so it is always v1
 sel_target <- pairs_all %>%
   filter(v1 == "yes_share") %>%
   slice_max(abs(r), n = top_target, with_ties = FALSE)
 
 # Keeping the bucket order of var_order for the selected variables
 #keep_vars <- intersect(var_order, c("yes_share", sel_pairs$v1, sel_pairs$v2, sel_target$v2))
-# Keeping the bucket order of var_order for the selected variables; drop_vars wins over add_vars
+# Keeping the bucket order of var_order for the selected variables, drop_vars wins over add_vars
 keep_vars <- intersect(var_order,
                        setdiff(c("yes_share", sel_pairs$v1, sel_pairs$v2, sel_target$v2,
                                  add_vars),
@@ -782,7 +782,7 @@ p_cor_man <- ggplot(cor_man, aes(v1, v2)) +
                        breaks = c(-1, -0.5, 0, 0.5, 1), name = "r") +
   coord_fixed() +
   labs(title = "Correlations of selected predictors and target",
-       subtitle = paste0("Pairwise complete observations; n shown where a cell rests on ",
+       subtitle = paste0("Pairwise complete observations, n shown where a cell rests on ",
                          "fewer than ", n_full, " votes"),
        x = NULL, y = NULL) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
@@ -989,7 +989,8 @@ save_plot(p_resid, "Eval Metrics/10_residual_boxplots.png", 9, 6)
 unique(forecast$model)
 
 # defining the models to hide in the display
-models_drop <- c("xgb_m1B_tree", "ridge_m1B_sig", "lasso_m2B_champ_cue", "knn_m2B_champ_sig", "lasso_m1B_sig_ref")
+models_drop <- c("xgb_m1B_tree", "ridge_m1B_sig", "lasso_m2B_champ_cue", "knn_m2B_champ_sig", "lasso_m1B_sig_ref",
+                 "lm_m1B_sig_ref")#, "lasso_m1B_sig")
 
 # subsetting the forecast table for plotting only, so the full table stays intact
 fc_plot <- forecast %>%
@@ -1015,14 +1016,13 @@ p_fc <- forecast %>%
 save_plot(p_fc, "Forecast/10_forecast_intervals.png", 10,
           max(6, 1.6 * n_distinct(forecast$anr)))
 
-
 ## p_fc anr 690 ------------------------------------------------------------
 
 # checking which ballot numbers the forecast table actually holds
 forecast %>% distinct(anr, titel)
 
 # isolating the target ballot once so plot and height share the same rows
-target_anr <- "690"
+target_anr <- "697"
 
 fc_one <- forecast %>%
   filter(anr == target_anr) %>%
@@ -1120,18 +1120,18 @@ vote_bars <- function(rows, model_name, bar_h = 0.7, clip = "on") {
     geom_label(data = bars, aes(x = xmid, y = y + 0.15, label = lab),
                size = 2.8, label.padding = unit(0.12, "lines"), fill = "white") +
     geom_segment(data = iv,
-                 aes(x = lo, xend = hi, y = y_iv, yend = y_iv, colour = "80% interval"),
+                 aes(x = lo, xend = hi, y = y_iv, yend = y_iv, colour = "80% Interval"),
                  linewidth = 0.6) +
-    geom_point(data = iv_end, aes(x = x, y = y_iv, colour = "80% interval"), size = 2) +
+    geom_point(data = iv_end, aes(x = x, y = y_iv, colour = "80% Interval"), size = 2) +
     scale_fill_manual(values = c(Yes = col_yes, No = col_no), name = NULL) +
     # model name as title of the interval key so the reference sits inside the legend
-    scale_colour_manual(values = c(`80% interval` = "black"),
+    scale_colour_manual(values = c(`80% Interval` = "black"),
                         name = paste0("Model: ", model_name)) +
     scale_x_continuous(breaks = seq(0, 100, 25), labels = label_percent(scale = 1)) +
     # zooming instead of scale limits so text placed right of 100% is kept
     coord_cartesian(xlim = c(0, 100), expand = TRUE, clip = clip) +
     guides(fill = guide_legend(order = 1), colour = guide_legend(order = 2)) +
-    labs(x = "Share of valid votes") +
+    labs(x = "Share of Valid Votes") +
     theme_vote()
 }
 
@@ -1142,7 +1142,14 @@ pred_date_up <- "10.10.2026"      # date of the 09 prediction run, dd.mm.yyyy
 vote_date_up <- "29.11.2026"
 anr_up       <- as.character(690:693)
 
-# reading the 09 forecast export; file name has to match the run suffix written in 09
+short_titles_up <- c(
+  "690" = "Finanzierung 13. AHV",
+  "691" = "Feuerwerks Initiative",
+  "692" = "Fairness Initiative",
+  "693" = "Kriegsmaterialgesetz"
+)
+
+# reading the 09 forecast export: file name has to match the run suffix written in 09
 fc_up <- read_csv(file.path(output_path, "forecast_upcoming.csv"),
                   col_types = cols(anr = col_character())) %>%
   filter(anr %in% anr_up) %>%
@@ -1156,22 +1163,138 @@ up_rows <- fc_up %>%
          yes     = yes_hat,
          lo      = lo80_rf,
          hi      = hi80_rf,
+         titel_lab = coalesce(unname(short_titles_up[anr]), titel),
          # accepted_hat already applies the double majority for rechtsform 1, 3, 4
          verdict = if_else(coalesce(accepted_hat, yes_hat >= 50), "Accepted", "Rejected"),
-         y_lab   = paste0(str_wrap(titel, 22), "\n", verdict,
-                          "\nP(yes majority) ", p_volksmehr_rf))# percent(p_volksmehr_rf, accuracy = 1)))
+         y_lab   = paste0(str_wrap(titel_lab, 22), "\n", verdict,
+                          "\nP(Volksmehr) ", round(p_volksmehr_rf, 3)))
 
 p_up <- vote_bars(up_rows, model_up) +
-  annotate("text", x = 51, y = max(up_rows$y) + 0.5, label = "50% threshold",
+  annotate("text", x = 51, y = max(up_rows$y) + 0.5, label = "50% Threshold",
            hjust = 0, fontface = "italic", size = 3) +
   scale_y_continuous(breaks = up_rows$y, labels = up_rows$y_lab,
                      expand = expansion(add = c(0.45, 0.65))) +
-  labs(title = paste0("Federal vote of ", vote_date_up,
+  labs(title = paste0("Federal Vote of ", vote_date_up,
                       "\nForecast Date: ", pred_date_up)) +
   theme(legend.box = "vertical", legend.spacing.y = unit(0, "pt"))
 
 print(p_up)
 ggsave(file.path(plot_path, "Forecast/10_forecast_upcoming_20261129.png"),
+       p_up, width = 4, height = 6.6, dpi = 300, bg = "white")
+
+
+## Upcoming votes of 28.02.2027 (anr 694-698) ---------------------------
+
+model_up     <- champion_name 
+pred_date_up <- "13.11.2026"      
+vote_date_up <- "28.02.2027"
+anr_up       <- as.character(694:698)
+
+short_titles_up <- c(
+  "694" = "Stopfleber Initiative",
+  "695" = "Demokratie Initiative",
+  "696" = "Malaysia Abkommen",
+  "697" = "Kernenergiegesetz",
+  "698" = "Gesamtarbeitsverträge vor Mindestlöhne"
+)
+
+# reading the 09 forecast export: file name has to match the run suffix written in 09
+fc_up <- read_csv(file.path(output_path, "forecast_upcoming.csv"),
+                  col_types = cols(anr = col_character())) %>%
+  filter(anr %in% anr_up) %>%
+  arrange(anr)
+
+stopifnot(nrow(fc_up) == length(anr_up),
+          !anyNA(fc_up[c("yes_hat", "lo80_rf", "hi80_rf", "p_volksmehr_rf")]))
+
+up_rows <- fc_up %>%
+  mutate(y       = -(row_number() - 1),
+         yes     = yes_hat,
+         lo      = lo80_rf,
+         hi      = hi80_rf,
+         titel_lab = coalesce(unname(short_titles_up[anr]), titel),
+         # accepted_hat already applies the double majority for rechtsform 1, 3, 4
+         verdict = if_else(coalesce(accepted_hat, yes_hat >= 50), "Accepted", "Rejected"),
+         y_lab   = paste0(str_wrap(titel_lab, 22), "\n", verdict,
+                          "\nP(Volksmehr) ", round(p_volksmehr_rf, 3)))
+
+# flagging any anr that still uses the long titel
+missing_short <- setdiff(up_rows$anr, names(short_titles_up))
+if (length(missing_short) > 0) warning("No short title for anr: ", paste(missing_short, collapse = ", "))
+
+p_up <- vote_bars(up_rows, model_up) +
+  annotate("text", x = 51, y = max(up_rows$y) + 0.5, label = "50% Threshold",
+           hjust = 0, fontface = "italic", size = 3) +
+  scale_y_continuous(breaks = up_rows$y, labels = up_rows$y_lab,
+                     expand = expansion(add = c(0.45, 0.65))) +
+  labs(title = paste0("Federal Vote of ", vote_date_up,
+                      "\nForecast Date: ", pred_date_up)) +
+  theme(legend.box = "vertical", legend.spacing.y = unit(0, "pt"))
+
+print(p_up)
+ggsave(file.path(plot_path, "Forecast/10_forecast_upcoming_20270228.png"),
+       p_up, width = 4, height = 6.6, dpi = 300, bg = "white")
+
+
+## All upcoming votes ------------------------------------------------------
+
+model_up     <- champion_name 
+pred_date_up <- "10.10.2026 and 13.11.2026"      
+vote_date_up <- "27.09. and 29.11.2026, 28.02.2027"
+anr_up       <- as.character(688:698)
+
+short_titles_up <- c(
+  "688" = "Neutralitätsinitiative",
+  "689" = "Ernährungsinitiative",  
+  "690" = "Finanzierung 13. AHV",
+  "691" = "Feuerwerks Initiative",
+  "692" = "Fairness Initiative",
+  "693" = "Kriegsmaterialgesetz",
+  "694" = "Stopfleber Initiative",
+  "695" = "Demokratie Initiative",
+  "696" = "Malaysia Abkommen",
+  "697" = "Kernenergiegesetz",
+  "698" = "Gesamtarbeitsverträge vor Mindestlöhne"
+)
+
+# reading the 09 forecast export: file name has to match the run suffix written in 09
+fc_up <- read_csv(file.path(output_path, "forecast_upcoming.csv"),
+                  col_types = cols(anr = col_character())) %>%
+  filter(anr %in% anr_up) %>%
+  arrange(anr)
+
+stopifnot(nrow(fc_up) == length(anr_up),
+          !anyNA(fc_up[c("yes_hat", "lo80_rf", "hi80_rf", "p_volksmehr_rf")]))
+
+up_rows <- fc_up %>%
+  mutate(y       = -(row_number() - 1),
+         yes     = yes_hat,
+         lo      = lo80_rf,
+         hi      = hi80_rf,
+         titel_lab = coalesce(unname(short_titles_up[anr]), titel),
+         # accepted_hat already applies the double majority for rechtsform 1, 3, 4
+         verdict = if_else(coalesce(accepted_hat, yes_hat >= 50), "Accepted", "Rejected"),
+         date    = case_when(anr %in% 688:689 ~ "27.09.26",
+                         anr %in% 690:693 ~ "29.11.26",
+                         anr %in% 694:698 ~ "28.02.27"),
+         y_lab   = paste0(str_wrap(titel_lab, 22), "\n", date, " | ", verdict,
+                          "\nP(Volksmehr) ", round(p_volksmehr_rf, 3)))
+
+# flagging any anr that still uses the long titel
+missing_short <- setdiff(up_rows$anr, names(short_titles_up))
+if (length(missing_short) > 0) warning("No short title for anr: ", paste(missing_short, collapse = ", "))
+
+p_up <- vote_bars(up_rows, model_up) +
+  annotate("text", x = 51, y = max(up_rows$y) + 0.5, label = "50% Threshold",
+           hjust = 0, fontface = "italic", size = 3) +
+  scale_y_continuous(breaks = up_rows$y, labels = up_rows$y_lab,
+                     expand = expansion(add = c(0.45, 0.65))) +
+  labs(title = paste0("Federal Votes of ", vote_date_up,
+                      "\nForecast Dates: ", pred_date_up)) +
+  theme(legend.box = "vertical", legend.spacing.y = unit(0, "pt"))
+
+print(p_up)
+ggsave(file.path(plot_path, "Forecast/10_forecast_upcoming_688-698.png"),
        p_up, width = 4, height = 6.6, dpi = 300, bg = "white")
 
 ## Forecast vs. result of 27.9.2026 (anr 688-689) ---------------------
@@ -1181,7 +1304,7 @@ pred_date_past <- "10.10.2026"
 vote_date_past <- "27.9.2026"
 
 # manual input: forecast of the 25.9.2026 lm_m1_2a run
-# p_volksmehr_rf from the same run; NA drops the P(yes majority) line
+# p_volksmehr_rf from the same run, NA drops the P(yes majority) line
 fc_past <- tribble(
   ~anr,  ~titel,                   ~yes_hat, ~lo80_rf, ~hi80_rf, ~p_volksmehr_rf,
   "688", "Neutralitätsinitiative", 38.5,     28.7,     52.7,     0.12,
@@ -1202,32 +1325,32 @@ past <- fc_past %>%
          # forecast verdict on the Volksmehr only, no Stände forecast in the manual input
          verdict_fc  = if_else(yes_hat >= 50, "Accepted", "Rejected"),
          verdict_act = if_else(yes_act > 50 & staende_yes > 11.5, "Accepted", "Rejected"),
-         hit         = if_else(verdict_fc == verdict_act, "forecast correct", "forecast wrong"),
+         hit         = if_else(verdict_fc == verdict_act, "Forecast Correct", "Forecast Wrong"),
          covered     = if_else(between(yes_act, lo80_rf, hi80_rf),
-                               "inside 80% interval", "outside 80% interval"),
-         err         = sprintf("forecast - result: %+.2f pp", yes_hat - yes_act))
+                               "Inside 80% Interval", "Outside 80% Interval"),
+         err         = sprintf("Absolute Error: %+.2f pp.", yes_hat - yes_act))
 
 past_rows <- bind_rows(
   past %>% transmute(y = y_fc, yes = yes_hat, lo = lo80_rf, hi = hi80_rf,
                      y_lab = paste0(titel, "\nForecast"),
                      note  = if_else(is.na(p_volksmehr_rf), verdict_fc,
-                                     paste0(verdict_fc, "\nP(yes majority) ",
+                                     paste0(verdict_fc, "\nP(Volksmehr) ",
                                             percent(p_volksmehr_rf, accuracy = 1)))),
   past %>% transmute(y = y_res, yes = yes_act, lo = NA_real_, hi = NA_real_,
                      y_lab = "Result",
                      note  = paste0(verdict_act, " | Stände ", staende_yes, "/23\n",
-                                    hit, " | ", covered, "\n", err))
+                                    hit, "\n", covered, "\n", err))
 )
 
 p_past <- vote_bars(past_rows, model_past, clip = "off") +
   geom_text(data = past_rows, aes(x = 101.5, y = y, label = note),
-            hjust = 0, size = 2.6, lineheight = 0.9) +
+            hjust = 0, size = 3, lineheight = 0.9) +
   annotate("text", x = 51, y = max(past_rows$y) + 0.75,
-           label = "50% threshold for acceptance",
+           label = "50% Threshold for Acceptance",
            hjust = 0, fontface = "italic", size = 3) +
   scale_y_continuous(breaks = past_rows$y, labels = past_rows$y_lab,
                      expand = expansion(add = c(0.5, 0.9))) +
-  labs(title = paste0("Forecast of ", pred_date_past, " vs. result of the federal vote of ",
+  labs(title = paste0("Forecast of ", pred_date_past, " vs. Result of the Federal Vote of ",
                       vote_date_past)) +
   theme(plot.margin = margin(10, 175, 10, 10))
 
@@ -1351,11 +1474,9 @@ if (!exists("fit_engine")) {
   stop("run 09b_inference2.R in this session first: the engine fitters live there")
 }
 
-# kNN has no internal importance measure, so the only defensible answer is a
-# model-agnostic one. I fit the model once per fold and then only re-predict on a test
-# frame with one column shuffled. Refitting per permutation, which is what the earlier
-# version did, costs folds x features x reps model fits and is unnecessary: permutation
-# importance asks what the fitted model loses, not what a refit would recover
+# kNN fits the model once per fold and then re-predicts on a test frame with one column shuffled
+# Refitting per permutation, costs folds x features x reps model fits -> Unnecessary 
+# Permutation importance asks what the fitted model loses, not what a refit would recover
 perm_importance <- function(model, frame_tag, reps = hp$perm_reps) {
   fu    <- if (frame_tag == "long") frame else frame_frak
   feats <- bundle$feature_sets[[sub("^[a-z]+_", "", model)]]
