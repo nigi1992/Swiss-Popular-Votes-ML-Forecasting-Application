@@ -553,7 +553,7 @@ agreement <- forecast_compare %>%
             sd_yes_hat    = sd(yes_hat, na.rm = TRUE),
             range_yes_hat = diff(range(yes_hat, na.rm = TRUE)),
             .groups = "drop") %>%
-  arrange(desc(sd_yes_hat))
+  arrange(desc(anr))
 
 print(agreement, n = Inf)
 
