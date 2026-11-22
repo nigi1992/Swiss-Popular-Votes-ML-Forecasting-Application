@@ -1,0 +1,19 @@
+role,model,frame_tag,anr,datum,rechtsform,titel,needs_staende,yes_hat,p_volksmehr,volksmehr_hat,std_yes_hat,staende_hat,p_staende,accepted_hat
+07 champion (MAE),lm_m1B_sig,long,688,2026-09-27,3,Neutralitätsinitiative,TRUE,38.5278091888383,0.18487394957983194,FALSE,0,FALSE,NA,FALSE
+accuracy champion (long),lasso_m1B_sig,long,688,2026-09-27,3,Neutralitätsinitiative,TRUE,38.81468998852236,0.18907563025210083,FALSE,0,FALSE,NA,FALSE
+accuracy champion (short),xgb_m1B_tree,short,688,2026-09-27,3,Neutralitätsinitiative,TRUE,40.22564697265625,0.19083969465648856,FALSE,0,FALSE,NA,FALSE
+07 champion (MAE),lm_m1B_sig,long,689,2026-09-27,3,Ernährungsinitiative,TRUE,26.500691240630672,0.02100840336134454,FALSE,0,FALSE,NA,FALSE
+accuracy champion (long),lasso_m1B_sig,long,689,2026-09-27,3,Ernährungsinitiative,TRUE,27.211157511278696,0.025210084033613446,FALSE,0,FALSE,NA,FALSE
+accuracy champion (short),xgb_m1B_tree,short,689,2026-09-27,3,Ernährungsinitiative,TRUE,30.510906219482422,0.06870229007633588,FALSE,0,FALSE,NA,FALSE
+07 champion (MAE),lm_m1B_sig,long,690,2026-11-29,1,Erhöhung der Mehrwertsteuer zugunsten der AHV,TRUE,52.33140138790804,0.634453781512605,TRUE,18,TRUE,NA,TRUE
+accuracy champion (long),lasso_m1B_sig,long,690,2026-11-29,1,Erhöhung der Mehrwertsteuer zugunsten der AHV,TRUE,51.75901660522025,0.5672268907563025,TRUE,16,TRUE,NA,TRUE
+accuracy champion (short),xgb_m1B_tree,short,690,2026-11-29,1,Erhöhung der Mehrwertsteuer zugunsten der AHV,TRUE,55.65142822265625,0.7022900763358778,TRUE,23,TRUE,NA,TRUE
+07 champion (MAE),lm_m1B_sig,long,691,2026-11-29,3,Feuerwerksinitiative,TRUE,34.98395170695641,0.13025210084033614,FALSE,0,FALSE,NA,FALSE
+accuracy champion (long),lasso_m1B_sig,long,691,2026-11-29,3,Feuerwerksinitiative,TRUE,35.33481757464061,0.13445378151260504,FALSE,0,FALSE,NA,FALSE
+accuracy champion (short),xgb_m1B_tree,short,691,2026-11-29,3,Feuerwerksinitiative,TRUE,33.890403747558594,0.07633587786259542,FALSE,0,FALSE,NA,FALSE
+07 champion (MAE),lm_m1B_sig,long,692,2026-11-29,3,Initiative zur Besteuerung von Ehepaaren,TRUE,42.09702796890292,0.24789915966386555,FALSE,0,FALSE,NA,FALSE
+accuracy champion (long),lasso_m1B_sig,long,692,2026-11-29,3,Initiative zur Besteuerung von Ehepaaren,TRUE,42.673670612037846,0.25630252100840334,FALSE,0,FALSE,NA,FALSE
+accuracy champion (short),xgb_m1B_tree,short,692,2026-11-29,3,Initiative zur Besteuerung von Ehepaaren,TRUE,44.08466339111328,0.2824427480916031,FALSE,0,FALSE,NA,FALSE
+07 champion (MAE),lm_m1B_sig,long,693,2026-11-29,2,Änderung des Kriegsmaterialgesetzes,FALSE,54.07430081258997,0.6974789915966386,TRUE,NA,NA,NA,TRUE
+accuracy champion (long),lasso_m1B_sig,long,693,2026-11-29,2,Änderung des Kriegsmaterialgesetzes,FALSE,53.564640198248306,0.6512605042016807,TRUE,NA,NA,NA,TRUE
+accuracy champion (short),xgb_m1B_tree,short,693,2026-11-29,2,Änderung des Kriegsmaterialgesetzes,FALSE,57.21835708618164,0.7557251908396947,TRUE,NA,NA,NA,TRUE

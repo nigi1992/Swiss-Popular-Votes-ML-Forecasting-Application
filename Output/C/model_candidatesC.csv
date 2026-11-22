@@ -1,2 +1,0 @@
-model,mae_short,dmae_short,se_short,p_worse,recent_short,acc_short,mae_long,dmae_long,in_band_long,engine,set,e_rank,k
-lm_m2B_champ_sig,7.586735592490727,0,0,0,7.158888496252346,0.8015267175572519,NA,NA,NA,lm,m2B_champ_sig,1,9
