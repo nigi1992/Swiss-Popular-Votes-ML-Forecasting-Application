@@ -17,3 +17,18 @@ accuracy champion (short),xgb_m1B_tree,short,692,2026-11-29,3,Initiative zur Bes
 07 champion (MAE),lm_m1B_sig,long,693,2026-11-29,2,Änderung des Kriegsmaterialgesetzes,FALSE,54.07430081258997,0.6974789915966386,TRUE,NA,NA,NA,TRUE
 accuracy champion (long),lasso_m1B_sig,long,693,2026-11-29,2,Änderung des Kriegsmaterialgesetzes,FALSE,53.564640198248306,0.6512605042016807,TRUE,NA,NA,NA,TRUE
 accuracy champion (short),xgb_m1B_tree,short,693,2026-11-29,2,Änderung des Kriegsmaterialgesetzes,FALSE,57.21835708618164,0.7557251908396947,TRUE,NA,NA,NA,TRUE
+07 champion (MAE),lm_m1B_sig,long,694,2027-02-28,3,Stopfleber-Initiative,TRUE,34.819197190474384,0.13025210084033614,FALSE,0,FALSE,NA,FALSE
+accuracy champion (long),lasso_m1B_sig,long,694,2027-02-28,3,Stopfleber-Initiative,TRUE,35.790626048128246,0.14285714285714285,FALSE,0,FALSE,NA,FALSE
+accuracy champion (short),xgb_m1B_tree,short,694,2027-02-28,3,Stopfleber-Initiative,TRUE,30.198041915893555,0.06870229007633588,FALSE,0,FALSE,NA,FALSE
+07 champion (MAE),lm_m1B_sig,long,695,2027-02-28,3,«Demokratie-Initiative» (Neuregelung Einbürgerungen),TRUE,35.4440440126628,0.14285714285714285,FALSE,0,FALSE,NA,FALSE
+accuracy champion (long),lasso_m1B_sig,long,695,2027-02-28,3,«Demokratie-Initiative» (Neuregelung Einbürgerungen),TRUE,36.35657290821226,0.14285714285714285,FALSE,0,FALSE,NA,FALSE
+accuracy champion (short),xgb_m1B_tree,short,695,2027-02-28,3,«Demokratie-Initiative» (Neuregelung Einbürgerungen),TRUE,34.19514083862305,0.0916030534351145,FALSE,0,FALSE,NA,FALSE
+07 champion (MAE),lm_m1B_sig,long,696,2027-02-28,2,Freihandelsabkommen mit Malaysia,FALSE,55.8491771537388,0.7521008403361344,TRUE,NA,NA,NA,TRUE
+accuracy champion (long),lasso_m1B_sig,long,696,2027-02-28,2,Freihandelsabkommen mit Malaysia,FALSE,55.376710354454055,0.7226890756302521,TRUE,NA,NA,NA,TRUE
+accuracy champion (short),xgb_m1B_tree,short,696,2027-02-28,2,Freihandelsabkommen mit Malaysia,FALSE,58.79608154296875,0.7786259541984732,TRUE,NA,NA,NA,TRUE
+07 champion (MAE),lm_m1B_sig,long,697,2027-02-28,2,Kernenergiegesetz (Aufhebung des Neubauverbots für AKW),FALSE,49.332785300384785,0.4789915966386555,FALSE,NA,NA,NA,FALSE
+accuracy champion (long),lasso_m1B_sig,long,697,2027-02-28,2,Kernenergiegesetz (Aufhebung des Neubauverbots für AKW),FALSE,49.365691088834545,0.47478991596638653,FALSE,NA,NA,NA,FALSE
+accuracy champion (short),xgb_m1B_tree,short,697,2027-02-28,2,Kernenergiegesetz (Aufhebung des Neubauverbots für AKW),FALSE,50.56321334838867,0.48091603053435117,TRUE,NA,NA,NA,TRUE
+07 champion (MAE),lm_m1B_sig,long,698,2027-02-28,2,Vorrang von Gesamtarbeitsverträgen vor kantonalen Mindestlöhnen,FALSE,50.75281464378824,0.5252100840336135,TRUE,NA,NA,NA,TRUE
+accuracy champion (long),lasso_m1B_sig,long,698,2027-02-28,2,Vorrang von Gesamtarbeitsverträgen vor kantonalen Mindestlöhnen,FALSE,50.70843645444053,0.5126050420168067,TRUE,NA,NA,NA,TRUE
+accuracy champion (short),xgb_m1B_tree,short,698,2027-02-28,2,Vorrang von Gesamtarbeitsverträgen vor kantonalen Mindestlöhnen,FALSE,51.617435455322266,0.5190839694656488,TRUE,NA,NA,NA,TRUE

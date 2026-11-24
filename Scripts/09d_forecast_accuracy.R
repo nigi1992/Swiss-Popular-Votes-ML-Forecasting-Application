@@ -1,4 +1,4 @@
-### 09d_inference_accuracy.R ###
+### 09d_forecast_accuracy.R ###
 
 # Accuracy-first variant of 09 / 09b:
 # 07b selects on the MAE of the yes-share, this script selects on the binary call (Volksmehr yes / no)
@@ -502,3 +502,52 @@ saveRDS(list(leaderboard    = leaderboard,
              calls          = calls,
              run_timestamp  = format(Sys.time(), tz = "UTC", usetz = TRUE)),
         file.path(output_path, "model_accuracy_bundle.rds"))
+
+
+# 11. Volksmehr accuracy by legal form ------------------------------------
+
+# Row-level calls of every model on the pooled test rows, joined with the legal form of the vote
+# M0 added as reference: within a legal form its call is one constant per fold
+rf_labels <- c("1" = "1 obligat. Ref.", "2" = "2 fak. Ref.", "3" = "3 Volksinitiative", "4" = "4 Gegenentwurf")
+
+calls_rf <- results %>%
+  select(model, pred) %>%
+  unnest(pred) %>%
+  select(model, row, yhat) %>%
+  bind_rows(tibble(model = "M0_rechtsform", row = test_idx, yhat = frame$roll_yes_rechtsform[test_idx])) %>%
+  left_join(frame %>% mutate(row = row_number()) %>% select(row, anr, datum, rechtsform, yes_share), by = "row") %>%
+  mutate(rechtsform = rf_labels[as.character(rechtsform)],
+         actual     = yes_share >= 50, # true Volksmehr
+         called     = yhat >= 50)      # volksmehr_hat
+
+acc_by_rf <- calls_rf %>%
+  group_by(model, rechtsform) %>%
+  summarise(n               = n(),
+            acceptance_rate = mean(actual),              # share of proposals that passed
+            called_accepted = mean(called),              # share the model calls as accepted
+            volksmehr_acc   = mean(called == actual),
+            acc_baseline    = max(acceptance_rate, 1 - acceptance_rate), # always calling the majority class
+            acc_skill       = volksmehr_acc - acc_baseline,
+            passed_hit      = sum(called & actual),      # passed, called accepted
+            passed_missed   = sum(!called & actual),     # passed, called rejected
+            failed_hit      = sum(!called & !actual),    # failed, called rejected
+            failed_missed   = sum(called & !actual),     # failed, called accepted
+            recall_failed   = failed_hit / (failed_hit + failed_missed), # share of the failures that is caught
+            .groups = "drop")
+
+# Champion candidates against the base rate, one block per legal form
+print(acc_by_rf %>%
+        filter(model %in% c("M0_rechtsform", "m1B_core", "m1B_sig", "m1B_sig_ref")) %>%
+        arrange(rechtsform, model) %>%
+        mutate(across(where(is.double), ~ round(.x, 3))),
+      n = Inf, width = Inf)
+
+# Optional referendums that failed at the ballot: which ones a model catches, and how close the others were
+print(calls_rf %>%
+        filter(model == "m1B_sig", rechtsform == "2 fak. Ref.", !actual) %>%
+        arrange(datum) %>%
+        transmute(anr, datum, yes_share, yhat = round(yhat, 1), caught = !called),
+      n = Inf)
+
+write_csv(acc_by_rf, file.path(output_path, "metrics_M1_by_rechtsform.csv"))
+

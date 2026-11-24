@@ -21,7 +21,6 @@ digraph pipeline {
   node [fillcolor = '#faeae7', color = '#e79c92', fontcolor = '#7f2c1e']
 
   sv  [label = 'SwissVotes Dataset\\nVoted Proposals (1971-2026)']
-    
   pr  [label = 'Parliament Roll-Calls\\nFaction Blocs, OWS API (1994-2026)']
   pp  [label = 'Partei Parolen\\nT1 Tier (M3 comparison only)']
   ur  [label = 'Urheber Coding\\nAuthors, Actors, Poles']
@@ -29,12 +28,19 @@ digraph pipeline {
   # shared preprocessing + modelling
   node [fillcolor = '#f1efe8', color = '#b4b2a9', fontcolor = '#444441']
   fe  [label = '01a-02b: Data Preparation + Feature Engineering\\nAs-of Features from strictly earlier Votes only:\\nRolling Base Rates, Elite Cues, Signatures, Author History']
+  
+   # helper functions
+  node [fillcolor = '#fdf6d3', color = '#e3c94f', fontcolor = '#5c4a06']
   cv  [label = '03: Expanding-window temporal CV\\nLong Frame k=6, 238 pooled test rows (1999-2026)\\nShort Frame k=4, 131 pooled test rows (2012-2026)']
+  
+  # model training
+  node [fillcolor = '#eaf3de', color = '#97c459', fontcolor = '#27500a']
   ml  [label = '04-05c: OLS Models\\nM0 Benchmark, M1 Curated Sets,\\nM2 + Faction Blocs, M3 + Paroles']
-  eg  [label = '06a, 06b: Engine Grid on identical Folds (M1 + M2, M3)\\nlm, ridge, lasso, rpart, ranger, gbm, xgboost, kNN']
-
+  eg  [label = '06a, 06b: Engine Grid on Identical Folds\\nlm, ridge, lasso, rpart, ranger, gbm, \\n xgboost, kNN (M1 + M2, M3)']
+  
   # model selection
-  sel [label = '07: Model Selection\\nPaired, date-clustered Bootstrap on dMAE (B = 4000)\\nChampion: lm_m1B_sig: MAE 8.77 (long) / 7.88 (short)\\nPooled CV Residuals stored', fillcolor = '#faeeda', color = '#e0b878', fontcolor = '#633806']
+  node [fillcolor = '#fde8d4', color = '#f0a868', fontcolor = '#7a3a0a']
+  sel [label = '07: Model Selection\\nPaired, date-clustered Bootstrap on dMAE (B = 4000)\\nChampion: lm_m1B_sig: MAE 8.77 (long) / 7.88 (short)\\nPooled CV Residuals stored']
 
   # route A
   node [fillcolor = '#e6f1fb', color = '#85b7eb', fontcolor = '#0c447c']
@@ -100,6 +106,12 @@ node [fillcolor = '#fbcfe8', color = '#f472b6', fontcolor = '#fda4af']
 node [fillcolor = '#fda4af', color = '#e11d48', fontcolor = '#4c0519']
 node [fillcolor = '#fda4af', color = '#f472b6', fontcolor = '#db2777']
 node [fillcolor = '#fda4af', color = '#db2777', fontcolor = '#4c0519']
+node [fillcolor = '#fde8d4', color = '#f0a868', fontcolor = '#7a3a0a']
+node [fillcolor = '#faeeda', color = '#e0b878', fontcolor = '#633806']
+node [fillcolor = '#e8e6dc', color = '#9c9a92', fontcolor = '#2c2c2a']
+# light yellow: fill, border, text
+node [fillcolor = '#fdf6d3', color = '#e3c94f', fontcolor = '#5c4a06']
+node [fillcolor = '#faeeda', color = '#e0b878', fontcolor = '#633806']
 
 #'#fbcfe8' (Soft light pink/rose)
 #'#f472b6' (Muted pastel pink with a warm red undertone)

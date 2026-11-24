@@ -15,8 +15,6 @@ source(file.path(base_path, "Scripts", "03_helpers.R"))
 
 df            <- readRDS(file.path(input_path, "swissvotes_features.rds"))
 champion_spec <- readRDS(file.path(output_path, "champion_spec.rds"))
-preds_trees   <- readRDS(file.path(output_path, "preds_trees.rds"))
-kt_long       <- readRDS(file.path(output_path, "canton_deviations.rds"))
 
 # 2. Comparing Champion against M0 ---------------------------------------
 
