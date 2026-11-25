@@ -126,9 +126,9 @@ print(pooled %>% arrange(desc(volksmehr_acc)), n = Inf)
 
 # 6. Saving dataset for the ML pipeline -------------------------------
 
-write_csv(results %>% select(-pred), file.path(output_path, "metrics_M2_folds.csv"))
+write_csv(results %>% select(-pred), file.path(output_path, "05b/metrics_M2_folds.csv"))
 
-write_csv(pooled, file.path(output_path, "metrics_M2_pooled.csv"))
+write_csv(pooled, file.path(output_path, "05b/metrics_M2_pooled.csv"))
 
 # Saving row-level predictions so paired tests can be run at row level, not fold level
 # row indexes into frame_frak, so the join target is frame_frak, not frame
@@ -139,5 +139,5 @@ preds_long <- results %>%
   left_join(frame_frak %>% mutate(row = row_number()) %>% select(row, anr, datum, yes_share),
             by = "row")
 
-write_csv(preds_long, file.path(output_path, "preds_M2_rows.csv"))
+write_csv(preds_long, file.path(output_path, "05b/preds_M2_rows.csv"))
 

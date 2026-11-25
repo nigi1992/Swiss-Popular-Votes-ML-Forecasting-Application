@@ -486,10 +486,10 @@ if (nrow(oos_check)) print(oos_check, n = Inf, width = Inf)
 
 # 10. Saving ---------------------------------------------------------------------
 
-write_csv(leaderboard,    file.path(output_path, "accuracy_leaderboard.csv"))
-write_csv(selection_test, file.path(output_path, "accuracy_selection_test.csv"))
-write_csv(paired,         file.path(output_path, "accuracy_paired_vs_champion.csv"))
-write_csv(forecast_acc,   file.path(output_path, "forecast_upcoming_accuracy.csv"))
+write_csv(leaderboard,    file.path(output_path, "09d/accuracy_leaderboard.csv"))
+write_csv(selection_test, file.path(output_path, "09d/accuracy_selection_test.csv"))
+write_csv(paired,         file.path(output_path, "09d/accuracy_paired_vs_champion.csv"))
+write_csv(forecast_acc,   file.path(output_path, "09d/forecast_upcoming_accuracy.csv"))
 
 saveRDS(list(leaderboard    = leaderboard,
              baselines      = baselines,
@@ -549,5 +549,5 @@ print(calls_rf %>%
         transmute(anr, datum, yes_share, yhat = round(yhat, 1), caught = !called),
       n = Inf)
 
-write_csv(acc_by_rf, file.path(output_path, "metrics_M1_by_rechtsform.csv"))
+write_csv(acc_by_rf, file.path(output_path, "09d/metrics_M1_by_rechtsform.csv"))
 

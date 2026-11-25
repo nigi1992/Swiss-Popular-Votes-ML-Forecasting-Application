@@ -230,8 +230,8 @@ print(dmae_boot)
 
 # 10. Saving -------------------------------------------------------------
 
-write_csv(bind_rows(m0g_vs_base, champ_vs_base), file.path(output_path, "metrics_champion_vs_baseline.csv"))
-write_csv(champ_vs_m0,       file.path(output_path, "metrics_champion_vs_M0.csv"))
-write_csv(champ_calibration, file.path(output_path, "metrics_champion_calibration.csv"))
-write_csv(dmae_boot,         file.path(output_path, "metrics_champion_dmae_boot.csv"))
+write_csv(bind_rows(m0g_vs_base, champ_vs_base), file.path(output_path, "09b/metrics_champion_vs_baseline.csv"))
+write_csv(champ_vs_m0,       file.path(output_path, "09b/metrics_champion_vs_M0.csv"))
+write_csv(champ_calibration, file.path(output_path, "09b/metrics_champion_calibration.csv"))
+write_csv(dmae_boot,         file.path(output_path, "09b/metrics_champion_dmae_boot.csv"))
 

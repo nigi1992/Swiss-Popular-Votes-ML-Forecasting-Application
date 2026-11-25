@@ -23,7 +23,7 @@ output_path <- file.path(base_path, "Output")
 
 #SwissVotes_Df0 <- file.path(input_path, "Cleaned Dataset for R - 2.7.26.csv") # Old dataset, no longer in use
 
-# Swissvotes dataset with updated votes (29.10.2026, anr 694-698 added, 688 + 689 as 'not voted' for out-of-sample test)
+# Swissvotes dataset with updated votes from 29.10.2026 (anr 694-698 added, 688-689 are set to 'not voted' for out-of-sample tests
 SwissVotes_Df0 <- file.path(input_path, "Cleaned Dataset for R - 15.11.26.csv") # Only new upcoming votes, no changes to past votes. Run this!
 
 #SwissVotes_Df0 <- file.path(input_path, "Cleaned Dataset for R - 29.10.26.csv") # Do not run for thesis!

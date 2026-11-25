@@ -261,4 +261,4 @@ pr_t1_short$dropped
 
 # 7. Saving the sweep -------------------------------------------------
 
-write_csv(vif_sweep, file.path(output_path, "vif_sweep.csv"))
+write_csv(vif_sweep, file.path(output_path, "04b_vif_sweep.csv"))

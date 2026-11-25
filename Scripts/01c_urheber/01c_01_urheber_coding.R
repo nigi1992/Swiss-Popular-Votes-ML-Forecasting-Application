@@ -3,12 +3,11 @@
 # Base urheber coding: sponsor counts, actor type, established flag, party-based pole
 
 library(tidyverse)
-
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
 input_path  <- file.path(base_path, "Input Data")
 output_path <- file.path(base_path, "Output")
 
-df_urheber <- read_csv(file.path(input_path, "Urheber_Poles/urheber_df.csv", show_col_types = FALSE))
+df_urheber <- read_csv(file.path(input_path, "Urheber_Poles/urheber_df.csv"), show_col_types = FALSE)
 
 # 1. Keyword dictionaries (lowercase, substring match) ------------------
 

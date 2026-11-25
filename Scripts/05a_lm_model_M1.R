@@ -255,9 +255,9 @@ print(grad %>% pivot_wider(names_from = scheme, values_from = mae))
 
 # 6. Saving dataset for the ML pipeline ------------------------------
 
-write_csv(results %>% select(-pred), file.path(output_path, "metrics_M1_folds.csv"))
+write_csv(results %>% select(-pred), file.path(output_path, "05a/metrics_M1_folds.csv"))
 
-write_csv(pooled, file.path(output_path, "metrics_M1_pooled.csv"))
+write_csv(pooled, file.path(output_path, "05a/metrics_M1_pooled.csv"))
 
 # Saving row-level predictions so paired tests can be run at row level, not fold level
 preds_long <- results %>%
@@ -266,5 +266,5 @@ preds_long <- results %>%
   left_join(frame %>% mutate(row = row_number()) %>% select(row, datum, yes_share),
             by = "row")
 
-write_csv(preds_long, file.path(output_path, "preds_M1_rows.csv"))
+write_csv(preds_long, file.path(output_path, "05a/preds_M1_rows.csv"))
 

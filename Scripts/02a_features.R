@@ -45,7 +45,7 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
 # dauer_bv, dauer_abst, i-dauer_tot, i-dauer_samm, i-dauer_br, fr-dauer_samm, fr-dauer_tot, sammeltempo, sparedays
 
 # Date Format: "YYYY-MM-DD". Sources: bk.admin.ch
-# 27.9.2026:
+# 27.09.2026:
 # https://www.bk.admin.ch/de/details-volksinitiativen?voteNumber=688                   (688)
 # https://www.bk.admin.ch/de/details-volksinitiativen?voteNumber=689                   (689)
 #
@@ -56,24 +56,18 @@ asof_stat <- function(dates, y, group = NULL, fun = mean, fallback = NA_real_) {
 # https://www.bk.admin.ch/de/details-referenden-und-weitere-erlasse/?referendum=4075   (693)
 # https://www.fedlex.admin.ch/eli/fga/2026/22/de                                       (693)
 # 
-# 28.2.2027:
+# 28.02.2027:
 # https://www.bk.admin.ch/de/details-volksinitiativen/?initiative=529                  (694)
 # https://www.bk.admin.ch/de/details-volksinitiativen/?initiative=549                  (695)
 # https://www.bk.admin.ch/de/details-referenden-und-weitere-erlasse/?referendum=4120   (696)
 # https://www.bk.admin.ch/de/details-referenden-und-weitere-erlasse/?referendum=4115   (697)
 # https://www.bk.admin.ch/de/details-referenden-und-weitere-erlasse/?referendum=4113   (698)
 # 
-# New Values for 694-698 are cross-referenced from the BK decrees (BBl) and referendum texts at Swissvotes:
-# https://swissvotes.ch/vote/694.00/vorpruefung-de.pdf     (+ zustandekommen-de.pdf)
-# https://swissvotes.ch/vote/695.00/vorpruefung-de.pdf     (+ zustandekommen-de.pdf, botschaft-de.pdf)
-# https://swissvotes.ch/vote/696.00/abstimmungstext-de.pdf (+ zustandekommen-de.pdf)
-# https://swissvotes.ch/vote/697.00/abstimmungstext-de.pdf, https://www.admin.ch/fr/newnsb/bsKoQvVIYqjx
-# https://swissvotes.ch/vote/698.00/abstimmungstext-de.pdf, https://www.admin.ch/de/newnsb/-t2rtlvDYznI
-# dat-parl = Schlussabstimmung NR: vote_52_33212 / vote_52_33217 (2.10.2026), vote_52_32817 / vote_52_32807 / vote_52_32803 (19.6.2026)
-
-# Open points for future reference: 
-# dat-success of 697 + 698 = date of the BK media release (decree possibly one working day earlier, same as 696)
-# dat-submit of 696 from the committee's own release
+# BK decrees (BBl) for new values for 696-698 do not contain all info
+# So, they are cross-referenced with referendum texts at Swissvotes:
+# https://swissvotes.ch/vote/696.00/abstimmungstext-de.pdf 
+# https://swissvotes.ch/vote/697.00/abstimmungstext-de.pdf
+# https://swissvotes.ch/vote/698.00/abstimmungstext-de.pdf
 
 #new_votes <- tribble(
 rm(new_votes)
@@ -1307,6 +1301,4 @@ sig_features_lm <- c("init_sig_surplus", "init_sig_spare", "ref_sig_surplus")
 # 10. Saving dataset for the ML pipeline ----------------------------
 
 saveRDS(df, file.path(input_path, "swissvotes_features.rds"))
-
-#saveRDS(feature_sets, file.path(input_path, "feature_sets.rds"))
 

@@ -234,38 +234,36 @@ p_target_form4
 save_plot(p_target_form4, "10_target_distribution_form4.png", 8, 5)
 
 
-## Eligable voters over time ------------------------------------------------
+## Eligible voters over time ------------------------------------------------
 
 library(ggplot2)
 
-# One value per year — the base only grows within a year, so max is the year-end figure
-elig_voters <- df %>%
-  filter(!is.na(berecht), berecht > 0) %>%
-  group_by(year_num) %>%
-  summarise(berecht = max(berecht), .groups = "drop") %>%
-  arrange(year_num)
+# Df with eligible voters per voting date 
+elig_voters <- read_csv(file.path(input_path, "eligible_voters_1960-2024.csv")) %>%
+  mutate(datum = as.Date(datum, format = "%d.%m.%Y")) %>%
+  distinct() # Dropping repeated rows as there are several proposals per voting date
 
-
-# The two franchise extensions that break the series
+# Marking the implementation of the two voter franchise extensions 
 breaks_franchise <- tibble::tibble(
-  year_num = c(1971, 1991),
-  label    = c("Women's suffrage", "Voting age lowered to 18 years")
+  datum = as.Date(c("1971-02-07", "1991-03-03")),
+  label = c("Women's suffrage (1971)", "Voting age lowered to 18 (1991)")
 )
 
-ggplot(elig_voters, aes(year_num, berecht / 1e6)) +
-  geom_vline(data = breaks_franchise, aes(xintercept = year_num),
+ggplot(elig_voters, aes(datum, berecht / 1e6)) +
+  geom_vline(data = breaks_franchise, aes(xintercept = datum),
              linetype = "dashed", colour = "grey45", linewidth = 0.4) +
   geom_text(data = breaks_franchise,
-            aes(x = year_num, y = max(elig_voters$berecht) / 1e6, label = label),
-            hjust = -0.05, vjust = -0.5,#1, angle = 90,
-            size = 3.2, colour = "grey35", inherit.aes = FALSE) +
+            aes(x = datum, y = max(elig_voters$berecht) / 1e6, label = label),
+            hjust = -0.05, vjust = -0.5, size = 3.2, colour = "grey35") +
   geom_line(colour = "#4D4D4D", linewidth = 0.7) +
-  scale_x_continuous(breaks = seq(1970, 2030, 10)) +
-  scale_y_continuous(breaks = scales::pretty_breaks(6)) +
+  scale_x_date(breaks = as.Date(paste0(seq(1960, 2020, 10), "-01-01")),
+               date_labels = "%Y") +
+  scale_y_continuous(breaks = scales::pretty_breaks(12), limits = c(0, NA)) +
   labs(x = NULL, y = "Eligible voters (in millions)") +
   theme_minimal(base_size = 12) +
   theme(panel.grid.minor = element_blank())
 save_plot(last_plot(), "10_eligible_voters_over_time.png", 8, 5)
+
 
 # 3. Feature distributions by outcome -------------------------------------
 
@@ -782,8 +780,8 @@ p_cor_man <- ggplot(cor_man, aes(v1, v2)) +
                        breaks = c(-1, -0.5, 0, 0.5, 1), name = "r") +
   coord_fixed() +
   labs(title = "Correlations of selected predictors and target",
-       subtitle = paste0("Pairwise complete observations, n shown where a cell rests on ",
-                         "fewer than ", n_full, " votes"),
+       subtitle = paste0("Pairwise complete observations, n = ",
+                         n_full, " votes"),
        x = NULL, y = NULL) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
         axis.text.y = element_text(size = 8),
@@ -798,7 +796,7 @@ save_plot(p_cor_man, "Correlation/10_correlation_matrix_handpicked.png", 8, 7.4)
 C %>%
   round(3) %>%
   as_tibble(rownames = "variable") %>%
-  write_csv(file.path(output_path, "10_correlation_matrix_ordered.csv"))
+  write_csv(file.path(output_path, "10/10_correlation_matrix_ordered.csv"))
 
 # Correlation Pairs -> Top rows are the redundancy candidates
 # Long form with bucket labels on both sides, upper triangle only, sorted by absolute correlation 
@@ -813,7 +811,7 @@ cor_pairs <- as_tibble(C, rownames = "v1") %>%
   select(v1, bucket_1, v2, bucket_2, r, abs_r, cross_bucket) %>%
   arrange(desc(abs_r))
 
-write_csv(cor_pairs, file.path(output_path, "10_correlation_pairs.csv"))
+write_csv(cor_pairs, file.path(output_path, "10/10_correlation_pairs.csv"))
 
 ## Correlation Test of important Features ----------------------------------
 
@@ -864,6 +862,9 @@ summary(lm(yes_share ~ parl_support_signed + rechtsform, data = frame))
 # B. Out-of-sample performance comparison --------------------------------
 # 7. Error metrics -------------------------------------------------------
 
+cv_long <- cv_metrics %>%
+  filter(frame_tag == "long")
+
 p_mae <- cv_metrics %>%
   mutate(label = paste0(model, " [", frame_tag, "]"),
          label = fct_reorder(label, mae)) %>%
@@ -875,6 +876,8 @@ p_mae <- cv_metrics %>%
        subtitle = "Lower is better - long/short frames not comparable",
        x = "MAE (percentage points)", y = NULL, fill = "Frame")
 
+save_plot(p_mae, "Eval Metrics/10_cv_error_metrics_mae.png", 9, 9)
+
 p_acc <- cv_metrics %>%
   mutate(label = paste0(model, " [", frame_tag, "]"),
          label = fct_reorder(label, volksmehr_acc)) %>%
@@ -885,6 +888,8 @@ p_acc <- cv_metrics %>%
   scale_x_continuous(labels = percent) +
   labs(title = "Volksmehr direction accuracy",
        x = "Share of test rows above 50% line", y = NULL, fill = "Frame")
+
+save_plot(p_acc, "Eval Metrics/10_cv_error_metrics_acc.png", 9, 9)
 
 save_plot(p_mae / p_acc, "Eval Metrics/10_cv_error_metrics.png", 9, 9)
 
@@ -1016,7 +1021,7 @@ p_fc <- forecast %>%
 save_plot(p_fc, "Forecast/10_forecast_intervals.png", 10,
           max(6, 1.6 * n_distinct(forecast$anr)))
 
-## p_fc anr 690 ------------------------------------------------------------
+## p_fc anr 697 ------------------------------------------------------------
 
 # checking which ballot numbers the forecast table actually holds
 forecast %>% distinct(anr, titel)
@@ -1392,7 +1397,7 @@ feat_order <- rev(diag_09$lmg$term)
 coef_plot <- diag_09$coef %>%
   filter(term != "(Intercept)") %>%
   mutate(term = factor(term, levels = feat_order),
-         sig  = if_else(p_cl < 0.05, "p < 0.05", "p \u2265 0.05"))
+         sig  = if_else(p_cl < 0.01, "p < 0.01", "p \u2265 0.01"))
 
 lmg_plot <- diag_09$lmg %>%
   mutate(term = factor(term, levels = feat_order))
@@ -1402,7 +1407,7 @@ p_coef <- ggplot(coef_plot, aes(beta_std, term)) +
   geom_vline(xintercept = 0, linetype = "dashed", colour = "grey55") +
   geom_errorbar(aes(xmin = beta_lo, xmax = beta_hi), width = 0.25, colour = "grey30") +
   geom_point(aes(shape = sig), size = 2.6, fill = "white") +
-  scale_shape_manual(values = c("p < 0.05" = 16, "p \u2265 0.05" = 21), name = NULL) +
+  scale_shape_manual(values = c("p < 0.01" = 16, "p \u2265 0.01" = 21), name = NULL) +
   labs(title = "A.  Regression coefficients", subtitle = "Fit on all voted rows: n = 475 votes \n95% CIs clustered by vote date",
        x = "standardised coefficient\n(SD of yes-share per SD of feature)", y = NULL) +
   theme(legend.position = "bottom")
@@ -1559,9 +1564,9 @@ perm_plots <- perm_summary %>%
 write_csv(perm_imp %>%
             group_by(model, frame_tag, feature) %>%
             summarise(delta_mae = mean(delta_mae), .groups = "drop"),
-          file.path(output_path, "model_permutation_importance.csv"))
+          file.path(output_path, "10/model_permutation_importance.csv"))
 
-write_csv(imp_xgb, file.path(output_path, "model_xgb_importance.csv"))
+write_csv(imp_xgb, file.path(output_path, "10/model_xgb_importance.csv"))
 
 message("plots written to: ", plot_path)
 
@@ -1585,10 +1590,10 @@ col_ttl <- if (rows_are_predicted) "Actual" else "Predicted"
 ## Raw counts, transcribed exactly as drawn (row, col, n) --------------
 
 rechtsform_labels <- c(
-  "1" = "Mandatory referendum",
-  "2" = "Optional referendum",
-  "3" = "Popular initiative",
-  "4" = "Counter-proposal"
+  "1" = "Mandatory Referendum",
+  "2" = "Optional Referendum",
+  "3" = "Popular Initiative",
+  "4" = "Counter Proposal"
 )
 
 cm_raw <- tribble(
@@ -1656,7 +1661,7 @@ print(metrics_pooled, width = Inf)
 
 write.csv(
   bind_rows(metrics, metrics_pooled %>% mutate(rechtsform = NA, legal_form = "Pooled")),
-  file.path(output_path, "metrics_confusion_by_rechtsform.csv"),
+  file.path(output_path, "10/metrics_confusion_by_rechtsform.csv"),
   row.names = FALSE
 )
 
@@ -1733,8 +1738,8 @@ p_cm <- ggplot(plot_df, aes(x, y)) +
   coord_cartesian(xlim = c(0.5, 2.5), ylim = c(0.02, 2.5), expand = FALSE, clip = "off") +
   labs(
     title    = "Confusion matrices by legal form",
-    subtitle = "Swiss federal votes: predicted vs. actual outcome",
-    caption  = pooled_txt
+    subtitle = "Swiss federal votes: predicted vs. actual outcome"#,
+    #caption  = pooled_txt
   ) +
   theme_void(base_size = 12) +
   theme(
@@ -1743,8 +1748,8 @@ p_cm <- ggplot(plot_df, aes(x, y)) +
     strip.placement  = "outside",   # keeping the strip title above the top axis
     axis.text.x.top  = element_text(colour = "#0b0b0b", size = 10, margin = margin(b = 4)),
     axis.text.y      = element_text(colour = "#0b0b0b", size = 10, hjust = 1, margin = margin(r = 4)),
-    axis.title.x.top = element_text(colour = "#52514e", size = 9.5, margin = margin(b = 4)),
-    axis.title.y     = element_text(colour = "#52514e", size = 9.5, angle = 90, margin = margin(r = 6)),
+    axis.title.x.top = element_text(colour = "#52514e", size = 11.5, face = "bold", margin = margin(b = 6)),
+    axis.title.y     = element_text(colour = "#52514e", size = 11.5, face = "bold", angle = 90, margin = margin(r = 8)),
     aspect.ratio     = 2.48 / 2,     # keeping the tiles square (y range / x range)
     panel.spacing.x  = unit(1.2, "lines"),
     panel.spacing.y  = unit(1.6, "lines"),
@@ -1763,8 +1768,6 @@ p_cm <- ggplot(plot_df, aes(x, y)) +
 
 print(p_cm)
 
-ggsave(file.path(plot_dir, "10_confusion_matrices.png"), p_cm,
+ggsave(file.path(plot_path, "10_confusion_matrices.png"), p_cm,
        width = 9.5, height = 11, dpi = 300, bg = "#fcfcfb")
-ggsave(file.path(plot_dir, "10_confusion_matrices.pdf"), p_cm,
-       width = 9.5, height = 11, bg = "#fcfcfb")
 

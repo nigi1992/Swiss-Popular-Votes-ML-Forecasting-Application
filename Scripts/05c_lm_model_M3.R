@@ -109,9 +109,9 @@ print(pooled_long %>% arrange(desc(volksmehr_acc)), n = Inf)
 
 # 5a. Saving long-frame results ---------------------------------------
 
-write_csv(results_long %>% select(-pred), file.path(output_path, "metrics_M3a_folds.csv"))
+write_csv(results_long %>% select(-pred), file.path(output_path, "05c/metrics_M3a_folds.csv"))
 
-write_csv(pooled_long, file.path(output_path, "metrics_M3a_pooled.csv"))
+write_csv(pooled_long, file.path(output_path, "05c/metrics_M3a_pooled.csv"))
 
 preds_long_a <- results_long %>%
   select(model, fold, pred) %>%
@@ -119,7 +119,7 @@ preds_long_a <- results_long %>%
   left_join(frame %>% mutate(row = row_number()) %>% select(row, datum, yes_share),
             by = "row")
 
-write_csv(preds_long_a, file.path(output_path, "preds_M3a_rows.csv"))
+write_csv(preds_long_a, file.path(output_path, "05c/preds_M3a_rows.csv"))
 
 # PART B — Short frame ------------------------------------------------
 # 2b. Modeling frames -------------------------------------------------
@@ -215,9 +215,9 @@ print(pooled_short %>% arrange(desc(volksmehr_acc)), n = Inf)
 
 # 5b. Saving short-frame results ---------------------------------------
 
-write_csv(results_short %>% select(-pred), file.path(output_path, "metrics_M3b_folds.csv"))
+write_csv(results_short %>% select(-pred), file.path(output_path, "05c/metrics_M3b_folds.csv"))
 
-write_csv(pooled_short, file.path(output_path, "metrics_M3b_pooled.csv"))
+write_csv(pooled_short, file.path(output_path, "05c/metrics_M3b_pooled.csv"))
 
 # row indices are into frame_frak — joining accordingly
 preds_long_b <- results_short %>%
@@ -226,5 +226,5 @@ preds_long_b <- results_short %>%
   left_join(frame_frak %>% mutate(row = row_number()) %>% select(row, datum, yes_share),
             by = "row")
 
-write_csv(preds_long_b, file.path(output_path, "preds_M3b_rows.csv"))
+write_csv(preds_long_b, file.path(output_path, "05c/preds_M3b_rows.csv"))
 

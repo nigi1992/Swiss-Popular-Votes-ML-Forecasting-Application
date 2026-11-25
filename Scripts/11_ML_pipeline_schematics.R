@@ -1,7 +1,7 @@
 ### 11_ML_pipeline_schematics_B.R ###
 
 # 1. Packages ----------------------------------------------------------
-dir.create("Output/Plots", showWarnings = FALSE, recursive = TRUE)
+dir.create("Output/Plots/ML Pipeline Schematics", showWarnings = FALSE, recursive = TRUE)
 #install.packages(c("DiagrammeR", "DiagrammeRsvg", "rsvg"))
 library(DiagrammeR)
 library(DiagrammeRsvg)
@@ -14,6 +14,7 @@ library(rsvg)
 # teal = Route B, amber = selection/champion, purple = output/evaluation
 g2 <- grViz("
 digraph pipeline {
+
   graph [rankdir = TB, fontname = Helvetica, splines = ortho, nodesep = 0.4, ranksep = 0.45]
   node  [shape = box, style = 'rounded,filled', fontname = Helvetica, fontsize = 11]
 
@@ -26,53 +27,47 @@ digraph pipeline {
   ur  [label = 'Urheber Coding\\nAuthors, Actors, Poles']
 
   # shared preprocessing + modelling
-  node [fillcolor = '#f1efe8', color = '#b4b2a9', fontcolor = '#444441']
-  fe  [label = '01a-02b: Data Preparation + Feature Engineering\\nAs-of Features from strictly earlier Votes only:\\nRolling Base Rates, Elite Cues, Signatures, Author History']
+  node [fillcolor = '#fdf6d3', color = '#e3c94f', fontcolor = '#5c4a06']
+  fe  [label = '01a-02b: Data Preparation + Feature Engineering\\nAs-of Features only from earlier Votes:\\nRolling Base Rates, Elite Cues, Signatures, Author History']
   
    # helper functions
-  node [fillcolor = '#fdf6d3', color = '#e3c94f', fontcolor = '#5c4a06']
-  cv  [label = '03: Expanding-window temporal CV\\nLong Frame k=6, 238 pooled test rows (1999-2026)\\nShort Frame k=4, 131 pooled test rows (2012-2026)']
+  node [fillcolor = '#f1efe8', color = '#b4b2a9', fontcolor = '#444441']
+  cv  [label = '03: Expanding-Window Temporal CV\\nLong Frame 6 Folds, 238 Pooled Test Rows (1999-2026)\\nShort Frame 4 Folds, 131 Pooled Test Rows (2012-2026)']
   
   # model training
-  node [fillcolor = '#eaf3de', color = '#97c459', fontcolor = '#27500a']
   ml  [label = '04-05c: OLS Models\\nM0 Benchmark, M1 Curated Sets,\\nM2 + Faction Blocs, M3 + Paroles']
   eg  [label = '06a, 06b: Engine Grid on Identical Folds\\nlm, ridge, lasso, rpart, ranger, gbm, \\n xgboost, kNN (M1 + M2, M3)']
   
   # model selection
-  node [fillcolor = '#fde8d4', color = '#f0a868', fontcolor = '#7a3a0a']
-  sel [label = '07: Model Selection\\nPaired, date-clustered Bootstrap on dMAE (B = 4000)\\nChampion: lm_m1B_sig: MAE 8.77 (long) / 7.88 (short)\\nPooled CV Residuals stored']
+  sel [label = '07: Model Selection\\nChampion Model: lm_m1B_sig\\nMAE 8.77 (long) / 7.88 (short)']
 
-  # route A
+  # route A (rechtsform 1, 2, 3, 4)
   node [fillcolor = '#e6f1fb', color = '#85b7eb', fontcolor = '#0c447c']
-  a1 [label = '09a: Final Champion Fit on all voted Rows\\nPoint Yes Share per Upcoming Vote']
-  a2 [label = 'Empirical 80/95% Intervals + p(Volksmehr)\\nFrom Pooled CV Residual Quantiles']
-  a3 [label = 'Threshold 50% => Volksmehr Forecast']
+  a1 [label = '09a: Route A (rechtsform 1, 2, 3, 4)\\nNational Share of Yes Votes =\\nChampion Model Fitted on all Voted Rows']
+  a2 [label = 'Point Forecast per Upcoming Vote\\nThreshold \u2265 50% Yes Share \u2192 Volksmehr']
 
   # route B (rechtsform 1, 3, 4)
   node [fillcolor = '#e1f5ee', color = '#5dcaa5', fontcolor = '#085041']
-  b1 [label = '08: Cantonal Yes Share =\\nNational Anchor + As-of Cantonal Deviation']
-  b2 [label = 'EB Shrinkage: canton x domain Deviation\\nToward Cantonal Mean (m = 8)']
-  b3 [label = 'Weighted Standesstimmen => Ständemehr\\n(6 Half-Cantons count 0.5)']
-
+  b1 [label = '08: Route B (rechtsform 1, 3, 4)\\nCantonal Share of Yes Votes =\\nNational Anchor + As-of Cantonal Deviation']
+  b2 [label = 'Weighted Cantonal Votes\\n Threshold \u2265 11.5 Stände \u2192 Ständemehr\\n(of 26 Cantons 6 Half-Cantons count 0.5)']
   # output
-  node [fillcolor = '#fda4af', color = '#db2777', fontcolor = '#4c0519']
-  out [label = '09a: Combined Verdict\\nProposal Accepted = Volksmehr (+ Ständemehr)\\n=> Forecast on 6 Upcoming Votes\\n09c: 19-Model-Frame Robustness Run']
+  node [fillcolor = '#eeedfe', color = '#afa9ec', fontcolor = '#3c3489']
+  out [label = '09a: Combined Verdict\\nVolksmehr (+ Ständemehr) = Proposal Accepted\\n\u279C Forecast on 11 Upcoming Votes\\n09c: 16-Model-Frame Robustness Run']
   
   # evaluation
-  node [fillcolor = '#eeedfe', color = '#afa9ec', fontcolor = '#3c3489']
   ea  [label = 'Route A Evaluation (04-07, 09a-09b)\\nMAE, RMSE, Volksmehr Acc., Brier, PR-AUC']
-  eb  [label = 'Route B Evaluation (08-09c)\\nCanton MAE, Ständemehr Acc., Double Majority Acc.']
+  eb  [label = 'Route B Evaluation (08-09c)\\nCanton MAE, Ständemehr + Double Majority Acc.']
   
   # edges
   sv -> fe  pr -> fe  pp -> fe  ur -> fe
   fe -> cv
-  cv -> ml  cv -> eg
-  ml -> sel  eg -> sel
-  sel -> a1 [color = '#378add']  sel -> b1 [color = '#1d9e75']
-  a1 -> a2 -> a3 [color = '#378add']
-  b1 -> b2 -> b3 [color = '#1d9e75']
-  a3 -> out  b3 -> out
-  out -> ea  out -> eb
+  cv -> ml  [color = '#444441'] cv -> eg [color = '#444441']
+  ml -> sel [color = '#444441'] eg -> sel[color = '#444441']
+  sel -> a1  sel -> b1
+  a1 -> a2 [color = '#378add']
+  b1 -> b2 [color = '#1d9e75']
+  a2 -> out  b2 -> out
+  out -> ea [color = '#3c3489']  out -> eb [color = '#3c3489']
   
 }")
 
@@ -81,7 +76,7 @@ g2   # rendering in the RStudio viewer
 # 3. Exporting to png ---------------------------------------------------
 
 # Rasterizing the svg at ~2x for a crisp figure
-export_svg(g2) |> charToRaw() |> rsvg_png("Output/Plots/11_ml_pipeline_schematic.png", width = 2200)
+export_svg(g2) |> charToRaw() |> rsvg_png("Output/Plots/ML Pipeline Schematics/11_ml_pipeline_schematic.png", width = 2200)
 
 ## Alternative illustration ---------------------------------------------
 
@@ -113,6 +108,9 @@ node [fillcolor = '#e8e6dc', color = '#9c9a92', fontcolor = '#2c2c2a']
 node [fillcolor = '#fdf6d3', color = '#e3c94f', fontcolor = '#5c4a06']
 node [fillcolor = '#faeeda', color = '#e0b878', fontcolor = '#633806']
 
+node [fillcolor = '#fde8d4', color = '#f0a868', fontcolor = '#7a3a0a']
+node [fillcolor = '#eaf3de', color = '#97c459', fontcolor = '#27500a']
+node [fillcolor = '#fdf6d3', color = '#e3c94f', fontcolor = '#5c4a06']
 #'#fbcfe8' (Soft light pink/rose)
 #'#f472b6' (Muted pastel pink with a warm red undertone)
 #'#fda4af' (Soft coral-pink)
@@ -227,7 +225,7 @@ g3 <- grViz(dot)
 print(g3)
 
 rsvg_png(charToRaw(export_svg(g3)),
-         file  = "Output/Plots/11_df_overview.png",
+         file  = "Output/Plots/ML Pipeline Schematics/11_df_overview.png",
          width = 2237)
 
 # C. Data Frames Overview Short  ------------------------------------------
@@ -298,6 +296,6 @@ g4 <- grViz(dot2)
 print(g4)
 
 rsvg_png(charToRaw(export_svg(g4)),
-         file  = "Output/Plots/11_df_overview_short.png",
+         file  = "Output/Plots/ML Pipeline Schematics/11_df_overview_short.png",
          width = 2237)
 

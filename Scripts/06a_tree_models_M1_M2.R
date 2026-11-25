@@ -256,6 +256,6 @@ saveRDS(list(results_long = results_long, results_short = results_short),
         file.path(output_path, "preds_trees.rds"))
 
 write_csv(bind_rows(results_long, results_short) %>% select(-pred),
-          file.path(output_path, "metrics_trees_folds.csv"))
-write_csv(pooled, file.path(output_path, "metrics_trees_pooled.csv"))
+          file.path(output_path, "06a/metrics_trees_folds.csv"))
+write_csv(pooled, file.path(output_path, "06a/metrics_trees_pooled.csv"))
 

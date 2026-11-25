@@ -201,8 +201,8 @@ print(vote_level %>% count(fold, staende_correct = staende_hat == staende_true))
 
 # 8. Saving --------------------------------------------------------------
 
-write_csv(vote_level, file.path(output_path, "route_b_votes.csv"))
+write_csv(vote_level, file.path(output_path, "08/route_b_votes.csv"))
 write_csv(bind_cols(kt_metrics, vote_metrics),
-          file.path(output_path, "metrics_route_b.csv"))
+          file.path(output_path, "08/metrics_route_b.csv"))
 saveRDS(kt_long, file.path(output_path, "canton_deviations.rds"))
 

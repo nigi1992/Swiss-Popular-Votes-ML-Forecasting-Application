@@ -284,8 +284,8 @@ print(forecast %>%
 # 8. Saving --------------------------------------------------------------
 
 write_csv(forecast,   file.path(output_path, "forecast_upcoming.csv"))
-write_csv(acc,        file.path(output_path, "forecast_accuracy_cv.csv"))
-write_csv(bias_by_kt, file.path(output_path, "forecast_accuracy_canton.csv"))
+write_csv(acc,        file.path(output_path, "09a/forecast_accuracy_cv.csv"))
+write_csv(bias_by_kt, file.path(output_path, "09a/forecast_accuracy_canton.csv"))
 
 # 9. Final Forecast (Public Version) -------------------------------------
 
@@ -331,7 +331,7 @@ forecast_public <- forecast %>%
          Prob_Pop_Majority, Total_Stände, Stände_Yes_Votes, Ständemehr,
          Needs_Ständemehr, Proposal_accepted) #, MAE)
 
-write_csv(forecast_public, file.path(output_path, "forecast_upcoming_public.csv"))
+write_csv(forecast_public, file.path(output_path, "09a/forecast_upcoming_public.csv"))
 
 
 ## Extended Version Final Forecast Public ------------------------------
@@ -370,7 +370,7 @@ forecast_public_ext <- forecast_public %>%
          Stände_Yes_Votes, Ständemehr, Needs_Ständemehr, Proposal_accepted,
          Parole_GP, Parole_SP, Parole_GLP, Parole_Mitte, Parole_FDP, Parole_SVP)
 
-write_csv(forecast_public_ext, file.path(output_path, "forecast_upcoming_public_ext.csv"), na = "-")
+write_csv(forecast_public_ext, file.path(output_path, "09a/forecast_upcoming_public_ext.csv"), na = "-")
 
 
 # 10. Champion model diagnostics ---------------------------------------
@@ -438,8 +438,8 @@ print(coef_tab %>% mutate(across(where(is.numeric), ~ round(.x, 3))), width = In
 print(lmg_tab  %>% mutate(across(where(is.numeric), ~ round(.x, 3))))
 summary(champ_lm)$r.squared
 
-write_csv(coef_tab, file.path(output_path, "champion_regression_table.csv"))
-write_csv(lmg_tab,  file.path(output_path, "champion_lmg_importance.csv"))
+write_csv(coef_tab, file.path(output_path, "09a/champion_regression_table.csv"))
+write_csv(lmg_tab,  file.path(output_path, "09a/champion_lmg_importance.csv"))
 saveRDS(list(coef = coef_tab, lmg = lmg_tab,
              meta = list(model = champion_spec$name, n_obs = nrow(d_ch),
                          r2 = summary(champ_lm)$r.squared)),

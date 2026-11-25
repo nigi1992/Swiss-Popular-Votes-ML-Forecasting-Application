@@ -5,8 +5,10 @@
 
 # 1. Building expanding-window folds ---------------------------------
 
-# Ordering by date, holding out k sequential blocks after an initial training window
+# Ordering by date:
+# k sequential blocks are held out after an initial training window
 # Every block is predicted only from votes strictly earlier in time
+
 make_time_folds <- function(dates, initial_frac = 0.5, k = 6) {
   ord <- order(dates)
   n   <- length(dates)
@@ -18,9 +20,7 @@ make_time_folds <- function(dates, initial_frac = 0.5, k = 6) {
     t0   <- min(dates[test])
     list(train = ord[dates[ord] < t0], test = test)
     
-    # Using row positions, which lets a vote see results from its own voting day
-    #train <- ord[seq_len(n_init + if (b > 1) length(unlist(blocks[1:(b - 1)])) else 0)]
-    #list(train = train, test = test)
+
   })
 }
 

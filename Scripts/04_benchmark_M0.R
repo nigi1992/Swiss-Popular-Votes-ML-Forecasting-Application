@@ -172,11 +172,11 @@ print(m0_calibration)
 # 7. Saving datasets for the ML pipeline ------------------------------
 
 write_csv(bind_rows(m0_fold, m0_pooled, mgrand_pooled),
-          file.path(output_path, "metrics_M0.csv"))
+          file.path(output_path, "04/metrics_M0.csv"))
 
-write_csv(baselines,  file.path(output_path, "fold_baselines.csv"))
+write_csv(baselines,  file.path(output_path, "04/fold_baselines.csv"))
 
-write_csv(m0_vs_base, file.path(output_path, "metrics_M0_vs_baseline.csv"))
+write_csv(m0_vs_base, file.path(output_path, "04/metrics_M0_vs_baseline.csv"))
 
-write_csv(m0_calibration, file.path(output_path, "metrics_M0_calibration.csv"))
+write_csv(m0_calibration, file.path(output_path, "04/metrics_M0_calibration.csv"))
 
