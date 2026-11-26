@@ -124,11 +124,11 @@ result_select <- result_select %>%
         mae_short = round(mae_short, 2),
         volksmehr_acc_short = round(volksmehr_acc_short*100, 2)
   )
-write_csv(result_select, file.path(output_path, "results_selection_rounded.csv"))
+write_csv(result_select, file.path(input_path, "results_selection_rounded.csv"))
 
 
 # Champ LMG Importance Table
-champ_lmg_importance <- read_csv(file.path(output_path, "09/champion_lmg_importance.csv"),
+champ_lmg_importance <- read_csv(file.path(output_path, "09b/champion_lmg_importance.csv"),
                           show_col_types = FALSE)
 
 champ_lmg_importance <- champ_lmg_importance %>%
@@ -136,11 +136,11 @@ champ_lmg_importance <- champ_lmg_importance %>%
     lmg_r2 = round(lmg_r2*100, 1),
     share = round(share*100, 1)
   )
-write_csv(champ_lmg_importance, file.path(output_path, "09/champion_lmg_importance_rounded.csv"))
+write_csv(champ_lmg_importance, file.path(output_path, "09b/champion_lmg_importance_rounded.csv"))
 
 
 # Champ Regression Table
-champ_reg_table <- read_csv(file.path(output_path, "09/champion_regression_table.csv"),
+champ_reg_table <- read_csv(file.path(output_path, "09b/champion_regression_table.csv"),
                           show_col_types = FALSE)
 
 champ_reg_table <- champ_reg_table %>%
@@ -153,11 +153,11 @@ champ_reg_table <- champ_reg_table %>%
     beta_lo   = round(beta_lo, 2),
     beta_hi   = round(beta_hi, 2)
   )
-write_csv(champ_reg_table, file.path(output_path, "09/champion_regression_table_rounded.csv"))
+write_csv(champ_reg_table, file.path(output_path, "09b/champion_regression_table_rounded.csv"))
 
 
 # Forecasting Table rounded values
-forecast_rounded <- read_csv(file.path(output_path, "forecast_upcoming.csv"),
+forecast_rounded <- read_csv(file.path(output_path, "09a/forecast_upcoming.csv"),
                              show_col_types = FALSE)
 
 forecast_rounded <- forecast_rounded %>%
@@ -172,4 +172,4 @@ forecast_rounded <- forecast_rounded %>%
     hi80_rf = sprintf("%.2f%%", hi80_rf),# * 100),
     p_volksmehr_rf = round(p_volksmehr_rf, 3)
   )
-write_csv(forecast_rounded, file.path(output_path, "forecast_upcoming_rounded.csv"))
+write_csv(forecast_rounded, file.path(output_path, "09a/forecast_upcoming_rounded.csv"))

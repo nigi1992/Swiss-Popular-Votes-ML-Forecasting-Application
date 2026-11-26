@@ -190,8 +190,8 @@ print(champ_calibration, width = Inf)
 
 # 9. Uncertainty of the MAE gain: pooled + per rechtsform ----------------
 
-# Date-clustered paired bootstrap of d_mae = MAE(champion) - MAE(M0), same resampling as 07b
-# (whole vote dates, B = 4000), because votes on the same Abstimmungstag share shocks
+# Date-clustered paired bootstrap of d_mae = MAE(champion) - MAE(M0), same resampling as in 07
+# Whole vote dates, because votes on the same voting day share shocks. B = 4000
 # Rechtsform 1 (n = 23) and 4 (n = 14) rest on few dates, so their intervals are wide by construction
 boot_dmae <- function(d, B = 4000, seed = 42) {
   cl  <- as.integer(factor(d$datum))

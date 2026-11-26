@@ -79,7 +79,7 @@ p_target_form <- ggplot(frame, aes(yes_share, fct_rev(rechtsform))) +
   geom_vline(xintercept = 50, linetype = "dashed") +
   labs(title = "Yes-share by legal form", x = "yes-share (%)", y = "rechtsform")
 
-save_plot(p_target / p_target_form, "10_target_distribution.png", 9, 8)
+save_plot(p_target / p_target_form, "A/10_target_distribution.png", 9, 8)
 
 ## Color ----------------------------------------------------------------
 
@@ -114,7 +114,7 @@ p_target_form <- ggplot(frame, aes(yes_share, fct_rev(rechtsform), fill = rechts
 
 ## Save -----------------------------------------------------------------
   
-save_plot(p_target / p_target_form, "10_target_distribution_col.png", 9, 8)
+save_plot(p_target / p_target_form, "A/10_target_distribution_col.png", 9, 8)
 
 ## Accetance rate by legal form -----------------------------------------
 
@@ -214,7 +214,7 @@ p_abs / p_pct +
     title = "Success Rate of Federal Referendums\nby legal form (1971-2026, absolutely, in %)")
 
 save_plot(p_abs / p_pct + plot_annotation(title = "Success Rate of Federal Referendums\nby legal form (1971-2026, absolutely, in %)"),
-          "10_target_outcome_by_rechtsform.png", 9, 8)
+          "A/10_target_outcome_by_rechtsform.png", 9, 8)
 
 ## Rechtsform = 4 ------------------------------------------------------
 
@@ -231,7 +231,7 @@ p_target_form4 <- frame %>%
        x = "yes-share (%)", y = "count")
 
 p_target_form4
-save_plot(p_target_form4, "10_target_distribution_form4.png", 8, 5)
+save_plot(p_target_form4, "A/10_target_distribution_form4.png", 8, 5)
 
 
 ## Eligible voters over time ------------------------------------------------
@@ -262,7 +262,7 @@ ggplot(elig_voters, aes(datum, berecht / 1e6)) +
   labs(x = NULL, y = "Eligible voters (in millions)") +
   theme_minimal(base_size = 12) +
   theme(panel.grid.minor = element_blank())
-save_plot(last_plot(), "10_eligible_voters_over_time.png", 8, 5)
+save_plot(last_plot(), "A/10_eligible_voters_over_time.png", 8, 5)
 
 
 # 3. Feature distributions by outcome -------------------------------------
@@ -1155,7 +1155,7 @@ short_titles_up <- c(
 )
 
 # reading the 09 forecast export: file name has to match the run suffix written in 09
-fc_up <- read_csv(file.path(output_path, "forecast_upcoming.csv"),
+fc_up <- read_csv(file.path(output_path, "09aforecast_upcoming.csv"),
                   col_types = cols(anr = col_character())) %>%
   filter(anr %in% anr_up) %>%
   arrange(anr)
@@ -1379,7 +1379,7 @@ tree_fit <- rpart(yes_share ~ .,
                   method = "anova",
                   control = rpart.control(cp = 0.01, minbucket = 15))
 
-png(file.path(plot_path, "10_display_tree.png"), width = 2400, height = 1500, res = 220)
+png(file.path(plot_path, "Feature Importance/10_display_tree.png"), width = 2400, height = 1500, res = 220)
 rpart.plot(tree_fit, type = 2, extra = 101, box.palette = "BuGn",
            main = paste0("Single regression tree on ", tree_set,
                          " (Illustrative, not ranger() ML engine)"))
@@ -1768,6 +1768,6 @@ p_cm <- ggplot(plot_df, aes(x, y)) +
 
 print(p_cm)
 
-ggsave(file.path(plot_path, "10_confusion_matrices.png"), p_cm,
+ggsave(file.path(plot_path, "E/10_confusion_matrices.png"), p_cm,
        width = 9.5, height = 11, dpi = 300, bg = "#fcfcfb")
 

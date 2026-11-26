@@ -117,15 +117,18 @@ mx_short <- drop_excluded(mx_short)
 
 # The function resamples whole vote dates 4000 times, using the same draw for every model. 
 # In each draw it recomputes every MAE and subtracts the reference’s MAE. The SD of those 4000 gaps is se_dmae
-# Whole dates are resampled because votes on the same voting day share shocks
-# Resampling single rows would understate the noise (Cameron and Miller 2015)
+
+# Whole dates are resampled because votes on the same voting day share shocks, because anything that might
+# influence these votes on the voting day is unobserved and thus not in the model. The prediction errors are correlated within a date
+# So if the model under-predicts one proposal on a given date, it tends to under-predict the others on that date as well 
+# -> Only resampling single rows would understate the noise
 
 B <- 4000 # No. of bootstrap draws for the paired bootstrap, 4000 is enough to get a stable p-value
 
 boot_table <- function(mx, frame_use, folds_use) {
   test_idx <- unlist(map(folds_use, "test"))
   y <- mx$y
-  # Clustering test rows by vote date, votes on the same Abstimmungstag share shocks
+  # Clustering test rows by vote date, votes on the same voting day share shocks
   cl  <- as.integer(factor(frame_use$datum[test_idx]))
   G   <- max(cl)
   n_g <- tabulate(cl, G)
@@ -137,7 +140,7 @@ boot_table <- function(mx, frame_use, folds_use) {
   W  <- replicate(B, tabulate(sample(G, replace = TRUE), G))
   BM <- sweep(t(S) %*% W, 2, drop(n_g %*% W), "/")
   mae_pt <- colMeans(E) # Point estimate of the MAE (pt for 'point', as opposed to the bootstrap replicates in BM)
-  # It's the mean absolute error of the model over all pooled test rows of the frame: colMeans(E), where E holds |y − ŷ| per row and model.
+  # It's the mean absolute error of the model over all pooled test rows of the frame: colMeans(E), where E holds (y − yhat) per row and model
   best   <- names(which.min(mae_pt)) # Per frame, the model with the lowest MAE over all pooled test rows becomes the frame best
   D      <- sweep(BM, 2, BM[best, ])
   # Flagging the later half of the folds as the deployment-relevant period
@@ -162,14 +165,14 @@ sel <- bind_rows(boot_table(mx_long,  frame,      folds_long),
 # 5. Decision rule --------------------------------------------------------
 
 # Priority order:
-# 1. Predictive loss (MAE on yes_share) comes first, but only up to its resolution. 
-#    A difference smaller than its own sampling noise carries no information.
+# 1. Predictive loss (MAE on yes_share) comes first, but only up to its resolution 
+#    A difference smaller than its own sampling noise carries no information
 # 2. Parsimony is the tie-breaker inside that noise band. Reduces 2 problems that CV MAE does not show:
-#   - Selection-induced optimism: the minimum of about 70 noisy MAEs is biased downward (Cawley and Talbot 2010; Varma and Simon 2006)
+#   - Selection-induced optimism: the minimum of about 70 noisy MAEs is biased downward 
 #   - Variance under regime drift
-# 3. Recent-fold performance breaks the remaining ties, because the deployment target is in the near future, not the past.
+# 3. Recent-fold performance breaks the remaining ties, because the deployment target is in the near future, not the past
 # 4. Hard constraints filter candidates before any ranking, never inside a score:
-#   - Ex-ante availability of every feature or the interpretable meaning of each feature across all rechtsform types.
+#   - Ex-ante availability of every feature or the interpretable meaning of each feature across all rechtsform types
 
 # Option to fix the engine family by use case before looking at results, because 09 needs coefficients, 09b for non-lm
 #engines_allowed <- c("lm")
@@ -199,16 +202,12 @@ engine_rank <- c(lm = 1, ridge = 2, lasso = 2, knn = 3, tree = 3,
 
 # Noise Band: A model survives if dmae <= se_dmae 
 # Falling back to the long frame (09's training frame) if exclusions empty it
-# This is a variant of the One-Standard Error rule (Breiman et al., 1984; Hastie et al., 2009).
+
+# One-Standard Error rule 
 pass <- elig %>% filter(ok) #%>% group_by(model) %>% filter(n_distinct(frame) == 2) %>% ungroup()
 
-#if (nrow(pass) == 0) {
- # warning("no model passes on both frames after exclusions, ranking on the long frame only")
-  #pass <- elig %>% filter(ok, frame == "long")
-#}
-
-#Ranking survivors: Fewest coefficients k wins. Recent-fold MAE only breaks exact ties in k. 
-# Non-linear engines get k = NA, and arrange() puts NA last, so a tree model can only win if no lm/ridge/lasso survives.
+# Ranking survivors: Fewest coefficients k wins. Recent-fold MAE only breaks exact ties in k. 
+# Non-linear engines get k = NA, and arrange() puts NA last, so a tree model can only win if no lm/ridge/lasso survives
 cands <- pass %>%
   group_by(model) %>%
   summarise(mae_long    = mae[frame == "long"][1],
