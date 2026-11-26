@@ -1,8 +1,8 @@
 ### 02a_features.R ###
 
-# Building all campaign-start (T) features derivable from SwissVotes +
-# other open-source datasets: Tables from updated predictor list 
-# Later sources (roll calls, coded urheber, text) get their own 01_ scripts and join on anr
+# Building pre-campaign (t0) and campaign start (t1) features derivable from SwissVotes and
+# other open-source datasets: Tables come from updated predictor list 
+# Later sources (roll calls, coded urheber, text) get their own '01_' scripts and join on anr
 
 # 1. Data import ------------------------------------------------------
 
@@ -264,7 +264,7 @@ cal_features <- c("era", "season", "months_to_election", "months_since_election"
 
 ## Government direction duplicates parliament direction from 1971-2026
 
-# 'br-pos' and 'bv-pos' NEVER diverge in direction (gov=1 => parl=1; parl in {2,3} => gov=2, checked over all 475 frame rows), 
+# 'br-pos' and 'bv-pos' NEVER diverge in direction (gov=1 => parl=1, parl in {2,3} => gov=2, checked over all 475 frame rows), 
 # So the only estimable government information is gov_missing (n=30) and 'keine Empfehlung' (n=2)
 # (n=8), is not of concern, because 'rechtsform' = 5 will later be dropped
 
@@ -426,7 +426,7 @@ dumb_features <- c("pa_iv", "log_dauer_bv", "anzahl", "dep", "d1e1", paste0("pol
 
 # 4. Historical base rates (strict as-of cutoffs) --------------------
 
-# Strictly earlier dates only; same-day votes never see each other;
+# Strictly earlier dates only, same-day votes never see each other,
 # Outcomes of not-yet-voted proposals are NA and drop out automatically
 # Cold start: the extract begins 1971, so the earliest rows fall back
 # to the expanding grand mean, and the very first voting day to 50% as mean %
@@ -444,25 +444,25 @@ df <- df %>%
     # Rolling historical average yes percentage across all previous referendums
     roll_yes_grand      = grand_asof,
     
-    # Status-quo base rate; Running mean of volksja-proz of same rechtsform in all votes strictly before this date
+    # Status-quo base rate, Running mean of volksja-proz of same rechtsform in all votes strictly before this date
     roll_yes_rechtsform = asof_stat(datum, y_hist, group = as.character(rechtsform)),
     roll_yes_rechtsform = if_else(is.na(roll_yes_rechtsform), roll_yes_grand, roll_yes_rechtsform),
     
-    # Status-quo base rate; Running mean of binary outcome (Yes/No) of same rechtsform in all votes strictly before this date
+    # Status-quo base rate, Running mean of binary outcome (Yes/No) of same rechtsform in all votes strictly before this date
     roll_acc_rechtsform = asof_stat(datum, acc_hist, group = as.character(rechtsform)),
     roll_acc_rechtsform = if_else(is.na(roll_acc_rechtsform), 0.5, roll_acc_rechtsform),
     
-    # Issue base rate; Running mean of volksja-proz in same d1e1 domain before this date
+    # Issue base rate, Running mean of volksja-proz in same d1e1 domain before this date
     roll_yes_domain     = asof_stat(datum, y_hist, group = as.character(main_domain)),
     roll_yes_domain     = if_else(is.na(roll_yes_domain), roll_yes_grand, roll_yes_domain),
     
-    # Momentum; Yes-share (%) of previous vote in same domain
+    # Momentum, Yes-share (%) of previous vote in same domain
     last_domain_outcome = asof_stat(datum, y_hist, group = as.character(main_domain),
                                     fun = function(v) tail(v, 1)),
     last_domain_outcome = if_else(is.na(last_domain_outcome),
                                   roll_yes_grand, last_domain_outcome),
     
-    # Salience/fatigue; Days since the last vote in the same domain
+    # Salience/fatigue, Days since the last vote in the same domain
     time_since_domain_vote = asof_stat(datum, as.numeric(datum),
                                        group = as.character(main_domain),
                                        fun = function(v) tail(v, 1)),
@@ -472,12 +472,12 @@ df <- df %>%
     time_since_domain_vote = if_else(is.na(time_since_domain_vote),
                                      3650, time_since_domain_vote)#,
     # author_prior_fail_rate = Sponsor track record: Count of failed initiatives by same urheber bloc before date -> see Section 8
-    # party_weighted_support =	Σ w-party x historical party tendency in domain (past data only) -> not same as Section 6c!	
+    # party_weighted_support =	Sum w-party x historical party tendency in domain (past data only) -> not same as Section 6c!	
     # -> Expected support from party-strength x past positions (not proposal specific - domain average) 
   )
 
 # Dropping the raw policy slot columns after multi-hot encoding
-# d1e1 lives on as main_domain; the level-2/3 slots hold hierarchical codes,
+# d1e1 lives on as main_domain, the level-2/3 slots hold hierarchical codes,
 # like 10.31 that would enter numeric selections as fake magnitudes
 
 #df <- df %>% select(-matches("^d[123]e[123]$"))
@@ -488,7 +488,7 @@ hist_features <- c("roll_yes_grand", "roll_yes_rechtsform", "roll_acc_rechtsform
 # 5. Elite cues / Coalition theory ----------------------------------
 
 # Parliament seat total for participation: SR had 44 seats before the
-# canton of Jura entered in 1979, 46 after; NR 200 throughout
+# canton of Jura entered in 1979, 46 after, NR 200 throughout
 df <- df %>%
   mutate(
     nr_yes_share  = nrja / (nrja + nrnein), # Elite-cue proxy
@@ -593,8 +593,8 @@ bw <- read_csv(file.path(input_path, "Fraktionen_Blocs/fraktionen_blocs_wide_v3.
 # via roll_call_inverted (verified: inverted rows have support = nein)
 
 # Factions according to "Parlamentswörterbuch - Faktenblatt Fraktionen", p.5:
-# S: Sozialdemokratische Fraktion; G: Grüne Fraktion; GL: Grünliberale Fraktion; 
-# ME: Mitte-Fraktion (CVP-EVP-BDP) RL: FDP-Liberale Fraktion; V: Fraktion der Schweizerischen Volkspartei. 
+# S: Sozialdemokratische Fraktion, G: Grüne Fraktion, GL: Grünliberale Fraktion, 
+# ME: Mitte-Fraktion (CVP-EVP-BDP) RL: FDP-Liberale Fraktion, V: Fraktion der Schweizerischen Volkspartei. 
 
 blocs <- c("S", "G", "GL", "ME", "RL", "V")   # left -> right (excluding 'other')
 
@@ -715,9 +715,9 @@ stopifnot(nrow(df) == n_master)
 
 # 6c. Electorate-weighted faction support -----------------------------
 
-# Σ (bloc yes-share x bloc voter share at the last NR election) / Σ (bloc voter share) 
+# Sum (bloc yes-share x bloc voter share at the last NR election) / Sum (bloc voter share) 
 # Party-to-bloc weights follow faction membership: 
-# LPS -> RL; Lega, MCG -> V; GLP weight sits in the center bloc
+# LPS -> RL, Lega, MCG -> V, GLP weight sits in the center bloc
 # Blocs without a cast share drop from both sums (Grüne in 3 roll calls)
 wsum <- function(...) rowSums(cbind(...), na.rm = TRUE)
 W <- tibble(sp     = df$`w-sp`,
@@ -742,7 +742,7 @@ df$weighted_parl_support <- if_else(is.na(df$frak_left_sup), NA_real_, num / den
 gov_blocs <- c("S", "ME", "RL", "V")
 all_blocs <- c("S", "G", "GL", "ME", "RL", "V")
 
-# Exact token parse; str_detect is unusable here (G matches inside GL)
+# Exact token parse, str_detect is unusable here (G matches inside GL)
 coal_str  <- as.character(df$support_coalition)
 coal_toks <- strsplit(coal_str, "\\+")
 for (b in all_blocs) {
@@ -826,7 +826,7 @@ paro_raw <- read_csv(file.path(input_path, "Partei_Parolen/parteiparolen_df.csv"
                      col_types = cols(.default = col_character())) %>%
   rename(p_center = `p-cvp/mitte`) %>%  # p-cvp -> p-mitte
   rename_with(~ str_replace(.x, "^p-", "p_"), starts_with("p-")) %>%
-  select(-p_cvp, -p_mitte, -p_edu)  # composite replaces cvp/mitte; edu has no faction anchor and ~20% missing
+  select(-p_cvp, -p_mitte, -p_edu)  # composite replaces cvp/mitte, edu has no faction anchor and ~20% missing
 
 # Imputing new Paroles as they become available
 # Interest group paroles
@@ -871,7 +871,7 @@ paro <- paro_raw %>%
       across(all_of(paste0("p_", c(paro_parties, paro_verbands))),
              parole_signed, .names = "cue_{str_remove(.col, 'p_')}"),
     # Elite-unease analogue of frak_enth_share: declared non-directional paroles (3/4/5)
-    # as a share of parties that exist and have a known parole; '.' stays out of both counts
+    # as a share of parties that exist and have a known parole, '.' stays out of both counts
              parole_abstain_share = rowSums(across(all_of(core_p), ~ .x %in% c("3", "4", "5"))) /
              pmax(rowSums(across(all_of(core_p),
                           ~ !is.na(.x) & !(.x %in% c("9999", "", ".")))), 1)

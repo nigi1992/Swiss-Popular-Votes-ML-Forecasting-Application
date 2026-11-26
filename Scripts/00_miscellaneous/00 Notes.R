@@ -108,7 +108,7 @@ table(df$dep, df$annahme)
 
 base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
 input_path  <- file.path(base_path, "Input Data")
-output_path <- file.path(base_path, "Output", "B") # B run kept apart from the old outputs
+output_path <- file.path(base_path, "Output") 
 
 # Results Selection Table
 result_select <- read_csv(file.path(input_path, "Results Selection.csv"),

@@ -27,7 +27,7 @@ output_path <- file.path(base_path, "Output")
 SwissVotes_Df0 <- file.path(input_path, "Cleaned Dataset for R - 15.11.26.csv") # Only new upcoming votes, no changes to past votes. Run this!
 
 #SwissVotes_Df0 <- file.path(input_path, "Cleaned Dataset for R - 29.10.26.csv") # Do not run for thesis!
-# -> This dataset contains the recently corrected SwissVotes Values for some older Votes. This would have downstream effects!
+# -> This dataset contains the recently corrected SwissVotes Values for some older votes. This would have downstream effects!
 
 ## Data import as characters ------------------------------------------
 

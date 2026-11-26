@@ -378,11 +378,11 @@ write_csv(forecast_public_ext, file.path(output_path, "09a/forecast_upcoming_pub
 # Relative importance and regression table
 
 # Regression table of the lm champion, standard errors clustered by vote date 
-# Votes on the same voting day share shocks, same reason as the date-clustered bootstrap in 07 (Cameron & Miller 2015)
+# Votes on the same voting day share shocks, same reason as the date-clustered bootstrap in 07 
 # Standardised coefficient = SD change in yes-share per SD change in the feature, comparable across features
 # Importance = LMG share of R^2: each feature's R^2 gain averaged over all orders of entry, so correlated
-# features (parl_support_signed vs roll_yes_rechtsform) split their shared part evenly (Groemping 2006)
-# In-sample on the final fit after the model selection in 07, so the p-values are overly optimistic (Berk et al. 2013)
+# features (parl_support_signed vs roll_yes_rechtsform) split their shared part evenly 
+# In-sample on the final fit after the model selection in 07, so the p-values are overly optimistic 
 
 library(sandwich)
 

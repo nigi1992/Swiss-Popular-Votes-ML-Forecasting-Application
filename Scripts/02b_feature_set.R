@@ -1,7 +1,8 @@
 ### 02b_feature_set.R ###
 
 # Feature-set registry for the reworked feature table from 02a_features.R
-# Blocks (Section 2) are composed into model sets (Section 3); every set carries metadata (Section 4):
+# Blocks (Section 2) are composed into model sets (Section 3) 
+# Every set carries metadata (Section 4):
 #   tier    t0 = known at campaign start, t1 = needs paroles (campaign phase)
 #   frames  long = 1971+ (k = 6), short = 1994+ faction frame (k = 4)
 #   engine  lm   = full-rank, VIF-checked, safe for plain lm (and every other engine)
@@ -10,17 +11,17 @@
 
 ## Structural zeros and their flags (lm) ------------------------------
 
-# Every 0-filled feature falls into one of four cases; only cases A and D need a flag next to them in lm:
-# A  fill on an impossible value, uncentered -> flag required, otherwise the slope absorbs the level gap
+# Every 0-filled feature falls into one of four cases, only cases A and D need a flag next to them in lm:
+# A  Fill on an impossible value, uncentered -> flag required, otherwise the slope absorbs the level gap
 #      log_dauer_bv (pa_iv), pole_init_loss / pole_ref_loss / actor_init_loss / init_ / ref_n_sponsors (rechtsform),
 #      legacy surplus_sig_ratio / spare_days_frac (has_signature_phase, kept unflagged in the legacy references)
-# B  gated + centered within instrument (init_sig_*, ref_sig_*, pole_yes_dev): the fill equals the instrument
-#      mean (active-row means -0.06 to 0), so the feature is orthogonal to its flag and the slope does not move;
+# B  Gated + centered within instrument (init_sig_*, ref_sig_*, pole_yes_dev): the fill equals the instrument
+#      mean (active-row means -0.06 to 0), so the feature is orthogonal to its flag and the slope does not move,
 #      the flag would only be a rechtsform dummy, which competes with roll_yes_rechtsform
 #      (CV: + rf2 flag +0.70 MAE long, + rf2 and rf3 flags +0.37 short)
-# C  binary interactions (ref_pole_left, init_ / ref_established, cp_paired, ...): 0 is a real category, not a fill;
+# C  Binary interactions (ref_pole_left, init_ / ref_established, cp_paired, ...): 0 is a real category, not a fill,
 #      a flag only changes the reference group (ref_pole_left: -1.75 vs all other rows, +1.81 vs other challengers)
-# D  fill inside the active group (0 = unknown, read as "average"):
+# D  Fill inside the active group (0 = unknown, read as "average"):
 #      init_sig_spare on the 24 initiatives without deadline (pre-1978) -> sig_no_deadline (CV long: -0.055 MAE)
 #      covid-partial counts (10 rows, 2020-22): never in the training window of long folds 1-5 / short folds 1-3 -> no flag
 #      ref_sig_speed / ref_sig_spare before 1993: era dummy in disguise -> no flag, short frame and trees only
@@ -57,7 +58,7 @@ b_cal_lm <- c("season", "months_since_election")
 
 # pa_iv is the missingness indicator of log_dauer_bv: dauer_bv does not exist for parliamentary initiatives,
 # log_dauer_bv is filled with 0 there (real range 2.8-7.9) and pa_iv absorbs that level shift
-# -> always together; without pa_iv the 0-fill reads as "shortest deliberation" and the slope is biased
+# -> always together, without pa_iv the 0-fill reads as "shortest deliberation" and the slope is biased
 b_proc_lm   <- c("pa_iv", "log_dauer_bv")
 b_inst_wide <- c("rechtsform", "gov_recommend", "main_domain", "dep", 
                  "pa_iv", "log_dauer_bv", "anzahl", paste0("policy_", sprintf("%02d", 1:12)))
@@ -116,7 +117,7 @@ b_coal_wide <- c("coalition_kriesi", "n_gov_defectors", "svp_defects", "sp_defec
 b_urh_lm <- "pole_yes_dev"
 
 # Challenger pole of optional referendums: the gated carrier of the signal in author_prior_fail_rate
-# (its predictive part sits on the rf 2 rows; on rf 3 rows it adds nothing next to the core)
+# (its predictive part sits on the rf 2 rows, on rf 3 rows it adds nothing next to the core)
 # One indicator only: all six ref_pole_* together overfit (thin cells: environmental 4, nonpartisan 7 rows)
 b_urh_ref <- "ref_pole_left"
 
@@ -227,7 +228,7 @@ feature_sets$m1B_sig_ref <- c(core, b_sig_lm, b_urh_ref) # similar to m1_2e
 feature_sets$m1_2eB      <- c(core, "author_prior_fail_rate", b_sig_lm)  # m1_2e with the reworked signature block
 
 # Widest lm-safe set: VIF-pruned in 02c_VIF_B.R (all GVIF^(1/(2df)) < 2.24 on the full long frame)
-# Contrast set for ridge / lasso in 06; plain lm on it loses ~1.2 MAE against the champion
+# Contrast set for ridge / lasso in 06, plain lm on it loses ~1.2 MAE against the champion
 feature_sets$m1B_lm <- c(core, b_hist_ext, b_elite_ext, b_cal_lm, b_proc_lm,
                          b_sig_lm, b_sig_lm_ext, b_urh_lm, b_urh_ref, b_pair, b_urh_struct_lm)
 
@@ -238,7 +239,7 @@ feature_sets$m1B_tree <- unique(c(feature_sets$m1B_wide, tree_extras_long))
 
 ## M2B: t0, short frame (faction + coalition features) -----------------
 
-# Slot swaps: the support-level signal replaces parl_support_signed; reference = m1B_core
+# Slot swaps: the support-level signal replaces parl_support_signed, reference = m1B_core
 feature_sets$m2B_wsup    <- c(b_hist_lm, "weighted_parl_support")
 feature_sets$m2B_gov     <- c(b_hist_lm, "n_gov_defectors")
 feature_sets$m2B_breadth <- c(b_hist_lm, "frak_breadth")
@@ -256,7 +257,7 @@ feature_sets$m2B_champ_sig   <- c(feature_sets[[champ_t0]], "ref_sig_spare")    
 
 # Widest lm-safe short set, VIF-trimmed on the short fold-1 window (n = 131):
 # pairs dropped (3 rows on the short frame), gated structure variables, sp_defects and elite_consensus dropped
-# (each lifted the VIF of roll_yes_rechtsform; with them max VIF 10.1, without 6.8)
+# (each lifted the VIF of roll_yes_rechtsform, with them max VIF 10.1, without 6.8)
 feature_sets$m2B_lm <- c(core, b_hist_ext, "interchamber_disagree", "parl_participation", b_cal_lm, b_proc_lm,
                          b_sig_lm, b_sig_lm_ext, "ref_sig_spare", b_urh_lm, b_urh_ref,
                          "elite_cue_lr0", "frak_enth_share", "svp_defects")
@@ -295,7 +296,7 @@ feature_sets$m3B_tree       <- unique(c(feature_sets$m1B_tree, b_par_wide))
 
 # 4. Set metadata -----------------------------------------------------
 
-# frames: where the set may be evaluated; engine: lm = lm-safe, wide = regularized / tree engines only
+# frames: where the set may be evaluated, engine: lm = lm-safe, wide = regularized / tree engines only
 meta <- tribble(
   ~set,                 ~tier, ~frames,        ~engine, ~compare_to,      ~design,
   "m0",                 "t0",  "long,short",   "lm",    NA,               "benchmark",
@@ -397,7 +398,7 @@ for (i in which(grepl("long", meta$frames))) {
 }
 
 # e) no NA on any frame the set is evaluated on
-#    (lm drops / NA-predicts such rows; 06 make_mm() drops them and breaks the train/test split)
+#    (lm drops / NA-predicts such rows, 06 make_mm() drops them and breaks the train/test split)
 frames_list <- list(long = frame, short = frame_frak)
 for (i in seq_len(nrow(meta))) {
   s <- meta$set[i]; f <- intersect(feature_sets[[s]], names(df))
@@ -408,8 +409,8 @@ for (i in seq_len(nrow(meta))) {
   }
 }
 
-# f) case A / D fills never enter a set without their flag (any one of the listed alternatives counts;
-#    rechtsform carries the instrument flags in the wide sets); legacy references stay unflagged on purpose
+# f) case A / D fills never enter a set without their flag (any one of the listed alternatives counts,
+#    rechtsform carries the instrument flags in the wide sets), legacy references stay unflagged on purpose
 indicator_of <- list(log_dauer_bv    = "pa_iv",
                      init_sig_spare  = "sig_no_deadline",
                      pole_init_loss  = c("sig_init", "rechtsform"),
@@ -454,7 +455,7 @@ print(meta, n = Inf)
 # 6. Saving the registry for the ML pipeline ---------------------------
 
 # Keeping the old feature_sets.rds untouched so earlier results stay reproducible
-# Metadata, blocks and the t0 champion travel as attributes; feature_sets[[s]] works as before
+# Metadata, blocks and the t0 champion travel as attributes, feature_sets[[s]] works as before
 attr(feature_sets, "meta")     <- meta
 attr(feature_sets, "champ_t0") <- champ_t0
 attr(feature_sets, "blocks")   <- list(

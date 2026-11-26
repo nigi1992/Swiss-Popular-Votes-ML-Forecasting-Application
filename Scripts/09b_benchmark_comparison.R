@@ -148,7 +148,7 @@ champ_vs_m0 <- inner_join(champ_vs_base, m0g_vs_base,
 
 print(champ_vs_m0, width = Inf)
 
-# Out-of-sample R² against the grand mean, same definition as the 0.458 for M0 in section 3
+# Out-of-sample R^2 against the grand mean, same definition as the 0.458 for M0 in section 3
 oos_r2_grand <- c(M0       = 1 - (m0_pooled$rmse / mgrand_pooled$rmse)^2,
                   champion = 1 - (champ_metrics$rmse[is.na(champ_metrics$fold)] / mgrand_pooled$rmse)^2)
 print(round(oos_r2_grand, 3))
