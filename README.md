@@ -19,6 +19,8 @@ Let me know, if you want the raw data.
 ## Scripts 💻
 You'll find the R scripts in the folder "Scripts".
 
+Change YOUR_BASE_PATH to your own base_path location to run the scripts.
+
 Scripts should be run in the intended numerical order. However, all input data and all output files are already present in the respective folders and is ready for inspection.
 
 Input Data for Fraktionen_Blocs was collected and prepared in another of my GitHub Repositories: https://github.com/nigi1992/NR-Roll-Call-Final-Vote-Data-Faction-Scraper
