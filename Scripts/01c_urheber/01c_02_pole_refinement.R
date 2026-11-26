@@ -8,7 +8,7 @@ base_path   <- "YOUR_BASE_PATH/Swiss Popular Votes ML Forecasting Application"
 input_path  <- file.path(base_path, "Input Data")
 output_path <- file.path(base_path, "Output")
 
-df_urheber_ref <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles2.csv"), show_col_types = FALSE)
+df_urheber_ref <- read_csv(file.path(input_path, "Urheber_Poles/urheber_coded_poles.csv"), show_col_types = FALSE)
 
 # 1. Keyword dictionaries (lowercase, substring match) ------------------
 
