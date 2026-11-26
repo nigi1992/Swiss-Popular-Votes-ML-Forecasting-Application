@@ -4,7 +4,8 @@ GitHub Repository for my MA-Thesis on building a ML Forecasting Tool for predict
 **Title:** _"Pre-Campaign Signals and Referendum Outcomes: Can Swiss federal votes be predicted before the first poll is published?"_
 
 ## Author 👋
-* Nicolas
+
+Nicolas
 
 ## Input Data 🗃
 The folder "Input Data" is where the Datasets can be found. 
