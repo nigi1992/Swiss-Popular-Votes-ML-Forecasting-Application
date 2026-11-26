@@ -9,7 +9,7 @@
 library(tidyverse)
 #library(lubridate)
 
-base_path   <- "/Users/nicolaswaser/New-project-GitHub-first/R/Swiss Popular Votes ML Forecasting Application"
+base_path   <- "YOUR_BASE_PATH/Swiss Popular Votes ML Forecasting Application"
 input_path  <- file.path(base_path, "Input Data")
 
 df <- readRDS(file.path(input_path, "swissvotes_prepared.rds"))
